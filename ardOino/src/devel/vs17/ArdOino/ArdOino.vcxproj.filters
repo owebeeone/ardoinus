@@ -36,9 +36,6 @@
     <ClInclude Include="..\..\..\setl_cyclic_int.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\setl_support.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\setl_system.h">
       <Filter>Header Files</Filter>
     </ClInclude>

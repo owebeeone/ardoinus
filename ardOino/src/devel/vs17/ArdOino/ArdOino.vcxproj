@@ -148,7 +148,6 @@
     <ClInclude Include="..\..\..\setlx_limits.h" />
     <ClInclude Include="..\..\..\setlx_type_traits.h" />
     <ClInclude Include="..\..\..\setl_cyclic_int.h" />
-    <ClInclude Include="..\..\..\setl_support.h" />
     <ClInclude Include="..\..\..\setl_system.h" />
     <ClInclude Include="..\..\..\setl_templ_utils.h" />
     <ClInclude Include="..\..\..\setl_test_framework.h" />
