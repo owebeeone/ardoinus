@@ -1,0 +1,7 @@
+
+INCLUDE_DIRS=../..
+
+CODE=$(wildcard ../code/*.cxx)
+
+ardo_test : $(wildcard ../*.h ../tests/*.h)
+	$(CXX) -o ardo_test -std=c++11 -w -I $(INCLUDE_DIRS) $(CODE)

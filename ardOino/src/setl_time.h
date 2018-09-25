@@ -89,6 +89,7 @@ template <typename T, TimeUnit w_units>
 class Period {
   template <typename W, TimeUnit u_units>
   friend class Time;
+  struct Converter;
 public:
   using type = T;
   static const TimeUnit UNITS = w_units;
@@ -108,12 +109,12 @@ public:
 
   // Convert to other units shortcut.
   template <TimeUnit u_units> 
-  auto to() const {
+  Period<T, u_units> to() const {
     return Period<T, u_units>(*this);
   }
   
   // Convert to other Period types shortcut.
-  auto to() const {
+  Converter to() const {
     return Converter(*this);
   }
 
@@ -210,79 +211,79 @@ Time<T, w_units> operator+(const Time<T, w_units>& lhs, const Period<W, w_units>
 }
 
 template <TimeUnit w_units, typename T>
-auto time(const T& v) {
+setl::Time<T, w_units> time(const T& v) {
   return setl::Time<T, w_units>(v);
 }
 
 template <TimeUnit w_units, typename T>
-auto period(const T& v) {
+setl::Period<T, w_units> period(const T& v) {
   return setl::Period<T, w_units>(v);
 }
 
 namespace time_suffix_ops {
 
 // Suffix operators for various time units.
-inline auto operator"" _wk(long double v) {
+inline setl::Period<long double, TimeUnit::WEEK> operator"" _wk(long double v) {
   return period<TimeUnit::WEEK>(v);
 }
 
-inline auto operator"" _wk(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::WEEK>  operator"" _wk(unsigned long long v) {
   return period<TimeUnit::WEEK>(v);
 }
 
-inline auto operator"" _day(long double v) {
+inline setl::Period<long double, TimeUnit::DAY>  operator"" _day(long double v) {
   return period<TimeUnit::DAY>(v);
 }
 
-inline auto operator"" _day(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::DAY>  operator"" _day(unsigned long long v) {
   return period<TimeUnit::DAY>(v);
 }
 
-inline auto operator"" _hr(long double v) {
+inline setl::Period<long double, TimeUnit::HOUR>  operator"" _hr(long double v) {
   return period<TimeUnit::HOUR>(v);
 }
 
-inline auto operator"" _hr(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::HOUR>  operator"" _hr(unsigned long long v) {
   return period<TimeUnit::HOUR>(v);
 }
 
-inline auto operator"" _min(long double v) {
+inline setl::Period<long double, TimeUnit::MINUTE>  operator"" _min(long double v) {
   return period<TimeUnit::MINUTE>(v);
 }
 
-inline auto operator"" _min(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::MINUTE>  operator"" _min(unsigned long long v) {
   return period<TimeUnit::MINUTE>(v);
 }
 
-inline auto operator"" _sec(long double v) {
+inline setl::Period<long double, TimeUnit::SECOND>  operator"" _sec(long double v) {
   return period<TimeUnit::SECOND>(v);
 }
 
-inline auto operator"" _sec(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::SECOND>  operator"" _sec(unsigned long long v) {
   return period<TimeUnit::SECOND>(v);
 }
 
-inline auto operator"" _msec(long double v) {
+inline setl::Period<long double, TimeUnit::MILLIS>  operator"" _msec(long double v) {
   return period<TimeUnit::MILLIS>(v);
 }
 
-inline auto operator"" _msec(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::MILLIS>  operator"" _msec(unsigned long long v) {
   return period<TimeUnit::MILLIS>(v);
 }
 
-inline auto operator"" _usec(long double v) {
+inline setl::Period<long double, TimeUnit::MICROS>  operator"" _usec(long double v) {
   return period<TimeUnit::MICROS>(v);
 }
 
-inline auto operator"" _usec(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::MICROS>  operator"" _usec(unsigned long long v) {
   return period<TimeUnit::MICROS>(v);
 }
 
-inline auto operator"" _nsec(long double v) {
+inline setl::Period<long double, TimeUnit::NANOS>  operator"" _nsec(long double v) {
   return period<TimeUnit::NANOS>(v);
 }
 
-inline auto operator"" _nsec(unsigned long long v) {
+inline setl::Period<unsigned long long, TimeUnit::NANOS>  operator"" _nsec(unsigned long long v) {
   return period<TimeUnit::NANOS>(v);
 }
 

@@ -1,15 +1,9 @@
 
-
 #include "ardoino.h"
 
-#include "ardo_time_poller.h"
+#include "ardo_time_poller.h"  // A time poller class.
 
-namespace adro_test_do_not_use {
-auto& pin1 = ardo::OutputPin<1, ardo::CoreIF::Output>::pin;
-auto& pin2 = ardo::OutputPin<2, ardo::CoreIF::OpenCollectorOutput>::pin;
-auto& pin3 = ardo::OutputPin<3, ardo::CoreIF::Output, ardo::OutputPinIF>::pin;
-auto& pin4 = ardo::OutputPin<4, ardo::CoreIF::OpenCollectorOutput, ardo::OutputPinIF>::pin;
-
+#include "setlx_type_traits.h"  // Ardoino partial implementation of C++ type_traits
 
 template <typename Seq, typename Params>
 class BlinkModule : public ardo::ModuleBase<Params> {
@@ -56,6 +50,4 @@ void setup() {
 
 void loop() {
   mainApp::runLoop();
-}
-
 }

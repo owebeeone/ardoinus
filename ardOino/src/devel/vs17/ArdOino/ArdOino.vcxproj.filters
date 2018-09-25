@@ -110,10 +110,13 @@
     <ClCompile Include="..\..\..\setl_system.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\ardoino_test.cpp">
+    <ClCompile Include="..\..\code\ardoino_test.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\emulate_arduino.cpp">
+    <ClCompile Include="..\..\code\blink_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\emulate_arduino.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -155,7 +155,7 @@ struct CoreIF::NowTimeEvaluator::NowTime<CoreIF::MicrosTime> {
 };
 
 /**
- * Runner supports execution of the setup() and loop() functions across
+ * Runner supports execution of the runSetup() and runLoop() functions across
  * a given set of classes.
  */
 template <typename... T>
@@ -164,40 +164,40 @@ class Runner;
 template <typename S, typename... T>
 class Runner<S, T...> {
 public:
-  inline static void paramsSetup() {
+  inline static void runParamsSetup() {
     S::paramsSetup();
-    Runner<T...>::paramsSetup();
+    Runner<T...>::runParamsSetup();
   }
 
-  inline static void paramsLoop() {
+  inline static void runParamsLoop() {
     S::paramsLoop();
-    Runner<T...>::paramsLoop();
+    Runner<T...>::runParamsLoop();
   }
 
-  inline static void setup() {
-    S::setup();
-    Runner<T...>::setup();
+  inline static void runSetup() {
+    S::runSetup();
+    Runner<T...>::runSetup();
   }
 
-  inline static void loop() {
-    S::loop();
-    Runner<T...>::loop();
+  inline static void runLoop() {
+    S::runLoop();
+    Runner<T...>::runLoop();
   }
 };
 
 template <>
 class Runner<> {
 public:
-  inline static void paramsSetup() {
+  inline static void runParamsSetup() {
   }
 
-  inline static void paramsLoop() {
+  inline static void runParamsLoop() {
   }
 
-  inline static void setup() {
+  inline static void runSetup() {
   }
 
-  inline static void loop() {
+  inline static void runLoop() {
   }
 };
 
@@ -228,11 +228,11 @@ public:
 
   static const OutputPin pin;
 
-  inline static void setup() {
+  inline static void runSetup() {
     CoreIF::pinMode(PIN, M);
   }
 
-  inline static void loop() {}
+  inline static void runLoop() {}
 
   static void set(bool level) {
     CoreIF::digitalWrite(PIN, level ? HIGH : LOW);
@@ -268,12 +268,12 @@ public:
 
   static const OutputPin pin;
 
-  inline static void setup() {
+  inline static void runSetup() {
     CoreIF::pinMode(PIN, CoreIF::Untied);
     CoreIF::digitalWrite(PIN, LOW);
   }
 
-  inline static void loop() {}
+  inline static void runLoop() {}
 
   static void set(bool level) {
     // Switching between input (no pullup mode) and output (drive low) mode
@@ -318,11 +318,11 @@ public:
 
   static const InputPin pin;
 
-  inline static void setup() {
+  inline static void runSetup() {
     CoreIF::pinMode(PIN, M);
   }
 
-  inline static void loop() {}
+  inline static void runLoop() {}
 
   static bool get() {
     return CoreIF::digitalRead(PIN) != LOW;
@@ -407,18 +407,18 @@ public:
   using Params = w_Params;
 
   static void paramsSetup() {
-    Params::ParamsRunner::setup();
+    Params::ParamsRunner::runSetup();
   }
 
   static void paramsLoop() {
-    Params::ParamsRunner::loop();
+    Params::ParamsRunner::runLoop();
   }
 
-  static void setup() {
+  static void runSetup() {
     // Provide an empty setup method.
   }
 
-  static void loop() {
+  static void runLoop() {
     // Provide an empty setup method.
   }
 };
@@ -439,14 +439,14 @@ public:
   using AutoScanner = setl::AutoFor<Modules...>;
 
 
-  static void setup() {
-    ModuleRunner::paramsSetup();
-    ModuleRunner::setup();
+  static void runSetup() {
+    ModuleRunner::runParamsSetup();
+    ModuleRunner::runSetup();
   }
 
-  static void loop() {
-    ModuleRunner::paramsLoop();
-    ModuleRunner::loop();
+  static void runLoop() {
+    ModuleRunner::runParamsLoop();
+    ModuleRunner::runLoop();
   }
 
   // Evaluates if any module has conflicts.

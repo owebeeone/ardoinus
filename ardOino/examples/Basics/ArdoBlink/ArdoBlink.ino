@@ -18,7 +18,7 @@ public:
 
   static BlinkModule instance;
 
-  static void loop() {
+  static void runLoop() {
     instance.instanceLoop();
   }
 
@@ -43,7 +43,7 @@ public:
 template <typename Seq, typename Params>
 BlinkModule<Seq, Params> BlinkModule<Seq, Params>::instance;
 
-using Blinker2 = BlinkModule<ardo::Sequence<1000, 500>, ardo::Parameters<ardo::OutputPin<2>>>;
+using Blinker2 = BlinkModule<ardo::Sequence<1000, 500>, ardo::Parameters<ardo::OutputPin<LED_BUILTIN>>>;
 using Blinker3 = BlinkModule<ardo::Sequence<750, 400>, ardo::Parameters<ardo::OutputPin<3>>>;
 
 // Define the main app with 2 blinker modules.
@@ -51,9 +51,9 @@ using mainApp = ardo::Application<Blinker2, Blinker3>;
 
 
 void setup() {
-  mainApp::setup();
+  mainApp::runSetup();
 }
 
 void loop() {
-  mainApp::loop();
+  mainApp::runLoop();
 }
