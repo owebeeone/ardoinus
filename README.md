@@ -1,5 +1,8 @@
 **ardOino - an Embedded Programming Module API for C++**
 
+This software is licensed under the MIT License, see the LICENSE.txt file
+for more detail.
+
 ArdOino is an embedded application framework allowing composition
 of re-usable modules targetted for embedded microcontroller applications.
 
