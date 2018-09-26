@@ -50,6 +50,23 @@ void digitalWrite(unsigned pin, std::uint8_t mode);
 int digitalRead(unsigned pin);
 unsigned millis();
 unsigned micros();
+
+class SerialType {
+public:
+  void begin(unsigned long);
+  template <typename T>
+  void print(const T&);
+  template <typename T>
+  void println(const T&);
+  void print(const char*);
+  void println(const char*);
+
+  // TODO need many more.
+
+};
+
+extern SerialType &Serial;
+extern SerialType &Serial1;
 #endif
 
 namespace ardo {
@@ -458,6 +475,76 @@ typename DebounceInput<debounceTime, w_TimeType, InputPin>::DebounceState
 template <unsigned long debounceTime, typename w_TimeType, typename InputPin>
 const DebounceInput<debounceTime, w_TimeType, InputPin>
     DebounceInput<debounceTime, w_TimeType, InputPin>::pin;
+
+/**
+ * Serial port support.
+ */
+
+/**
+ * For resource claims. 
+ */
+template <unsigned PortN>
+class SerialResource {};
+
+template <unsigned PortN>
+class SerialIf {
+public:
+  static decltype(Serial)& get();
+};
+
+template <>
+class SerialIf<0> {
+public:
+  inline static decltype(Serial)& get() {
+    return Serial;
+  }
+};
+
+// Serial1 support. Define ARDO_HAS_SERIAL1 to get Serial1 support.
+#if ARDO_HAS_SERIAL1
+template <>
+class SerialIf<1> {
+public:
+  inline static decltype(Serial1)& get() {
+    return Serial1;
+  }
+};
+#endif
+
+/**
+ * Provides module parameter support for Serial initialization.
+ */
+template <unsigned long baudRate, unsigned long PortN = 0>
+class SerialIO {
+public:
+  using Claims = ResourceClaim<SerialResource<PortN>>;
+  using SerialIfType = SerialIf<PortN>;
+
+  inline static void runSetup() {
+    Serial.begin(baudRate);
+  }
+
+  inline static void runLoop() {}
+
+  inline static void print() {}
+
+  template <typename T, typename... Ts>
+  inline static void print(const T& arg, Ts... args) {
+    SerialIfType::get().print(arg);
+    print(args...);
+  }
+
+  template <typename T>
+  inline static void println(const T& arg) {
+    SerialIfType::get().println(arg);
+  }
+
+  template <typename T, typename... Ts>
+  inline static void println(const T& arg, Ts... args) {
+    SerialIfType::get().print(arg);
+    println(args...);
+  }
+};
 
 /**
  * Fetches a template parameter by index.

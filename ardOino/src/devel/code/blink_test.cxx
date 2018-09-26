@@ -5,6 +5,8 @@
 
 #include "setlx_type_traits.h"  // Ardoino partial implementation of C++ type_traits
 
+using SerialA = ardo::SerialIO<115200>;
+
 template <typename Seq, typename w_LedPin>
 class BlinkModule : public ardo::ModuleBase<ardo::Parameters<w_LedPin>> {
 public:
@@ -20,6 +22,7 @@ public:
     if (timeSequence.poll()) {
       switch (timeSequence.state() & 1) {
       case 0: {
+        SerialA::println("now: ", ardo::CoreIF::nowMillis().get());
         LedPin::set(true);
         break;
       }
@@ -39,9 +42,10 @@ BlinkModule<Seq, Params> BlinkModule<Seq, Params>::instance;
 
 using Blinker2 = BlinkModule<ardo::Sequence<1000, 500>, ardo::OutputPin<2>>;
 using Blinker3 = BlinkModule<ardo::Sequence<750, 400>, ardo::OutputPin<3>>;
+using SerialM = ardo::ModuleBase<ardo::Parameters<SerialA>>;
 
 // Define the main app with 2 blinker modules.
-using mainApp = ardo::Application<Blinker2, Blinker3>;
+using mainApp = ardo::Application<SerialM, Blinker2, Blinker3>;
 
 
 void fsetup() {
@@ -50,4 +54,5 @@ void fsetup() {
 
 void floop() {
   mainApp::runLoop();
+  SerialA::println(1, 2, 3);
 }
