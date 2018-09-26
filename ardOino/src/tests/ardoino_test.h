@@ -6,9 +6,15 @@
 
 namespace adro_test_do_not_use {
 auto& pin1 = ardo::OutputPin<1, ardo::CoreIF::Output>::pin;
-auto& pin2 = ardo::OutputPin<2, ardo::CoreIF::OpenCollectorOutput>::pin;
+auto& pin2 = ardo::OutputPin<2, ardo::CoreIF::OpenDrainLowOutput>::pin;
 auto& pin3 = ardo::OutputPin<3, ardo::CoreIF::Output, ardo::OutputPinIF>::pin;
-auto& pin4 = ardo::OutputPin<4, ardo::CoreIF::OpenCollectorOutput, ardo::OutputPinIF>::pin;
+auto& pin4 = ardo::OutputPin<4, ardo::CoreIF::OpenDrainLowOutput, ardo::OutputPinIF>::pin;
+using Pin5Type = ardo::DebounceInput<13, ardo::CoreIF::MillisTime, ardo::InputPin<5>>;
+auto& pin5 = Pin5Type::pin;
+
+bool getValue() {
+  return pin5.get() || Pin5Type::get();
+}
 
 
 template <typename Seq, typename Params>

@@ -92,7 +92,8 @@ public:
 class CoreIF {
 public:
   enum OutputPinMode : std::uint8_t {
-    OpenCollectorOutput = 0xffu,  // Open collector output. 
+    OpenDrainLowOutput = 0xffu,   // Open collector/drain low output. 
+    OpenDrainHighOutput = 0xfeu,  // Open collector/drain high output. 
     Output = OUTPUT,              // Output mode.
   };
 
@@ -219,6 +220,7 @@ template <unsigned P,
     CoreIF::OutputPinMode M = CoreIF::Output, 
     typename Base = NullPinBase>
 class OutputPin : public Base, public setl::not_copyable {
+protected:
   OutputPin() {}  // Only the one instance allowed.
 public:
   static constexpr unsigned PIN = P;
@@ -243,6 +245,7 @@ public:
     set(level);
   }
 
+  // May override base class.
   unsigned pinNo() const {
     return PIN;
   }
@@ -252,14 +255,13 @@ template <unsigned P, CoreIF::OutputPinMode M, typename Base>
 const OutputPin<P, M, Base> OutputPin<P, M, Base>::pin;
 
 /**
- * A digital output for open collector.
+ * A digital output for open collector/drain pulled low when active.
  */
 template <unsigned P, typename Base>
-class OutputPin<P, CoreIF::OpenCollectorOutput, Base> 
+class OutputPin<P, CoreIF::OpenDrainLowOutput, Base> 
     : public Base, public setl::not_copyable {
-
+protected:
   OutputPin() {}  // Only the one instance allowed.
-
 public:
   static constexpr unsigned PIN = P;
 
@@ -286,13 +288,55 @@ public:
     set(level);
   }
 
+  // May override base class.
+  unsigned pinNo() const {
+    return PIN;
+  }
+};
+
+/**
+* A digital output for open collector/drain pulled high when active.
+*/
+template <unsigned P, typename Base>
+class OutputPin<P, CoreIF::OpenDrainHighOutput, Base>
+  : public Base, public setl::not_copyable {
+protected:
+  OutputPin() {}  // Only the one instance allowed.
+public:
+  static constexpr unsigned PIN = P;
+
+  // Claim resources.
+  using Claims = ResourceClaim<GPIOResource<PIN>>;
+
+  static const OutputPin pin;
+
+  inline static void runSetup() {
+    CoreIF::pinMode(PIN, CoreIF::Untied);
+    CoreIF::digitalWrite(PIN, HIGH);
+  }
+
+  inline static void runLoop() {}
+
+  static void set(bool level) {
+    // Switching between input (no pullup mode) and output (drive low) mode
+    // emulates an open collector output.
+    CoreIF::pinMode(PIN, level ? CoreIF::Output : CoreIF::Untied);
+  }
+
+  // Overrides OutputPinIF base class interface.
+  void setPin(bool level) const {
+    set(level);
+  }
+
+  // May override base class.
   unsigned pinNo() const {
     return PIN;
   }
 };
 
 template <unsigned P, typename Base>
-const OutputPin<P, CoreIF::OpenCollectorOutput, Base> OutputPin<P, CoreIF::OpenCollectorOutput, Base>::pin;
+const OutputPin<P, CoreIF::OpenDrainLowOutput, Base> 
+    OutputPin<P, CoreIF::OpenDrainLowOutput, Base>::pin;
 
 /** A base class for input pins where a base class is needed. */
 class InputPinIF {
@@ -309,6 +353,7 @@ template <unsigned P,  // The digital/gpio pin number.
   CoreIF::InputPinMode M = CoreIF::PullUp, 
   typename Base = NullPinBase>
 class InputPin : public Base, public setl::not_copyable {
+protected:
   InputPin() {}  // Private constructor.
 public:
   static constexpr unsigned PIN = P;
@@ -328,10 +373,12 @@ public:
     return CoreIF::digitalRead(PIN) != LOW;
   }
 
+  // May override base class.
   bool getPin() const {
     return get();
   }
 
+  // May override base class.
   unsigned pinNo() const {
     return PIN;
   }
@@ -340,6 +387,81 @@ public:
 template <unsigned P, CoreIF::InputPinMode M, typename Base>
 const InputPin<P, M, Base> InputPin<P, M, Base>::pin;
 
+/**
+ * Debounced input type.
+ */
+template <unsigned long debounceTime, typename w_TimeType, typename InputPin>
+class DebounceInput : public InputPin {
+protected:
+  DebounceInput() {}
+public:
+  using TimeType = w_TimeType;
+
+  static bool get() {
+    return debounceState.debounce(InputPin::get());
+  }
+
+  // May override base class.
+  bool getPin() const {
+    return get();
+  }
+
+  inline static void runSetup() {
+    InputPin::runSetup();
+    debounceState.runSetup(); // Initialize the debounce state.
+  }
+
+  static const DebounceInput pin;
+
+private:
+  // The debounce state 
+  struct DebounceState {
+    bool debounce(bool input) {
+      const bool changedNow = input != currentLevel;
+      if (isChanged) {
+        if (changedNow) {
+          TimeType now = CoreIF::now();
+          auto elapsed = now - lastChangeTime;
+          if (elapsed.get() > debounceTime) {
+            currentLevel = input;
+            isChanged = false;
+          }
+        }
+      }
+      else if (changedNow) {
+        isChanged = true;
+        lastChangeTime = CoreIF::now();
+      }
+      else {
+        isChanged = false;
+      }
+
+      return currentLevel;
+    }
+
+    void runSetup() {
+      lastChangeTime = CoreIF::now();
+    }
+
+    TimeType lastChangeTime;
+    bool currentLevel = false;
+    bool isChanged = false;
+  };
+
+  static DebounceState debounceState;
+};
+
+template <unsigned long debounceTime, typename w_TimeType, typename InputPin>
+typename DebounceInput<debounceTime, w_TimeType, InputPin>::DebounceState 
+    DebounceInput<debounceTime, w_TimeType, InputPin>::debounceState;
+
+template <unsigned long debounceTime, typename w_TimeType, typename InputPin>
+const DebounceInput<debounceTime, w_TimeType, InputPin>
+    DebounceInput<debounceTime, w_TimeType, InputPin>::pin;
+
+/**
+ * Fetches a template parameter by index.
+ */
 template <unsigned index, typename... P>
 class ParamByIndex;
 
