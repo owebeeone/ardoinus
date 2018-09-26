@@ -176,7 +176,7 @@ setl::PweBitCollectorArray<char, 2> array_2s;
      }
 
      TimeType jitterTime() {
-       auto result = clock + PeriodType(std::rand() % 11);
+       auto result = clock + PeriodType(std::rand() % 13);
        return result;
      }
 

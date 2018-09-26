@@ -18,21 +18,21 @@ class CyclicIntTest_DO_NOT_USE : setl_test::SetlTest {
     using test_type = setl::CyclicInt<w_size, as_volatile>;
 
     test() {
-      do_test_add1([](auto& value) -> void { ++value; });
-      do_test_add1([](auto& value) -> void { value++; });
-      do_test_add1([](auto& value) -> void { value += 1; });
-      do_test_add1([](auto& value) -> void { value = value + 1; });
+      do_test_add1([](test_type& value) -> void { ++value; });
+      do_test_add1([](test_type& value) -> void { value++; });
+      do_test_add1([](test_type& value) -> void { value += 1; });
+      do_test_add1([](test_type& value) -> void { value = value + 1; });
     
-      do_test_sub1([](auto& value) -> void { value = value + (w_size - 1); });
-      do_test_sub1([](auto& value) -> void { value -= 1; });
-      do_test_sub1([](auto& value) -> void { value--; });
-      do_test_sub1([](auto& value) -> void { --value; });
+      do_test_sub1([](test_type& value) -> void { value = value + (w_size - 1); });
+      do_test_sub1([](test_type& value) -> void { value -= 1; });
+      do_test_sub1([](test_type& value) -> void { value--; });
+      do_test_sub1([](test_type& value) -> void { --value; });
 
       do_test_add_any();
     }
 
-    template <typename F>
-    void do_test_add1(const F& add_1) {
+    void do_test_add1(void (*add_1)(test_type& value)) {
+
       test_type value;
       assertThat(value.get()).eq(0);
       assertThat(value == test_type()).eq(true);
@@ -48,8 +48,7 @@ class CyclicIntTest_DO_NOT_USE : setl_test::SetlTest {
       assertThat(test_type(-1L).get()).eq(w_size - 1);
     }
 
-    template <typename F>
-    void do_test_sub1(const F& sub_1) {
+    void do_test_sub1(void(*sub_1)(test_type& value)) {
       test_type value;
       assertThat(value.get()).eq(0);
 

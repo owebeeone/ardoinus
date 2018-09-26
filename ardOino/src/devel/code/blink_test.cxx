@@ -44,10 +44,10 @@ using Blinker3 = BlinkModule<ardo::Sequence<750, 400>, ardo::OutputPin<3>>;
 using mainApp = ardo::Application<Blinker2, Blinker3>;
 
 
-void setup() {
+void fsetup() {
   mainApp::runSetup();
 }
 
-void loop() {
+void floop() {
   mainApp::runLoop();
 }

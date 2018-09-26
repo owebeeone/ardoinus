@@ -6,8 +6,6 @@
 
 #include "ardo_time_poller.h"  // A time poller class.
 
-//#include "setlx_type_traits.h"  // Ardoino partial implementation of C++ type_traits
-
 
 // Re-usable blink module.
 // Module classes are not instantiated by the framework. If an instance
@@ -17,7 +15,7 @@ class BlinkModule : public ardo::ModuleBase<ardo::Parameters<w_LedPin>> {
 public:
   using LedPin = w_LedPin;
 
-  static BlinkModule instance;
+  static BlinkModule instance;  // Define an instance here.
 
   static void runLoop() {
     instance.instanceLoop();
@@ -38,17 +36,28 @@ public:
     }
   }
 
-  ardo::TimeSequencePoller<Seq> timeSequence;
+  ardo::TimeSequencePoller<Seq> timeSequence;  // State variable.
 };
 
+// C++ requires the instantiation of the static instance outside the class.
 template <typename Seq, typename Params>
 BlinkModule<Seq, Params> BlinkModule<Seq, Params>::instance;
 
-using Blinker2 = BlinkModule<ardo::Sequence<1000, 500>, ardo::OutputPin<LED_BUILTIN>>;
-using Blinker3 = BlinkModule<ardo::Sequence<750, 400>, ardo::OutputPin<3>>;
+#if !defined(LED_BUILTIN)
+#define LED_BUILTIN 1
+#endif
+
+// Here we "specialize" the BlinkModule template by defining all the parameters.
+using BlinkerA = BlinkModule<
+  ardo::Sequence<750, 400, 650, 300, 550, 200, 450, 100, 350, 50, 250, 50, 50, 1000>, 
+  ardo::OutputPin<LED_BUILTIN>>;
+  
+using BlinkerB = BlinkModule<
+  ardo::Sequence<1000, 500>,
+  ardo::OutputPin<2>>;
 
 // Define the main app with 2 blinker modules.
-using mainApp = ardo::Application<Blinker2, Blinker3>;
+using mainApp = ardo::Application<BlinkerB, BlinkerA>;
 
 void setup() {
   mainApp::runSetup();

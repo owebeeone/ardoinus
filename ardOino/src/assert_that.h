@@ -109,7 +109,7 @@ struct asserter<AssertTypeSpecifier::FLOATING, T> : assert_value<T> {
 };
 
 template <typename T>
-auto assertThat(const T& value) {
+asserter<assert_type_specifier<T>, T> assertThat(const T& value) {
   return asserter<assert_type_specifier<T>, T>(value);
 }
 

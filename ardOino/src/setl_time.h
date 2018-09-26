@@ -36,7 +36,7 @@ class Time {
   friend class Period;
 public:
   using type = T;
-  static const TimeUnit UNITS = w_units;
+  static constexpr TimeUnit UNITS = w_units;
   using period_type = Period<T, UNITS>;
 
   Time() {}
@@ -92,7 +92,7 @@ class Period {
   struct Converter;
 public:
   using type = T;
-  static const TimeUnit UNITS = w_units;
+  static constexpr TimeUnit UNITS = w_units;
   using time_type = Time<T, UNITS>;
 
   Period() {}
@@ -247,6 +247,7 @@ inline setl::Period<unsigned long long, TimeUnit::HOUR>  operator"" _hr(unsigned
   return period<TimeUnit::HOUR>(v);
 }
 
+#undef _min  // gcc 5.2 defines _min as a macro.
 inline setl::Period<long double, TimeUnit::MINUTE>  operator"" _min(long double v) {
   return period<TimeUnit::MINUTE>(v);
 }
