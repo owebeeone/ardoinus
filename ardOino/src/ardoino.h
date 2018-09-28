@@ -53,20 +53,20 @@ unsigned micros();
 
 class SerialType {
 public:
-  void begin(unsigned long);
+  void begin(unsigned long) {}
   template <typename T>
-  void print(const T&);
+  void print(const T&) {}
   template <typename T>
-  void println(const T&);
-  void print(const char*);
-  void println(const char*);
+  void println(const T&) {}
+  void print(const char*) {}
+  void println(const char*) {}
 
   // TODO need many more.
 
 };
 
-extern SerialType &Serial;
-extern SerialType &Serial1;
+extern SerialType Serial;
+extern SerialType Serial1;
 #endif
 
 namespace ardo {
@@ -407,7 +407,9 @@ const InputPin<P, M, Base> InputPin<P, M, Base>::pin;
 /**
  * Debounced input type.
  */
-template <unsigned long debounceTime, typename w_TimeType, typename InputPin>
+template <typename InputPin, 
+  unsigned long debounceTime = 300, 
+  typename w_TimeType= ardo::CoreIF::MicrosTime>
 class DebounceInput : public InputPin {
 protected:
   DebounceInput() {}
@@ -468,13 +470,13 @@ private:
   static DebounceState debounceState;
 };
 
-template <unsigned long debounceTime, typename w_TimeType, typename InputPin>
-typename DebounceInput<debounceTime, w_TimeType, InputPin>::DebounceState 
-    DebounceInput<debounceTime, w_TimeType, InputPin>::debounceState;
+template <typename InputPin, unsigned long debounceTime, typename w_TimeType>
+typename DebounceInput<InputPin, debounceTime, w_TimeType>::DebounceState
+    DebounceInput<InputPin, debounceTime, w_TimeType>::debounceState;
 
-template <unsigned long debounceTime, typename w_TimeType, typename InputPin>
-const DebounceInput<debounceTime, w_TimeType, InputPin>
-    DebounceInput<debounceTime, w_TimeType, InputPin>::pin;
+template <typename InputPin, unsigned long debounceTime, typename w_TimeType>
+const DebounceInput<InputPin, debounceTime, w_TimeType>
+    DebounceInput<InputPin, debounceTime, w_TimeType>::pin;
 
 /**
  * Serial port support.

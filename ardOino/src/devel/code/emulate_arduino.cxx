@@ -22,3 +22,7 @@ unsigned millis() {
 unsigned micros() {
   return 1000;
 }
+
+
+SerialType Serial;
+SerialType Serial1;

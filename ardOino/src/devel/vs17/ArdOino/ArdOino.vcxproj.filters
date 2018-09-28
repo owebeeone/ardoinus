@@ -102,6 +102,9 @@
     <ClInclude Include="..\..\..\tests\type_for_size_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\setl_interactive_scaling.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\setl_system.cpp">

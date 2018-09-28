@@ -4,6 +4,9 @@
 
 #include "ardoino.h"
 
+#include "setl_time.h"
+#include "setl_interactive_scaling.h"
+
 namespace quad {
 
 /**
@@ -18,7 +21,7 @@ public:
    */
   long iterate() {
     long change = determineChange();
-    currentPosition += change;
+    currentPosition += scaleValue(change);
     return change;
   }
 
@@ -27,6 +30,10 @@ public:
   }
 
   virtual State getInput() = 0;
+
+  virtual long scaleValue(long change) {
+    return change;
+  }
 
 protected:
 
@@ -126,10 +133,43 @@ protected:
 };
 
 /**
+ * The scaler you have when you don't want a scaler.
+ */
+class NUllScaler {
+public:
+  template <typename T>
+  static T scale(const T& value) {
+    return value;
+  }
+};
+
+/**
+ * A scaler for interactivity.
+ */
+using NonlinerarScaler = setl::RelativeInteractiveScaler<
+    long, float, ardo::CoreIF::MicrosTime>;
+
+class InteractiveScaler : public NonlinerarScaler {
+public:
+
+  InteractiveScaler()
+    : NonlinerarScaler{ 1.0f, setl::Period<float>(100), setl::Period<float>(500) }
+  {}
+
+  long scale(long value) {
+    return scaleForNow(value, ardo::CoreIF::now());
+  }
+};
+
+/**
  * The quadrature encoder class. This uses ardo::InputPin Creates 2 bits from 
  * two given pins.
  */
-template <typename w_PinA, typename w_PinB, typename Base = QuadEncoderBase>
+template <
+  typename w_PinA, 
+  typename w_PinB, 
+  typename ScalerType = NUllScaler,
+  typename Base = QuadEncoderBase>
 class QuadEncoder : public Base {
 public:
   using PinA = w_PinA;
@@ -139,10 +179,18 @@ public:
   /**
    * Return the input values as the first 2 bits in the return value.
    */
-  virtual State getInput() {
+  State getInput() override {
     return (PinA::get() ? State(0u) : State(1u)) | (PinB::get() ? State(0u) : State(2u));
   }
+
+
+  long scaleValue(long change) override {
+    return scaler.scale(change);
+  }
+
+  ScalerType scaler;
 };
+
 
 template <typename w_QuadEncoderType>
 class QuadEncoderModule : public ardo::ModuleBase<
@@ -150,8 +198,8 @@ class QuadEncoderModule : public ardo::ModuleBase<
 public:
   using QuadEncoderType = w_QuadEncoderType;
 
-  static void loop() {
-    quadEncoder::iterate();
+  static void runLoop() {
+    quadEncoder.iterate();
   }
 
   static QuadEncoderType quadEncoder;

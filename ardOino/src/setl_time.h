@@ -104,7 +104,7 @@ public:
   // Unit conversion constructor.
   template <typename U, TimeUnit u_units>
   explicit Period(const Period<U, u_units>& value)
-    : value{ ConvertTime<u_units, UNITS>::convert(value.get()) }
+    : value{ static_cast<type>(ConvertTime<u_units, UNITS>::convert(value.get())) }
   {}
 
   // Convert to other units shortcut.
