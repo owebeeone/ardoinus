@@ -119,5 +119,8 @@
     <ClCompile Include="..\..\code\emulate_arduino.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\code\pwe_test_module.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

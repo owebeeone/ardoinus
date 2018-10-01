@@ -42,7 +42,7 @@ public:
     }
 
     // De-linearize the value.
-    auto factor = since.get() / min_to_max_period.get();
+    auto factor = 1 - since.get() / min_to_max_period.get();
 
     avgFactor = avgFactorRuningScale * factor + (1 - avgFactorRuningScale) * avgFactor;
 

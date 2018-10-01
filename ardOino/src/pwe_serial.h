@@ -18,7 +18,7 @@
 namespace setl {
 
 // Data type used for period.
-using pwe_type = std::uint32_t;
+using xpwe_type = std::uint32_t;
 const TimeUnit PWE_UNIT = TimeUnit::MICROS;
 
 /**
@@ -106,9 +106,9 @@ private:
 /**
  * Parameters that describe the waveform.
  */
-template <TimeUnit units = PWE_UNIT>
+template <typename w_type, TimeUnit units = PWE_UNIT>
 struct PweWaveformParams {
-  using PeriodType = Period<pwe_type, units>;
+  using PeriodType = Period<w_type, units>;
   PeriodType settle_period;
   PeriodType stop_period;
   PeriodType bit_on_period;
@@ -124,18 +124,19 @@ struct PweWaveformParams {
  */
 // This should optimize to statically initialized data in the rdata segement.
 template <
-  pwe_type settle_period,
-  pwe_type stop_period,
-  pwe_type bit_period,
+  typename w_type,
+  w_type settle_period,
+  w_type stop_period,
+  w_type bit_period,
   TimeUnit units = PWE_UNIT>
-const PweWaveformParams<units> PweWaveformParams1to3 = {
+const PweWaveformParams<w_type, units> PweWaveformParams1to3 = {
   period<units>(settle_period),
   period<units>(stop_period),
-  period<units>(pwe_type(bit_period * 0.25)),
-  period<units>(pwe_type(bit_period * 0.75)),
-  period<units>(pwe_type(bit_period / 2)),
-  period<units>(pwe_type(bit_period * 0.8)),
-  period<units>(pwe_type(bit_period * 1.2)) };
+  period<units>(w_type(bit_period * 0.25)),
+  period<units>(w_type(bit_period * 0.75)),
+  period<units>(w_type(bit_period / 2)),
+  period<units>(w_type(bit_period * 0.8)),
+  period<units>(w_type(bit_period * 1.2)) };
 
 /**
  * Decodes a sequence of timed on/off signals and provides a decoded value.
@@ -144,6 +145,7 @@ template <
   typename CollectorType,     /// The assembler of bit into data.
   bool inverted = false,      /// The sense of the signal.
   bool long_on_is_1 = false,  /// Long on period is a 1 (0 if false).
+  typename w_type = xpwe_type,/// The time value type.
   TimeUnit units = PWE_UNIT>  /// Units used.
 class PweDecoder {
 private:
@@ -157,12 +159,12 @@ private:
 
 public:
 
-  using PeriodType = Period<pwe_type, units>;
-  using TimeType = Time<pwe_type, units>;
+  using PeriodType = Period<w_type, units>;
+  using TimeType = Time<w_type, units>;
   static const std::uint16_t size_bits = CollectorType::size_bits;
   using value_type = typename CollectorType::value_type;
 
-  PweDecoder(const PweWaveformParams<units>& params)
+  PweDecoder(const PweWaveformParams<w_type, units>& params)
     : params(params)
   {}
 
@@ -222,14 +224,14 @@ public:
         auto period = time - time_state_entered;
 
         // Period for the bit has to be within margin.
-        if (period < params.bit_min_period) {
-          transition(State::STOP, time);
-          signal_error = true;
-        } else if (period > params.bit_max_period) {
+         if (period > params.bit_max_period) {
           transition(State::STOP, time);
           signal_error = true;
         } else if (level) {
-          if (bit_number >= size_bits) {
+          if (period < params.bit_min_period) {
+            transition(State::STOP, time);
+            signal_error = true;
+          } else if (bit_number >= size_bits) {
             transition(State::STOP, time);
           } else {
             transition(State::ON, time);
@@ -313,6 +315,10 @@ public:
     clearSignalError();
   }
 
+  std::uint16_t get_bit_number() {
+    return bit_number;
+  }
+
 private:
 
   void transition(State nextState, const TimeType& time) {
@@ -321,7 +327,7 @@ private:
   }
 
   // The encoder parameters used for this.
-  const PweWaveformParams<units>& params;
+  const PweWaveformParams<w_type, units>& params;
 
   State state = State::NO_SAMPLES;
   std::uint16_t bit_number = 0;
@@ -335,6 +341,7 @@ template <
   typename CollectorType,     /// The assembler of bit into data.
   bool inverted = false,      /// The sense of the signal.
   bool long_on_is_1 = false,  /// Long on period is a 1 (0 if false).
+  typename w_type = xpwe_type,/// The time value type.
   TimeUnit units = PWE_UNIT>  /// Units used.
 class PweEncoder {
 private:
@@ -349,8 +356,8 @@ private:
   };
 public:
 
-  using PeriodType = Period<pwe_type, units>;
-  using TimeType = Time<pwe_type, units>;
+  using PeriodType = Period<w_type, units>;
+  using TimeType = Time<w_type, units>;
   static const std::uint16_t size_bits = CollectorType::size_bits;
   using value_type = typename CollectorType::value_type;
   enum {
@@ -365,7 +372,7 @@ public:
     TimeType time_next_poll; 
   };
 
-  PweEncoder(const PweWaveformParams<units>& params)
+  PweEncoder(const PweWaveformParams<w_type, units>& params)
     : params(params)
   {}
 
@@ -491,7 +498,7 @@ private:
   }
 
   bool hasPassedMidBitPoint(const TimeType& time) {
-    const auto mid_value = PeriodType(~(pwe_type(1) << (sizeof(pwe_type) * 8 - 1)));
+    const auto mid_value = PeriodType(~(w_type(1) << (sizeof(w_type) * 8 - 1)));
     return (time - next_transition_time) < mid_value;
   }
 
@@ -502,7 +509,7 @@ private:
   CollectorType collector;
 
   // The encoder parameters used for this.
-  const PweWaveformParams<units>& params;
+  const PweWaveformParams<w_type, units>& params;
 };
 
 } // namespace pwm_serial

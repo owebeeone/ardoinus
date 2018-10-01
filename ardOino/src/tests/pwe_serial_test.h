@@ -148,7 +148,7 @@ setl::PweBitCollectorArray<char, 2> array_2s;
 #endif
 
      void do_transfer(const EncoderT::value_type& value) {
-       const auto& params = setl::PweWaveformParams1to3<1000, 1000, 100>;
+       const auto& params = setl::PweWaveformParams1to3<TimeType::type, 1000, 1000, 100>;
 
        // Decoder ignores everything for at least a stop period.
        decoder.signalChanged(jitterTime(), false);
@@ -196,8 +196,8 @@ setl::PweBitCollectorArray<char, 2> array_2s;
      PollResult prev_result;
      TimeType clock;
 
-     DecoderT decoder{ setl::PweWaveformParams1to3<1000, 1000, 100> };
-     EncoderT encoder{ setl::PweWaveformParams1to3<1000, 1000, 100> };
+     DecoderT decoder{ setl::PweWaveformParams1to3<TimeType::type, 1000, 1000, 100> };
+     EncoderT encoder{ setl::PweWaveformParams1to3<TimeType::type, 1000, 1000, 100> };
    };
 
    bool run() override {

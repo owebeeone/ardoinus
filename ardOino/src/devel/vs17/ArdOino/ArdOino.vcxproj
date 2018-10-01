@@ -170,6 +170,7 @@
     <ClCompile Include="..\..\code\ardoino_test.cxx" />
     <ClCompile Include="..\..\code\blink_test.cxx" />
     <ClCompile Include="..\..\code\emulate_arduino.cxx" />
+    <ClCompile Include="..\..\code\pwe_test_module.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
