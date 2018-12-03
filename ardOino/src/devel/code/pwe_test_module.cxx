@@ -96,7 +96,7 @@ bool MainModule::printedStatus;
 
 // Define the main app with the serial module and a timer module.
 using mainApp = ardo::Application<
-  SerialModule, ReceiverModule, TransmitterModule, SerialModule, MainModule>;
+  SerialModule, ReceiverModule, TransmitterModule, MainModule>;
 
 void setupPweTest() {
   mainApp::runSetup();

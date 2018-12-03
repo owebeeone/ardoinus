@@ -29,6 +29,10 @@ public:
     return currentPosition;
   }
 
+  void setCurrentPosition(long position) {
+    currentPosition = position;
+  }
+
   virtual State getInput() = 0;
 
   virtual long scaleValue(long change) {

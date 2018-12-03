@@ -230,6 +230,18 @@ public:
   virtual unsigned pinNo() const = 0;
 };
 
+/** A base class for input pins where a base class is needed. */
+class InputPinIF {
+public:
+  virtual ~InputPinIF() {}
+  virtual bool getPin() const = 0;
+  virtual unsigned pinNo() const = 0;
+};
+
+/** A base class for pins that support both input and output where a base class is needed. */
+class InputOutputPinIF : public OutputPinIF, public InputPinIF {
+};
+
 /**
  * A digital output.
  */
@@ -305,6 +317,16 @@ public:
     set(level);
   }
 
+  // Open drain can be read as well.
+  static bool get() {
+    return CoreIF::digitalRead(PIN);
+  }
+
+  // May override base class.
+  bool getPin() const {
+    return get();
+  }
+
   // May override base class.
   unsigned pinNo() const {
     return PIN;
@@ -312,8 +334,8 @@ public:
 };
 
 /**
-* A digital output for open collector/drain pulled high when active.
-*/
+ * A digital output for open collector/drain pulled low when active.
+ */
 template <unsigned P, typename Base>
 class OutputPin<P, CoreIF::OpenDrainHighOutput, Base>
   : public Base, public setl::not_copyable {
@@ -337,12 +359,22 @@ public:
   static void set(bool level) {
     // Switching between input (no pullup mode) and output (drive low) mode
     // emulates an open collector output.
-    CoreIF::pinMode(PIN, level ? CoreIF::Output : CoreIF::Untied);
+    CoreIF::pinMode(PIN, level ? CoreIF::Output: CoreIF::Untied);
   }
 
   // Overrides OutputPinIF base class interface.
   void setPin(bool level) const {
     set(level);
+  }
+
+  // Open drain can be read as well.
+  static bool get() {
+    return CoreIF::digitalRead(PIN);
+  }
+
+  // May override base class.
+  bool getPin() const {
+    return get();
   }
 
   // May override base class.
@@ -354,14 +386,6 @@ public:
 template <unsigned P, typename Base>
 const OutputPin<P, CoreIF::OpenDrainLowOutput, Base> 
     OutputPin<P, CoreIF::OpenDrainLowOutput, Base>::pin;
-
-/** A base class for input pins where a base class is needed. */
-class InputPinIF {
-public:
-  virtual ~InputPinIF() {}
-  virtual bool getPin() const = 0;
-  virtual unsigned pinNo() const = 0;
-};
 
 /**
  * The basic digital input pin.
@@ -387,7 +411,7 @@ public:
   inline static void runLoop() {}
 
   static bool get() {
-    return CoreIF::digitalRead(PIN) != LOW;
+    return CoreIF::digitalRead(PIN);
   }
 
   // May override base class.

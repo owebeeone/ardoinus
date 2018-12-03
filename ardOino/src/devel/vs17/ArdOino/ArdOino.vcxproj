@@ -89,6 +89,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -99,6 +100,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,6 +113,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -127,6 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -135,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\ardoino.h" />
+    <ClInclude Include="..\..\..\ardo_sequencer.h" />
     <ClInclude Include="..\..\..\ardo_time_poller.h" />
     <ClInclude Include="..\..\..\assert_that.h" />
     <ClInclude Include="..\..\..\circular_buffer.h" />
@@ -170,6 +175,7 @@
     <ClCompile Include="..\..\code\ardoino_test.cxx" />
     <ClCompile Include="..\..\code\blink_test.cxx" />
     <ClCompile Include="..\..\code\emulate_arduino.cxx" />
+    <ClCompile Include="..\..\code\gammil_repeater.cxx" />
     <ClCompile Include="..\..\code\pwe_test_module.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -93,9 +93,6 @@
     <ClInclude Include="..\..\..\tests\setl_templ_utils_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\tests\setl_time_test.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\tests\setl_time_unit_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -105,6 +102,10 @@
     <ClInclude Include="..\..\..\setl_interactive_scaling.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\ardo_sequencer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\tests\setl_time_test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\setl_system.cpp">
@@ -120,6 +121,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\code\pwe_test_module.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\gammil_repeater.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

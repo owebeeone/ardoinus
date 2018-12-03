@@ -1,5 +1,7 @@
 //
 
+#include "setl_support.h"
+
 #if HAS_STDIOSTREAM
 #include <iostream>
 #define std stdx
