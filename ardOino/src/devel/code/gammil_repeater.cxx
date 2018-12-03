@@ -25,15 +25,31 @@ enum PinAllocation : unsigned {
 using GRTimeType = ardo::CoreIF::MillisTime;
 using GRPeriodType = GRTimeType::period_type;
 
+const bool STOP_BUTTON_STOPS = KEYPAD_SINGLE == 2;
 static const GRPeriodType SETTLE_PERIOD{ 3 };  // We wait 3ms before collission detection.
 static const GRPeriodType LONG_PRESS_TIME{ 1000 };  // Long press time.
 static const GRPeriodType LONG_RECOVERY_TIME{ 1000 };  // Time to wait to detect stop.
 
-const long MAX_PERIOD = 3000;
-const long MIN_PERIOD = 200;
+const long MAX_PERIOD_MS = 3000;
+const long MIN_PERIOD_MS = 200;
+const long LOW_PERIOD_MS = 100;
 static GRPeriodType HIGH_PERIOD{ 500 };  // Repeater off time
-static const GRPeriodType LOW_PERIOD{ 100 };  // Repeater on time
+static const GRPeriodType LOW_PERIOD{ LOW_PERIOD_MS };  // Repeater on time
 
+const float MIN_FREQ = 1.0 / (LOW_PERIOD_MS + MAX_PERIOD_MS);
+const float MAX_FREQ = 1.0 / (LOW_PERIOD_MS + MIN_PERIOD_MS);
+
+const long MAX_ENCODER_VAL = 100;
+
+const float ENCODER_SCALE = (MAX_FREQ - MIN_FREQ) / MAX_ENCODER_VAL;
+
+long toHighPeriodFromEncoder(long encoderVal) {
+  return 1.0 / (MIN_FREQ + encoderVal * ENCODER_SCALE);
+}
+
+long toEncoderFromHighPeriod(long high_period) {
+  return (1.0 / high_period - MIN_FREQ) / ENCODER_SCALE;
+}
 
 using SerialPort = ardo::SerialIO<115200>;
 using SerialModule = ardo::ModuleBase<ardo::Parameters<SerialPort>>;
@@ -48,21 +64,22 @@ class FrequencyAdjuster : public ardo::ModuleBase<ardo::Parameters<>> {
 public:
 
   static void runSetup() {
-    QEncoderModule::quadEncoder.setCurrentPosition(HIGH_PERIOD.get());
+    QEncoderModule::quadEncoder.setCurrentPosition(
+      toEncoderFromHighPeriod(HIGH_PERIOD.get()));
   }
 
   static void runLoop() {
     auto currentPos = QEncoderModule::quadEncoder.getCurrentPosition();
-    if (currentPos > MAX_PERIOD) {
-      currentPos = MAX_PERIOD;
+    if (currentPos > MAX_ENCODER_VAL) {
+      currentPos = MAX_ENCODER_VAL;
       QEncoderModule::quadEncoder.setCurrentPosition(currentPos);
     }
-    if (currentPos < MIN_PERIOD) {
-      currentPos = MIN_PERIOD;
+    if (currentPos < 0) {
+      currentPos = 0;
       QEncoderModule::quadEncoder.setCurrentPosition(currentPos);
     }
 
-    HIGH_PERIOD = GRPeriodType(currentPos);
+    HIGH_PERIOD = GRPeriodType(toHighPeriodFromEncoder(currentPos));
   }
 
 };
@@ -356,7 +373,8 @@ private:
         break;
       }
       case RepeaterState::RunningHigh: {
-        if (StopButton::instance.getState() != StopButton::State::UNASSISTED_HIGH
+        if (
+          (STOP_BUTTON_STOPS && StopButton::instance.getState() != StopButton::State::UNASSISTED_HIGH)
           || Button::instance.getState() == Button::State::ASSISTED_COLLISION) {
           setState(RepeaterState::Off);
           break;
@@ -368,7 +386,7 @@ private:
         break;
       }
       case RepeaterState::RunningLow: {
-        if (StopButton::instance.getState() != StopButton::State::UNASSISTED_HIGH) {
+        if (STOP_BUTTON_STOPS && StopButton::instance.getState() != StopButton::State::UNASSISTED_HIGH) {
           setState(RepeaterState::Off);
           break;
         }
