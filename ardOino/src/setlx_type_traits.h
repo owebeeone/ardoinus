@@ -72,6 +72,11 @@ struct remove_cv {
   using type = typename remove_volatile<typename remove_const<T>::type>::type;
 };
 
+// This needs compiler support so we just make it true.
+template< class T >
+struct is_trivially_copyable : true_type {
+};
+
 } // namespace
 
 #endif

@@ -89,6 +89,31 @@ public:
  * Examples of other possible resources would be timers, interrupts, network ports
  * nvram.
  */
+
+// Range claims allow the use of a resource claim than spans a linear
+// range of integers. An example where this is particularly useful for claiming 
+// ranges of EEPROM addresses.
+
+template <typename T, int Begin, int End>
+struct range_claim {
+  static_assert(End > Begin, "Incorrect range, End must be strictly after Begin.");
+  static constexpr bool is_good = End > Begin;
+};
+
+template<typename T, typename U>
+struct has_conflict : std::false_type {};
+
+template<typename T>
+struct has_conflict<T, T> : std::true_type {};
+
+template<typename T, int Begin1, int End1, int Begin2, int End2>
+struct has_conflict<range_claim<T, Begin1, End1>, range_claim<T, Begin2, End2>> {
+  static constexpr bool value = (End1 > Begin2) && (End2 > Begin1)
+    && range_claim<T, Begin1, End1>::is_good
+    && range_claim<T, Begin2, End2>::is_good;
+};
+
+
 // TODO - Currently the claim conflict is simply the existance of the type, however
 // handling a range may be more desirable. For example, if multiple modules need
 // nvram allocations, it would be preferable if there was a range available so each
@@ -100,7 +125,7 @@ public:
   using Scanner = setl::For<Op, VL, R...>;
 
   template <typename S>
-  using has_resource = Scanner<setl::Operator<std::is_same, setl::OrEval>, S>;
+  using has_resource = Scanner<setl::Operator<has_conflict, setl::OrEval>, S>;
 };
 
 /**
