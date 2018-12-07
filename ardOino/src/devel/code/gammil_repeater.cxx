@@ -9,6 +9,7 @@
 
 enum PinAllocation : unsigned {
   LEDS_PIN = 9,
+  LEDS_COUNT = 6,
 
   KEYPAD_SINGLE = 2,
   KEYPAD_STOP = 3,
@@ -29,9 +30,10 @@ const bool STOP_BUTTON_STOPS = KEYPAD_SINGLE == 2;
 static const GRPeriodType SETTLE_PERIOD{ 3 };  // We wait 3ms before collission detection.
 static const GRPeriodType LONG_PRESS_TIME{ 1000 };  // Long press time.
 static const GRPeriodType LONG_RECOVERY_TIME{ 1000 };  // Time to wait to detect stop.
+static const GRPeriodType FREQ_DISPLAY_PERIOD{ 800 };  // Time to wait to detect stop.
 
-const long MAX_PERIOD_MS = 3000;
-const long MIN_PERIOD_MS = 200;
+const long MAX_PERIOD_MS = 4000;
+const long MIN_PERIOD_MS = 100;
 const long LOW_PERIOD_MS = 100;
 static GRPeriodType HIGH_PERIOD{ 500 };  // Repeater off time
 static const GRPeriodType LOW_PERIOD{ LOW_PERIOD_MS };  // Repeater on time
@@ -39,7 +41,7 @@ static const GRPeriodType LOW_PERIOD{ LOW_PERIOD_MS };  // Repeater on time
 const float MIN_FREQ = 1.0 / (LOW_PERIOD_MS + MAX_PERIOD_MS);
 const float MAX_FREQ = 1.0 / (LOW_PERIOD_MS + MIN_PERIOD_MS);
 
-const long MAX_ENCODER_VAL = 100;
+const long MAX_ENCODER_VAL = 200;
 
 const float ENCODER_SCALE = (MAX_FREQ - MIN_FREQ) / MAX_ENCODER_VAL;
 
@@ -69,20 +71,71 @@ public:
   }
 
   static void runLoop() {
+    instance.instanceRunLoop();
+  }
+
+  void instanceRunLoop() {
     auto currentPos = QEncoderModule::quadEncoder.getCurrentPosition();
+    if (last_position != currentPos) {
+      timeChanged = ardo::CoreIF::now();
+      has_changed = true;
+    }
+
     if (currentPos > MAX_ENCODER_VAL) {
       currentPos = MAX_ENCODER_VAL;
       QEncoderModule::quadEncoder.setCurrentPosition(currentPos);
     }
+
     if (currentPos < 0) {
       currentPos = 0;
       QEncoderModule::quadEncoder.setCurrentPosition(currentPos);
     }
 
+    last_position = currentPos;
+
     HIGH_PERIOD = GRPeriodType(toHighPeriodFromEncoder(currentPos));
   }
 
+  static bool isChangeRecent() {
+
+    if (!instance.has_changed) {
+      return false;
+    }
+
+    GRTimeType now = ardo::CoreIF::now();
+
+    if (now - instance.timeChanged > FREQ_DISPLAY_PERIOD) {
+      instance.has_changed = false;
+      return false;
+    }
+
+    return true;
+  }
+
+  static double getLedQuotient(unsigned index, unsigned maxLeds) {
+    auto ledSize = (1.0 * MAX_ENCODER_VAL) / maxLeds;
+    auto indexStart = ledSize * index;
+    auto indexEnd = ledSize * (index + 1);
+    auto currentPos = 1.0 * QEncoderModule::quadEncoder.getCurrentPosition();
+    if (indexEnd < currentPos) {
+      return 1.0;
+    }
+    if (indexStart > currentPos) {
+      return 0.0;
+    }
+    return (currentPos - indexStart) / ledSize;
+  }
+
+private:
+  using PositionType = decltype(QEncoderModule::quadEncoder.getCurrentPosition());
+  PositionType last_position;
+  bool has_changed = true;
+  GRTimeType timeChanged = ardo::CoreIF::now();
+
+  static FrequencyAdjuster instance;
 };
+
+FrequencyAdjuster FrequencyAdjuster::instance;
 
 template <
   unsigned w_count,
@@ -145,7 +198,7 @@ template <
 LedStrip<w_count, w_LedPin, w_Type, w_colorOrder, w_brightness>
   LedStrip<w_count, w_LedPin, w_Type, w_colorOrder, w_brightness>::instance;
 
-using ButtonLeds = LedStrip<6, ardo::OutputPin<LEDS_PIN>, WS2812B, RGB, 64>;
+using ButtonLeds = LedStrip<LEDS_COUNT, ardo::OutputPin<LEDS_PIN>, WS2812B, RGB, 64>;
 
 /**
  * Button pad button handler interface.
@@ -435,6 +488,10 @@ Repeater<w_Button, w_StopButton> Repeater<w_Button, w_StopButton>::instance;
 // Repeater only happens on Single.
 using RepeaterKeyPadSingle = Repeater<KeyPadSingle, KeyPadStop>;
 
+
+const CRGB ADJUSTER_LOW_COLOUR{ 0x008000 };
+const CRGB ADJUSTER_HIGH_COLOUR{ 0x800000 };
+
 /**
  * Translate state to button colour.
  */
@@ -448,6 +505,9 @@ public:
   }
 
   static CRGB colorForButton() {
+    if (FrequencyAdjuster::isChangeRecent()) {
+      return colourForAdjuster();
+    }
     switch (Button::instance.getState()) {
       case PadButton::State::UNASSISTED_HIGH: return 0x000010;
       case PadButton::State::UNASSISTED_LOW: {
@@ -462,6 +522,19 @@ public:
     }
     return CRGB::Red;
   }
+
+  static CRGB colourForAdjuster() {
+    if (Button::instance.getState() == PadButton::State::ASSISTED_LOW) {
+      return 0x0000ff;
+    }
+    auto colorScale = FrequencyAdjuster::getLedQuotient(Button::instance.index, LEDS_COUNT);
+    CRGB low = ADJUSTER_LOW_COLOUR;
+    CRGB high = ADJUSTER_HIGH_COLOUR;
+
+    return low.nscale8(uint8_t(255 * colorScale))
+        + high.nscale8(uint8_t(255 * (1 - colorScale)));
+  }
+
 };
 
 using LedTranslatorKeyPadSingle = LedTranslator<KeyPadSingle>;
