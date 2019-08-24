@@ -9,7 +9,6 @@
 
 enum PinAllocation : unsigned {
   LEDS_PIN = 9,
-  LEDS_COUNT = 6,
 
   KEYPAD_SINGLE = 2,
   KEYPAD_STOP = 3,
@@ -21,6 +20,8 @@ enum PinAllocation : unsigned {
   ROTARY_ENCODER_S1 = 10,
   ROTARY_ENCODER_S2 = 11,
   ROTARY_ENCODER_BUTTON = 12,
+
+  LEDS_COUNT = 6,
 };
 
 using GRTimeType = ardo::CoreIF::MillisTime;

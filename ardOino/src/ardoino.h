@@ -114,10 +114,8 @@ struct has_conflict<range_claim<T, Begin1, End1>, range_claim<T, Begin2, End2>> 
 };
 
 
-// TODO - Currently the claim conflict is simply the existance of the type, however
-// handling a range may be more desirable. For example, if multiple modules need
-// nvram allocations, it would be preferable if there was a range available so each
-// module is able to claim a slice of the address space.
+// R is the set of resourced claimed. A resource may be any type or for a range 
+// of resources can be a range_claim.
 template <typename... R>
 class ResourceClaim {
 public:
@@ -265,6 +263,26 @@ public:
 
 /** A base class for pins that support both input and output where a base class is needed. */
 class InputOutputPinIF : public OutputPinIF, public InputPinIF {
+};
+
+/**
+ * An externally managed pin. This only provides resource claims. It expects that
+ * an external library will manage the pin setup. No access to the GPIO functions
+ * are provided.
+ */
+template <unsigned P>
+class ExternalPin : public NullPinBase, public setl::not_copyable {
+  private:
+    ExternalPin() = delete;  // No instance provided.
+  public:
+    static constexpr unsigned PIN = P;
+
+    // Claim resources.
+    using Claims = ResourceClaim<GPIOResource<PIN>>;
+
+    inline static void runSetup() {}
+
+    inline static void runLoop() {}
 };
 
 /**

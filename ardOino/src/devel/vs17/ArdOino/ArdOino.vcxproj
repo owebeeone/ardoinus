@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\ardoino.h" />
+    <ClInclude Include="..\..\..\ardo_eeprom.h" />
     <ClInclude Include="..\..\..\ardo_sequencer.h" />
     <ClInclude Include="..\..\..\ardo_time_poller.h" />
     <ClInclude Include="..\..\..\assert_that.h" />
