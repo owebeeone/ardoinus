@@ -138,6 +138,17 @@ private:
 
 FrequencyAdjuster FrequencyAdjuster::instance;
 
+class FastLEDParameter {
+private:
+  FastLEDParameter() = delete;
+public:
+  using Claims = ardo::ResourceClaim<decltype(FastLED)>;
+
+  inline static void runSetup() {}
+  inline static void runLoop() {}
+};
+
+
 template <
   unsigned w_count,
   typename w_LedPin, 
@@ -145,7 +156,7 @@ template <
   EOrder w_colorOrder,
   uint8_t w_brightness
   >
-class LedStrip : public ardo::ModuleBase<ardo::Parameters<w_LedPin>> {
+class LedStrip : public ardo::ModuleBase<ardo::Parameters<w_LedPin, FastLEDParameter>> {
 public:
   constexpr static unsigned COUNT = w_count;
   constexpr static EOrder COLOR_ORDER = w_colorOrder;
@@ -199,7 +210,7 @@ template <
 LedStrip<w_count, w_LedPin, w_Type, w_colorOrder, w_brightness>
   LedStrip<w_count, w_LedPin, w_Type, w_colorOrder, w_brightness>::instance;
 
-using ButtonLeds = LedStrip<LEDS_COUNT, ardo::OutputPin<LEDS_PIN>, WS2812B, RGB, 64>;
+using ButtonLeds = LedStrip<LEDS_COUNT, ardo::ExternalPin<LEDS_PIN>, WS2812B, RGB, 64>;
 
 /**
  * Button pad button handler interface.
