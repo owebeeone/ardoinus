@@ -16,7 +16,7 @@ public:
   using value_type = T;
   static_assert(std::is_trivially_copyable(T), "Type is not compatible with EEPROM storage");
 
-  using Claims = ResourceClaim<range_claim<EepromResource, w_Addr, w_Addr + sizeof(T)>;
+  using Claims = ResourceClaim<range_claim<EepromResource, w_Addr, w_Addr + sizeof(T)>>;
 
   /**
    * Read a value from the EEPROM.

@@ -206,23 +206,23 @@ template <typename S, typename... T>
 class Runner<S, T...> {
 public:
   inline static void runParamsSetup() {
-    S::paramsSetup();
     Runner<T...>::runParamsSetup();
+    S::paramsSetup();
   }
 
   inline static void runParamsLoop() {
-    S::paramsLoop();
     Runner<T...>::runParamsLoop();
+    S::paramsLoop();
   }
 
   inline static void runSetup() {
-    S::runSetup();
     Runner<T...>::runSetup();
+    S::runSetup();
   }
 
   inline static void runLoop() {
-    S::runLoop();
     Runner<T...>::runLoop();
+    S::runLoop();
   }
 };
 
@@ -628,7 +628,7 @@ public:
 };
 
 /**
- * Parameters.
+ * Parameters captures a set of module parameters.
  */
 template <typename... P>
 class Parameters {
@@ -637,7 +637,7 @@ public:
   using Scanner = setl::For<Op, VL, P...>;
 
   template <unsigned index>
-  using Param = ParamByIndex<index, P...>;
+  using Param = typename ParamByIndex<index, P...>::param;
 
   const unsigned size = Scanner <
       setl::Operator<setl::ConstIntegerAdaptor<unsigned, 1>::template Constant, 
@@ -677,11 +677,56 @@ struct ParamsParamsConflictTest {
 }  // namespace nfp.
 
 /**
- * Module.
+ * Container for dependent modules.
  */
-template <typename w_Params>
+template <typename... T>
+using DependentModules = setl::TypeArgs<T...>;
+
+/**
+ * Evaluate the closure of the module dependency graph. The result is
+ * a setl::TypeArgs that contains all the closure modules. Any repeated nodes
+ * in the given
+ */
+namespace nfp {
+  template <typename Contained, typename...w_Ms>
+  struct ModuleClosureVa;
+
+  template <typename Contained, typename...w_Ms>
+  using ModuleClosureVaTemplate = ModuleClosureVa<Contained, w_Ms...>;
+
+  template <typename Contained>
+  struct ModuleClosureVa<Contained> {
+    using type = Contained;
+  };
+
+  template <typename Contained, typename T, typename...w_Ms>
+  class ModuleClosureVa<Contained, T, w_Ms...> {
+    using catenated_deps = typename T::Deps::template cat<w_Ms...>;
+    using rest = setl::RemoveAll<catenated_deps, Contained>;
+  public:
+    using type = typename std::conditional <
+      Contained::template eval_arg1<T, setl::Contains>::type::value,
+      typename ModuleClosureVa<Contained, w_Ms...>::type,
+      typename rest::template eval_arg1<
+      typename Contained::template cat<T>, ModuleClosureVaTemplate>::type>::type;
+  };
+} // namespace nfp
+
+template <typename...w_Ms>
+using ModuleClosure = typename nfp::ModuleClosureVa<setl::TypeArgs<>, w_Ms...>::type;
+
+/**
+ * Module base class.
+ */
+template <
+  typename w_Params = Parameters<>,
+  typename w_Deps = DependentModules<>>
 class ModuleBase {
 public:
+  // Dependent modules will automatically be added to the application modules
+  // if not already in the application modules. Modules added here will not 
+  // conflict with other modules adding modules.
+  using Deps = w_Deps;
   using Params = w_Params;
 
   static void paramsSetup() {
@@ -709,13 +754,15 @@ struct ModuleConflictTest
 template <typename... Modules> 
 class Application {
 public:
-  using ModuleRunner = ardo::Runner<Modules...>;
+  // Find the closure of all dependent modules.
+  using AllModules = ModuleClosure<Modules...>;
+
+  using ModuleRunner = typename AllModules::template eval<Runner>;
 
   template <typename Op, typename VL>
-  using Scanner = setl::For<Op, VL, Modules...>;
+  using Scanner = typename AllModules::template eval_arg2<Op, VL, setl::For>;
 
-  using AutoScanner = setl::AutoFor<Modules...>;
-
+  using AutoScanner = typename AllModules::template eval<setl::AutoFor>;
 
   static void runSetup() {
     ModuleRunner::runParamsSetup();
