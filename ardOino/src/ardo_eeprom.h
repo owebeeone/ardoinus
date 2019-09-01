@@ -4,6 +4,7 @@
 
 #include "ardoino.h"
 
+#include "setlx_type_traits.h"
 #include "setlx_cstdint.h"
 
 namespace ardo {
@@ -14,7 +15,7 @@ template <typename T, std::int32_t w_Addr>
 class EepromReaderWriter : public setl::not_copyable {
 public:
   using value_type = T;
-  static_assert(std::is_trivially_copyable(T), "Type is not compatible with EEPROM storage");
+  static_assert(std::is_trivially_copyable<T>::value, "Type is not compatible with EEPROM storage");
 
   using Claims = ResourceClaim<range_claim<EepromResource, w_Addr, w_Addr + sizeof(T)>>;
 
@@ -39,6 +40,10 @@ public:
       EEPROM.update(w_Addr + i, &addr);
     }
   }
+
+  inline static void runSetup() {}
+
+  inline static void runLoop() {}
 };
 
 }

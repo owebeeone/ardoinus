@@ -673,6 +673,8 @@ struct ParamsParamsConflictTest {
   using value_type = bool;
   static constexpr value_type value = PSL::template Scanner<
     setl::Operator<ParamParamsConflictTest, setl::OrEval>, PSR>::value;
+
+  static_assert(!value, "Application has resource conflict.");
 };
 }  // namespace nfp.
 
