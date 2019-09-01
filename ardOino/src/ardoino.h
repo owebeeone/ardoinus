@@ -377,7 +377,7 @@ public:
 };
 
 /**
- * A digital output for open collector/drain pulled low when active.
+ * A digital output for open collector/drain pulled high when active.
  */
 template <unsigned P, typename Base>
 class OutputPin<P, CoreIF::OpenDrainHighOutput, Base>
