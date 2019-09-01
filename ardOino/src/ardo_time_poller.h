@@ -70,7 +70,7 @@ template <ardo::CoreIF::MillisTime::type SN, ardo::CoreIF::MillisTime::type... R
 class Sequence<SN, R...> {
 public:
   using type = ardo::CoreIF::MillisTime::type;
-  static const unsigned count = 1 + Sequence<R...>::count;
+  static constexpr unsigned count = 1 + Sequence<R...>::count;
 
   inline static type get(unsigned index) {
     if (index == 0) {
@@ -84,7 +84,7 @@ template <ardo::CoreIF::MillisTime::type L>
 class Sequence<L> {
 public:
   using type = ardo::CoreIF::MillisTime::type;
-  static const unsigned count = 1;
+  static constexpr unsigned count = 1;
 
   inline static type get(unsigned) {
     return L;
