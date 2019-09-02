@@ -55,6 +55,11 @@ public:
     return state;
   }
 
+  void reset() {
+    from = ardo::CoreIF::now();
+    state = StateType{};
+  }
+
 private:
   StateType state = {};
   TimeType from = ardo::CoreIF::now();
@@ -92,10 +97,10 @@ public:
 };
 
 /**
- * Provides a poller that will sequence throgh the given periods.
+ * Provides a poller that will sequence throgh the given periods cyclicly.
  */
 template <typename w_Seq, typename w_TimeType = ardo::CoreIF::MillisTime>
-class TimeSequencePoller {
+class CyclicTimeSequencePoller {
 public:
   using Sequence = w_Seq;
   using TimeType = w_TimeType;
@@ -110,11 +115,43 @@ public:
     return poller.poll(typename TimeType::period_type(Sequence::get(state())));
   }
 
-  unsigned state() {
+  unsigned state() const {
     return poller.getState().get();
   }
 
   TimePoller<setl::CyclicInt<Sequence::count>, TimeType> poller;
+};
+
+/**
+ * Provides a poller that will sequence throgh the given periods once.
+ */
+template <typename w_Seq, typename w_TimeType = ardo::CoreIF::MillisTime>
+class TimerSequencePoller {
+public:
+  using Sequence = w_Seq;
+  using TimeType = w_TimeType;
+
+  void init() {
+    poller.setNow();
+  }
+
+  bool poll() {
+    // Terminate if we reach the end of the sequence.
+    if (Sequence::count <= poller.getState()) {
+      return false;
+    }
+    return poller.poll(typename TimeType::period_type(Sequence::get(state())));
+  }
+
+  unsigned state() const {
+    return poller.getState();
+  }
+
+  void reset() {
+    poller.reset();
+  }
+
+  TimePoller<unsigned, TimeType> poller;
 };
 
 }  // namespace

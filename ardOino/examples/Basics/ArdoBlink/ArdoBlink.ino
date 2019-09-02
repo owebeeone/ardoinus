@@ -24,19 +24,19 @@ public:
   void instanceLoop() {
     if (timeSequence.poll()) {
       switch (timeSequence.state() & 1) {
-      case 0: {
-        LedPin::set(true);
-        break;
-      }
-      case 1: {
-        LedPin::set(false);
-        break;
-      }
+        case 0: {
+          LedPin::set(true);
+          break;
+        }
+        case 1: {
+          LedPin::set(false);
+          break;
+        }
       }
     }
   }
 
-  ardo::TimeSequencePoller<Seq> timeSequence;  // State variable.
+  ardo::CyclicTimeSequencePoller<Seq> timeSequence;  // State variable.
 };
 
 // C++ requires the instantiation of the static instance outside the class.

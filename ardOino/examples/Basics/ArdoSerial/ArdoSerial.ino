@@ -31,7 +31,7 @@ public:
     }
   }
 
-  ardo::TimeSequencePoller<Seq> timeSequence;  // State variable.
+  ardo::CyclicTimeSequencePoller<Seq> timeSequence;  // State variable.
 };
 
 // C++ requires the instantiation of the static instance outside the class.
