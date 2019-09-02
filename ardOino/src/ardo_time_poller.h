@@ -56,7 +56,7 @@ public:
   }
 
   void reset() {
-    from = ardo::CoreIF::now();
+    setNow();
     state = StateType{};
   }
 
@@ -105,11 +105,9 @@ public:
   using Sequence = w_Seq;
   using TimeType = w_TimeType;
 
-  static_assert(Sequence::count > 1, "Sequence is too small, add more sequnce items (min 2).");
-
-  void init() {
-    poller.setNow();
-  }
+  static_assert(
+    Sequence::count > 1, 
+    "Sequence is too small, add more sequnce items (min 2).");
 
   bool poll() {
     return poller.poll(typename TimeType::period_type(Sequence::get(state())));
@@ -117,6 +115,10 @@ public:
 
   unsigned state() const {
     return poller.getState().get();
+  }
+
+  void init() {
+    poller.setNow();
   }
 
   TimePoller<setl::CyclicInt<Sequence::count>, TimeType> poller;
@@ -131,16 +133,16 @@ public:
   using Sequence = w_Seq;
   using TimeType = w_TimeType;
 
-  void init() {
-    poller.setNow();
-  }
-
   bool poll() {
     // Terminate if we reach the end of the sequence.
-    if (Sequence::count <= poller.getState()) {
+    if (hasFinished()) {
       return false;
     }
     return poller.poll(typename TimeType::period_type(Sequence::get(state())));
+  }
+
+  bool hasFinished() {
+    return Sequence::count <= poller.getState();
   }
 
   unsigned state() const {
@@ -149,6 +151,10 @@ public:
 
   void reset() {
     poller.reset();
+  }
+
+  void init() {
+    poller.setNow();
   }
 
   TimePoller<unsigned, TimeType> poller;

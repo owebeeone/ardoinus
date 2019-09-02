@@ -1,4 +1,4 @@
-**ardOino - an Embedded Programming Module API for Arduino in C++**
+**ardOinus - an Embedded Programming Module API for Arduino in C++**
 
 This software is licensed under the MIT License, see the LICENSE.txt file
 for more detail.
