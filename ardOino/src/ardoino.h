@@ -165,6 +165,7 @@ public:
     return MicrosTime(micros());
   }
 
+private:
   // Cast operator conversion to target time.
   struct NowTimeEvaluator {
     template <typename T>
@@ -176,6 +177,7 @@ public:
     }
   };
 
+public:
   static NowTimeEvaluator now() {
     return NowTimeEvaluator();
   }
@@ -784,5 +786,6 @@ public:
 };
 
 }  // namespace
+
 
 #endif

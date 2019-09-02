@@ -24,7 +24,7 @@ public:
     if (timeSequence.poll()) {
       switch (timeSequence.state() & 1) {
         case 0: {
-          SerialA::println("now: ", ardo::CoreIf::nowMillis().get());
+          SerialA::println("now: ", ardo::CoreIF::nowMillis().get());
           break;
         }
       }
