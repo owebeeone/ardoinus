@@ -128,7 +128,6 @@ public:
   }
 
   const CyclicInt& setLsb() {
-    static_assert(size * 1, "setLsb can onlybe called on even sized cyclic int.");
     nv_type tmp = value;
     value = tmp | nv_type(1u);
     return *this;

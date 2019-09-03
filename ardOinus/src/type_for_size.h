@@ -27,46 +27,46 @@ class TypeTraits : not_instantiable {
   friend struct TypeForMaxBits;
 
   struct Integer7 {
-    static const std::uint32_t max_value = (1UL << 7) - 1;
-    static const std::uint32_t max_bits = 8;
+    static constexpr std::uint32_t max_value = (1UL << 7) - 1;
+    static constexpr std::uint32_t max_bits = 8;
     using type_signed = std::int8_t;
     using type_unsigned = std::uint8_t;
   };
 
   struct Integer8 {
-    static const std::uint32_t max_value = (1UL << 8) - 1;
+    static constexpr std::uint32_t max_value = (1UL << 8) - 1;
     using type_signed = std::int16_t;
     using type_unsigned = std::uint8_t;
   };
 
   struct Integer15 {
-    static const std::uint32_t max_value = (1UL << 15) - 1;
-    static const std::uint32_t max_bits = 16;
+    static constexpr std::uint32_t max_value = (1UL << 15) - 1;
+    static constexpr std::uint32_t max_bits = 16;
     using type_signed = std::int16_t;
     using type_unsigned = std::uint16_t;
   };
 
   struct Integer16 {
-    static const std::uint32_t max_value = (1UL << 16) - 1;
+    static constexpr std::uint32_t max_value = (1UL << 16) - 1;
     using type_signed = std::int32_t;
     using type_unsigned = std::uint16_t;
   };
 
   struct Integer31 {
-    static const std::uint32_t max_value = (1UL << 31) - 1;
-    static const std::uint32_t max_bits = 32;
+    static constexpr std::uint32_t max_value = (1UL << 31) - 1;
+    static constexpr std::uint32_t max_bits = 32;
     using type_signed = std::int32_t;
     using type_unsigned = std::uint32_t;
   };
 
   struct Integer32 {
-    static const std::uint32_t max_value = (((1UL << 31) - 1) << 1) + 1;
+    static constexpr std::uint32_t max_value = (((1UL << 31) - 1) << 1) + 1;
     // No signed type specified.
     using type_unsigned = std::uint32_t;
   };
 
   struct IntegerError {
-    static const std::uint32_t max_value = 0;
+    static constexpr std::uint32_t max_value = 0;
     // No type specified.
   };
 };
