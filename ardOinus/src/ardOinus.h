@@ -51,6 +51,8 @@ int digitalRead(unsigned pin);
 unsigned millis();
 unsigned micros();
 
+#define ARDO_DEV_MOCK_SERIAL
+
 class SerialType {
 public:
   void begin(unsigned long) {}
@@ -67,6 +69,7 @@ public:
 
 extern SerialType Serial;
 extern SerialType Serial1;
+extern SerialType Serial2;
 #endif
 
 namespace ardo {
@@ -547,6 +550,8 @@ template <typename InputPin, unsigned long debounceTime, typename w_TimeType>
 const DebounceInput<InputPin, debounceTime, w_TimeType>
     DebounceInput<InputPin, debounceTime, w_TimeType>::pin;
 
+#include "ardo_sys_defs.h"
+
 /**
  * Serial port support.
  */
@@ -557,30 +562,25 @@ const DebounceInput<InputPin, debounceTime, w_TimeType>
 template <unsigned PortN>
 class SerialResource {};
 
+// Serial support. Define ARDO_HAS_SERIAL0 to get Serial support.
+#ifdef ARDO_HAS_SERIAL0
+
 template <unsigned PortN>
 class SerialIf {
 public:
   static decltype(Serial)& get();
 };
 
+
 template <>
 class SerialIf<0> {
 public:
+  using Resource = ardo_system::Serial0Resources;
+
   inline static decltype(Serial)& get() {
     return Serial;
   }
 };
-
-// Serial1 support. Define ARDO_HAS_SERIAL1 to get Serial1 support.
-#if ARDO_HAS_SERIAL1
-template <>
-class SerialIf<1> {
-public:
-  inline static decltype(Serial1)& get() {
-    return Serial1;
-  }
-};
-#endif
 
 /**
  * Provides module parameter support for Serial initialization.
@@ -588,11 +588,12 @@ public:
 template <unsigned long baudRate, unsigned long PortN = 0>
 class SerialIO {
 public:
-  using Claims = ResourceClaim<SerialResource<PortN>>;
   using SerialIfType = SerialIf<PortN>;
+  using Claims = typename SerialIfType::Resource
+      ::template cat<SerialResource<PortN>>::template eval<ResourceClaim>;
 
   inline static void runSetup() {
-    Serial.begin(baudRate);
+    SerialIfType::get().begin(baudRate);
   }
 
   inline static void runLoop() {}
@@ -616,6 +617,34 @@ public:
     println(args...);
   }
 };
+#endif
+
+// Serial1 support. Define ARDO_HAS_SERIAL1 to get Serial1 support.
+#ifdef ARDO_HAS_SERIAL1
+template <>
+class SerialIf<1> {
+public:
+  using Resource = ardo_system::Serial1Resources;
+
+  inline static decltype(Serial1)& get() {
+    return Serial1;
+  }
+};
+#endif
+
+// Serial2 support. Define ARDO_HAS_SERIAL2 to get Serial2 support.
+#ifdef ARDO_HAS_SERIAL2
+template <>
+class SerialIf<2> {
+public:
+  using Resource = ardo_system::Serial2Resources;
+
+  inline static decltype(Serial1)& get() {
+    return Serial2;
+  }
+};
+#endif
+
 
 /**
  * Fetches a template parameter by index.
@@ -787,5 +816,5 @@ public:
 
 }  // namespace
 
-
+#define ARDOINUS___H_DONE
 #endif
