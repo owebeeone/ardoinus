@@ -6,7 +6,9 @@ for more detail.
 ArdOinus is an embedded application framework allowing composition
 of re-usable modules targetted for embedded microcontroller applications.
 
-See [the reference guide](http://bit.ly/2lBFpq7) for more complete information.
+**See [the reference guide](http://bit.ly/2lBFpq7) for more complete information.**
+
+**Installation instructions [here](https://docs.google.com/document/d/1fMNtdiGXlO81dV7xWskJ5awzqB4RrT1b3g5xGvtspfc/edit#heading=h.dsx6dx668179).**
 
 ArdOinus aims to be true to the C++ philosophy that you don't pay for what
 you don't need (at run time) and hence makes heavy use of C++ templates.
