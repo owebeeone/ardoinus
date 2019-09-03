@@ -266,7 +266,10 @@ public:
   virtual unsigned pinNo() const = 0;
 };
 
-/** A base class for pins that support both input and output where a base class is needed. */
+/** A base class for pins that support both input and output where a 
+ * base class is needed.
+ * @deprecated - use OutputPinIF, InputPinIF as Base
+ */
 class InputOutputPinIF : public OutputPinIF, public InputPinIF {
 };
 
@@ -295,8 +298,8 @@ class ExternalPin : public NullPinBase, public setl::not_copyable {
  */
 template <unsigned P, 
     CoreIF::OutputPinMode M = CoreIF::Output, 
-    typename Base = NullPinBase>
-class OutputPin : public Base, public setl::not_copyable {
+    typename... Base>
+class OutputPin : public Base..., public setl::not_copyable {
 protected:
   OutputPin() {}  // Only the one instance allowed.
 public:
@@ -328,15 +331,15 @@ public:
   }
 };
 
-template <unsigned P, CoreIF::OutputPinMode M, typename Base>
-const OutputPin<P, M, Base> OutputPin<P, M, Base>::pin;
+template <unsigned P, CoreIF::OutputPinMode M, typename... Base>
+const OutputPin<P, M, Base...> OutputPin<P, M, Base...>::pin;
 
 /**
  * A digital output for open collector/drain pulled low when active.
  */
-template <unsigned P, typename Base>
-class OutputPin<P, CoreIF::OpenDrainLowOutput, Base> 
-    : public Base, public setl::not_copyable {
+template <unsigned P, typename... Base>
+class OutputPin<P, CoreIF::OpenDrainLowOutput, Base...> 
+    : public Base..., public setl::not_copyable {
 protected:
   OutputPin() {}  // Only the one instance allowed.
 public:
@@ -384,9 +387,9 @@ public:
 /**
  * A digital output for open collector/drain pulled high when active.
  */
-template <unsigned P, typename Base>
-class OutputPin<P, CoreIF::OpenDrainHighOutput, Base>
-  : public Base, public setl::not_copyable {
+template <unsigned P, typename... Base>
+class OutputPin<P, CoreIF::OpenDrainHighOutput, Base...>
+  : public Base..., public setl::not_copyable {
 protected:
   OutputPin() {}  // Only the one instance allowed.
 public:
@@ -431,17 +434,17 @@ public:
   }
 };
 
-template <unsigned P, typename Base>
-const OutputPin<P, CoreIF::OpenDrainLowOutput, Base> 
-    OutputPin<P, CoreIF::OpenDrainLowOutput, Base>::pin;
+template <unsigned P, typename... Base>
+const OutputPin<P, CoreIF::OpenDrainLowOutput, Base...> 
+    OutputPin<P, CoreIF::OpenDrainLowOutput, Base...>::pin;
 
 /**
  * The basic digital input pin.
  */
 template <unsigned P,  // The digital/gpio pin number.
   CoreIF::InputPinMode M = CoreIF::PullUp, 
-  typename Base = NullPinBase>
-class InputPin : public Base, public setl::not_copyable {
+  typename... Base>
+class InputPin : public Base..., public setl::not_copyable {
 protected:
   InputPin() {}  // Private constructor.
 public:
@@ -473,8 +476,8 @@ public:
   }
 };
 
-template <unsigned P, CoreIF::InputPinMode M, typename Base>
-const InputPin<P, M, Base> InputPin<P, M, Base>::pin;
+template <unsigned P, CoreIF::InputPinMode M, typename... Base>
+const InputPin<P, M, Base...> InputPin<P, M, Base...>::pin;
 
 /**
  * Debounced input type.

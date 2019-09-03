@@ -1,3 +1,6 @@
+// Note: This must only be included through ardOinus.h.
+
+// System specific attributes here.
 
 #ifndef ARDOINUS___H
 #error "This must be included by ardOinus.h"
@@ -44,7 +47,6 @@ using Serial2Resources = setl::TypeArgs<ExternalPin<104>, ExternalPin<105>>;
 #else
 
 #pragma message ( "Processor type is not defined. Serial interface disabled." )
-
 
 #endif // ARDUINO_AVR_NANO
 
