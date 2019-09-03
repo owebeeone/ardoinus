@@ -127,10 +127,14 @@ public:
 /**
  * Provides a poller that will sequence throgh the given periods once.
  */
-template <typename w_Seq, typename w_TimeType = ardo::CoreIF::MillisTime>
+template <
+  typename w_Seq, 
+  typename w_StateType = unsigned, 
+  typename w_TimeType = ardo::CoreIF::MillisTime>
 class TimerSequencePoller {
 public:
   using Sequence = w_Seq;
+  using StateType = w_StateType;
   using TimeType = w_TimeType;
 
   bool poll() {
@@ -145,7 +149,7 @@ public:
     return Sequence::count <= poller.getState();
   }
 
-  unsigned state() const {
+  StateType state() const {
     return poller.getState();
   }
 
@@ -157,7 +161,7 @@ public:
     poller.setNow();
   }
 
-  TimePoller<unsigned, TimeType> poller;
+  TimePoller<StateType, TimeType> poller;
 };
 
 }  // namespace
