@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ardOStepper", "ardOStepper.vcxproj", "{5253627F-C658-451B-84F4-555556666777}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ArdOino", "..\..\..\..\..\ardOino\src\devel\vs17\ArdOino\ArdOino.vcxproj", "{45AD37AB-ACE6-47B1-8101-5696195456E8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ArdOinus", "..\..\..\..\..\ardOinus\src\devel\vs17\ArdOinus\ArdOinus.vcxproj", "{45AD37AB-ACE6-47B1-8101-5696195456E8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ardoEsp32", "..\ardoEsp32\ardoEsp32.vcxproj", "{C0FE3753-5E64-490E-B1CF-360698FB006D}"
 EndProject

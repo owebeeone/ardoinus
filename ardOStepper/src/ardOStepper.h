@@ -4,7 +4,7 @@
 #if !defined(ARDO_STEPPER___A)
 #define ARDO_STEPPER___A
 
-#include "ardoino.h"
+#include "ardOinus.h"
 #include "setl_cyclic_int.h"
 
 namespace step {

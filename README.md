@@ -3,10 +3,10 @@
 This software is licensed under the MIT License, see the LICENSE.txt file
 for more detail.
 
-ArdOino is an embedded application framework allowing composition
+ArdOinus is an embedded application framework allowing composition
 of re-usable modules targetted for embedded microcontroller applications.
 
-ArdOino aims to be true to the C++ philosophy that you don't pay for what
+ArdOinus aims to be true to the C++ philosophy that you don't pay for what
 you don't need (at run time) and hence makes heavy use of C++ templates.
 The extensive use of templates results in requiring the minimum version 
 of C++11 compiler support.

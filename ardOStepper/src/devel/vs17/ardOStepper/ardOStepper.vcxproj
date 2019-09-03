@@ -70,16 +70,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOino/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOino/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOino/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOino/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../..;../../../../../ardOQuadEncoder/src;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,7 +129,7 @@
     <ClInclude Include="..\..\..\ardOStepper.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\ardOino\src\devel\code\emulate_arduino.cxx" />
+    <ClCompile Include="..\..\..\..\..\ardOinus\src\devel\code\emulate_arduino.cxx" />
     <ClCompile Include="..\..\code\ardOStepperTest.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

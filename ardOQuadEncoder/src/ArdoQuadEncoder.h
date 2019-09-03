@@ -2,7 +2,7 @@
 #if !defined(ArdoQuadEncoder___h)
 #define ArdoQuadEncoder___h
 
-#include "ardoino.h"
+#include "ardOinus.h"
 
 #include "setl_time.h"
 #include "setl_interactive_scaling.h"

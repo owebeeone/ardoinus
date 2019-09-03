@@ -23,7 +23,7 @@
     <ClCompile Include="..\..\code\ardOStepperTest.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\ardOino\src\devel\code\emulate_arduino.cxx">
+    <ClCompile Include="..\..\..\..\..\ardOinus\src\devel\code\emulate_arduino.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

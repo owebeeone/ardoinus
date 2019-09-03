@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{5253627F-C658-451B-84F4-49164669E191}</ProjectGuid>
-    <RootNamespace>ArdoQuadEncoder</RootNamespace>
+    <ProjectGuid>{45AD37AB-ACE6-47B1-8101-5696195456E8}</ProjectGuid>
+    <RootNamespace>ArdOinus</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,41 +70,50 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>../../..;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>../../..;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>../../..;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>../../..;../../../../../ardOinus/src;$(IncludePath)</IncludePath>
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -113,12 +122,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -126,11 +138,46 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\ArdoQuadEncoder.h" />
+    <ClInclude Include="..\..\..\ardOinus.h" />
+    <ClInclude Include="..\..\..\ardo_eeprom.h" />
+    <ClInclude Include="..\..\..\ardo_sequencer.h" />
+    <ClInclude Include="..\..\..\ardo_time_poller.h" />
+    <ClInclude Include="..\..\..\assert_that.h" />
+    <ClInclude Include="..\..\..\circular_buffer.h" />
+    <ClInclude Include="..\..\..\pwe_serial.h" />
+    <ClInclude Include="..\..\..\pwm_serial_comms.h" />
+    <ClInclude Include="..\..\..\setlx_array.h" />
+    <ClInclude Include="..\..\..\setlx_cassert.h" />
+    <ClInclude Include="..\..\..\setlx_cstddef.h" />
+    <ClInclude Include="..\..\..\setlx_cstdint.h" />
+    <ClInclude Include="..\..\..\setlx_cstdlib.h" />
+    <ClInclude Include="..\..\..\setlx_limits.h" />
+    <ClInclude Include="..\..\..\setlx_type_traits.h" />
+    <ClInclude Include="..\..\..\setl_cyclic_int.h" />
+    <ClInclude Include="..\..\..\setl_interactive_scaling.h" />
+    <ClInclude Include="..\..\..\setl_system.h" />
+    <ClInclude Include="..\..\..\setl_templ_utils.h" />
+    <ClInclude Include="..\..\..\setl_test_framework.h" />
+    <ClInclude Include="..\..\..\setl_time.h" />
+    <ClInclude Include="..\..\..\setl_time_unit.h" />
+    <ClInclude Include="..\..\..\setl_utils.h" />
+    <ClInclude Include="..\..\..\tests\ardOinus_test.h" />
+    <ClInclude Include="..\..\..\tests\circular_buffer_test.h" />
+    <ClInclude Include="..\..\..\tests\pwe_serial_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_cyclic_int_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_templ_utils_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_time_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_time_unit_test.h" />
+    <ClInclude Include="..\..\..\tests\type_for_size_test.h" />
+    <ClInclude Include="..\..\..\type_for_size.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\ardOinus\src\devel\code\emulate_arduino.cxx" />
-    <ClCompile Include="..\..\code\ardOQuadEncoderTest.cxx" />
+    <ClCompile Include="..\..\..\setl_system.cpp" />
+    <ClCompile Include="..\..\code\ardOinus_test.cxx" />
+    <ClCompile Include="..\..\code\blink_test.cxx" />
+    <ClCompile Include="..\..\code\emulate_arduino.cxx" />
+    <ClCompile Include="..\..\code\gammil_repeater.cxx" />
+    <ClCompile Include="..\..\code\pwe_test_module.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

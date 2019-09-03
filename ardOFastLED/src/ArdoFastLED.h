@@ -2,7 +2,7 @@
 #ifndef __ArdoFastLED_h__
 #define __ArdoFastLED_h__
 
-#include "ardoino.h"
+#include "ardOinus.h"
 #include "setl_time.h"
 
 #include <FastLED.h>
