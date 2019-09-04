@@ -23,16 +23,7 @@ public:
 
   void instanceLoop() {
     if (timeSequence.poll()) {
-      switch (timeSequence.state() & 1) {
-        case 0: {
-          LedPin::set(true);
-          break;
-        }
-        case 1: {
-          LedPin::set(false);
-          break;
-        }
-      }
+      LedPin::set(timeSequence.state() & 1);
     }
   }
 
