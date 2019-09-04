@@ -3,7 +3,7 @@
 // System specific attributes here.
 
 #ifndef ARDOINUS___H
-#error "This must be included by ardOinus.h"
+#error "This must only be included by ardOinus.h"
 #endif // ARDOINUS___H
 
 #ifdef ARDOINUS___H_DONE
