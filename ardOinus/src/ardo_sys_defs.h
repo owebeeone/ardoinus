@@ -16,7 +16,7 @@ namespace ardo_system {
 #if defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_UNO)
 
 #define ARDO_HAS_SERIAL0
-using Serial0Resources = setl::TypeArgs<ExternalPin<0>, ExternalPin<1>>;
+using Serial0Resources = setl::TypeArgs<GPIOResource<0>, GPIOResource<1>>;
 
 #elif defined(ARDUINO_attiny)
 
@@ -25,24 +25,24 @@ using Serial0Resources = setl::TypeArgs<ExternalPin<0>, ExternalPin<1>>;
 #elif defined(ARDUINO_ESP32_DEV)
 
 #define ARDO_HAS_SERIAL0
-using Serial0Resources = setl::TypeArgs<ExternalPin<1>, ExternalPin<3>>;
+using Serial0Resources = setl::TypeArgs<GPIOResource<1>, GPIOResource<3>>;
 
 #define ARDO_HAS_SERIAL1
-using Serial1Resources = setl::TypeArgs<ExternalPin<9>, ExternalPin<10>>;
+using Serial1Resources = setl::TypeArgs<GPIOResource<9>, GPIOResource<10>>;
 
 #define ARDO_HAS_SERIAL2
-using Serial2Resources = setl::TypeArgs<ExternalPin<17>, ExternalPin<16>>;
+using Serial2Resources = setl::TypeArgs<GPIOResource<17>, GPIOResource<16>>;
 
 #elif defined(ARDO_DEV_MOCK_SERIAL)
 
 #define ARDO_HAS_SERIAL0
-using Serial0Resources = setl::TypeArgs<ExternalPin<100>, ExternalPin<101>>;
+using Serial0Resources = setl::TypeArgs<GPIOResource<100>, GPIOResource<101>>;
 
 #define ARDO_HAS_SERIAL1
-using Serial1Resources = setl::TypeArgs<ExternalPin<102>, ExternalPin<103>>;
+using Serial1Resources = setl::TypeArgs<GPIOResource<102>, GPIOResource<103>>;
 
 #define ARDO_HAS_SERIAL2
-using Serial2Resources = setl::TypeArgs<ExternalPin<104>, ExternalPin<105>>;
+using Serial2Resources = setl::TypeArgs<GPIOResource<104>, GPIOResource<105>>;
 
 #else
 

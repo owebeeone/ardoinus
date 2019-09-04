@@ -31,7 +31,7 @@ public:
 
 class AnotherModule : public ardo::ModuleBase<
   ardo::Parameters<>,
-  // Dependent modules are added application
+  // Dependent modules are added to the application.
   ardo::DependentModules<MyModule>> {
 public:
   // Override these functions as needed.
