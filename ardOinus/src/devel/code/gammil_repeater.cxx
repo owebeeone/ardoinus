@@ -20,7 +20,6 @@ enum PinAllocation : unsigned {
   ROTARY_ENCODER_S1 = 10,
   ROTARY_ENCODER_S2 = 11,
   ROTARY_ENCODER_BUTTON = 12,
-
   LEDS_COUNT = 6,
 };
 
@@ -138,25 +137,14 @@ private:
 
 FrequencyAdjuster FrequencyAdjuster::instance;
 
-class FastLEDParameter {
-private:
-  FastLEDParameter() = delete;
-public:
-  using Claims = ardo::ResourceClaim<decltype(FastLED)>;
-
-  inline static void runSetup() {}
-  inline static void runLoop() {}
-};
-
-
 template <
   unsigned w_count,
-  typename w_LedPin, 
+  typename w_LedPin,
   template<uint8_t DATA_PIN, EOrder RGB_ORDER> class w_Type,
   EOrder w_colorOrder,
   uint8_t w_brightness
-  >
-class LedStrip : public ardo::ModuleBase<ardo::Parameters<w_LedPin, FastLEDParameter>> {
+>
+class LedStrip : public ardo::ModuleBase<ardo::Parameters<w_LedPin>> {
 public:
   constexpr static unsigned COUNT = w_count;
   constexpr static EOrder COLOR_ORDER = w_colorOrder;
@@ -231,7 +219,7 @@ public:
     INPUT_LEVEL   // waiting for reading
   };
 
-  PadButton(unsigned index) 
+  PadButton(unsigned index)
     : index(index) {}
 
   virtual ~PadButton() {}
@@ -255,7 +243,7 @@ public:
 
   using Pin = w_Pin;
 
-  PadButtonImpl() 
+  PadButtonImpl()
     : PadButton(w_index) {}
 
   /**
@@ -317,7 +305,7 @@ public:
 
 private:
   // Returns true if the settle time has passed.
-  bool settleTimePassed() {
+  bool settleTimePassed() const {
     GRTimeType now = ardo::CoreIF::now();
     auto period = now - time_switched;
 
@@ -560,10 +548,10 @@ using mainApp = ardo::Application<
   SerialModule,
   QEncoderModule,
   FrequencyAdjuster,
-  ButtonLeds, 
-  KeyPadSingle, 
-  KeyPadStop, 
-  KeyPadStart, 
+  ButtonLeds,
+  KeyPadSingle,
+  KeyPadStop,
+  KeyPadStart,
   KeyPadCut,
   KeyPadOption,
   KeyPadMode,
@@ -580,7 +568,7 @@ using mainApp = ardo::Application<
   LedTranslatorKeyPadCut,
   LedTranslatorKeyPadOption,
   LedTranslatorKeyPadMode
->;
+> ;
 
 
 void setup() {
