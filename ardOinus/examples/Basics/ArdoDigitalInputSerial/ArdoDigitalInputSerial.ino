@@ -29,7 +29,7 @@ template <typename w_InputPin, typename w_Serial>
 SerialExample<w_InputPin, w_Serial> SerialExample<w_InputPin, w_Serial>::instance;
 
 using SerialExampleModule = SerialExample<
-  ardo::InputPin<2, ardo::CoreIF::Untied>,
+  ardo::InputPin<7, ardo::CoreIF::Untied>,
   ardo::SerialIO<9600>>;
 
 // Define the main application class. This will combine 

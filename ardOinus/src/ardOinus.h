@@ -743,14 +743,12 @@ struct ModuleClosureVa<Contained> {
 
 template <typename Contained, typename T, typename...w_Ms>
 class ModuleClosureVa<Contained, T, w_Ms...> {
+  using new_contained = typename Contained::template cat<T>;
   using catenated_deps = typename T::Deps::template cat<w_Ms...>;
-  using rest = setl::RemoveAll<catenated_deps, Contained>;
+  using rest = setl::RemoveAll<catenated_deps, new_contained>;
 public:
-  using type = typename std::conditional <
-    Contained::template eval_arg1<T, setl::Contains>::type::value,
-    typename ModuleClosureVa<Contained, w_Ms...>::type,
-    typename rest::template eval_arg1<
-    typename Contained::template cat<T>, ModuleClosureVaTemplate>::type>::type;
+  using type = 
+    typename rest::template eval_arg1<new_contained, ModuleClosureVaTemplate>::type;
 };
 } // namespace nfp
 
