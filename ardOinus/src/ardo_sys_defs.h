@@ -36,9 +36,7 @@ using Serial0Resources0 = setl::TypeArgs<GPIOResource<0>, GPIOResource<1>>;
 
 #elif defined(ARDUINO_ESP32_DEV)
 
-
 #include "sys/ardo_sys_esp32.h"
-
 
 #elif defined(ARDO_USE_MOCK_ARDUINO) || !defined(INPUT_PULLUP)
 
