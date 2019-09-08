@@ -21,6 +21,12 @@ public:
 };
 
 /**
+ * For serial port resource claims. 
+ */
+template <unsigned PortN>
+class SerialResource {};
+
+/**
  * Module parameters must contain a "Claim" type which is a ResourceClaim below.
  * Any type may be a parameter to ResourceClaim which allows any library to
  * define a new claim type to manage finite resources. GPIOResource above is
