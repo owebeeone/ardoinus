@@ -18,56 +18,31 @@
 #include "setlx_cstdint.h"
 #include "setlx_type_traits.h"
 
-namespace ardo_system {
-// Used by serial resources.
-using ardo::GPIOResource;
-
 // Defines for Arduino Nano
 #if defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_UNO)
 
 #define ARDO_USE_ARDUINO_COREIF
-
-#define ARDO_HAS_SERIAL0
+namespace ardo_system {
+using ardo::GPIOResource;
+#define ARDO_HAS_SERIAL0 1
 using Serial0Resources0 = setl::TypeArgs<GPIOResource<0>, GPIOResource<1>>;
+}  // namespace ardo_system
 
 #elif defined(ARDUINO_attiny)
 
 #define ARDO_USE_ARDUINO_COREIF 1
 
-// No serial resources.
+// No serial port on ATtiny.
 
 #elif defined(ARDUINO_ESP32_DEV)
 
-#define ARDO_USE_ARDUINO_COREIF
 
-#define ARDO_HAS_SERIAL0
-using Serial0Resources0 = setl::TypeArgs<GPIOResource<1>, GPIOResource<3>>;
+#include "sys/ardo_sys_esp32.h"
 
-#define ARDO_HAS_SERIAL1
-using Serial1Resources1 = setl::TypeArgs<GPIOResource<9>, GPIOResource<10>>;
-
-#define ARDO_HAS_SERIAL2
-using Serial2Resources2 = setl::TypeArgs<GPIOResource<17>, GPIOResource<16>>;
 
 #elif defined(ARDO_USE_MOCK_ARDUINO) || !defined(INPUT_PULLUP)
 
-#define ARDO_USE_ARDUINO_COREIF
-
-// MOCK arduino interface when we don't have Arduino.h
-#if !defined(INPUT_PULLUP)  // This is provided by Arduino.h
-}  // namespace ardo_system
-#include "mock_arduino.h"
-namespace ardo_system {
-#endif
-
-#define ARDO_HAS_SERIAL0
-using Serial0Resources0 = setl::TypeArgs<GPIOResource<100>, GPIOResource<101>>;
-
-#define ARDO_HAS_SERIAL1
-using Serial1Resources1 = setl::TypeArgs<GPIOResource<102>, GPIOResource<103>>;
-
-#define ARDO_HAS_SERIAL2
-using Serial2Resources2 = setl::TypeArgs<GPIOResource<104>, GPIOResource<105>>;
+#include "sys/ardo_sys_mock.h"
 
 #else
 
@@ -80,11 +55,16 @@ using Serial2Resources2 = setl::TypeArgs<GPIOResource<104>, GPIOResource<105>>;
 
 #endif // ARDUINO_AVR_NANO
 
-} // namespace ardo_system
+// Include the system specific include file.
+#if defined(ARDO_SYS_INCLUDE)
+#include ARDO_SYS_INCLUDE
+#endif
 
-// ardo::CoreIF should
+// ardo::CoreIF should use the ardo:: namespace.
 namespace ardo {
 
+// If system uses Arduino API, then ARDO_USE_ARDUINO_COREIF is defined.
+// This will define the generic arduino core interface.
 #ifdef ARDO_USE_ARDUINO_COREIF
 
 /**
@@ -159,27 +139,17 @@ struct CoreIF::NowTimeEvaluator::NowTime<CoreIF::MicrosTime> {
 };
 
 /**
- * Serial port support.
+ * Arduino serial port support.
  */
 
-// Serial support. Define ARDO_HAS_SERIAL0 to get Serial support.
-#ifdef ARDO_HAS_SERIAL0
+// Serial support. Set ARDO_HAS_SERIAL{0,1,2} to 1 get Serial support.
+#define ARDO_ANY_SERIAL (ARDO_HAS_SERIAL0 || ARDO_HAS_SERIAL1 || ARDO_HAS_SERIAL2)
 
+#if ARDO_ANY_SERIAL
 template <unsigned PortN>
 class SerialIf {
 public:
   static decltype(Serial)& get();
-};
-
-
-template <>
-class SerialIf<0> {
-public:
-  using Resource = ardo_system::Serial0Resources0;
-
-  inline static decltype(Serial)& get() {
-    return Serial;
-  }
 };
 
 /**
@@ -200,6 +170,13 @@ public:
 
   inline static void print() {}
 
+  inline static void println () {
+    SerialIfType::get().println();
+  }
+
+  /**
+   * Prints a variable list of arguments.
+   */
   template <typename T, typename... Ts>
   inline static void print(const T& arg, Ts... args) {
     SerialIfType::get().print(arg);
@@ -211,6 +188,10 @@ public:
     SerialIfType::get().println(arg);
   }
 
+  /**
+   * Prints a variable list of arguments and prints a newline after 
+   * the last argument is printed.
+   */
   template <typename T, typename... Ts>
   inline static void println(const T& arg, Ts... args) {
     SerialIfType::get().print(arg);
@@ -219,7 +200,21 @@ public:
 };
 #endif
 
-// Serial1 support. Define ARDO_HAS_SERIAL1 to get Serial1 support.
+
+// Serial support. Define ARDO_HAS_SERIAL0 as 1 to get Serial support.
+#ifdef ARDO_HAS_SERIAL0
+template <>
+class SerialIf<0> {
+public:
+  using Resource = ardo_system::Serial0Resources0;
+
+  inline static decltype(Serial)& get() {
+    return Serial;
+  }
+};
+#endif
+
+// Serial1 support. Define ARDO_HAS_SERIAL1 as 1 to get Serial1 support.
 #ifdef ARDO_HAS_SERIAL1
 template <>
 class SerialIf<1> {
@@ -239,7 +234,7 @@ class SerialIf<2> {
 public:
   using Resource = ardo_system::Serial2Resources2;
 
-  inline static decltype(Serial1)& get() {
+  inline static decltype(Serial2)& get() {
     return Serial2;
   }
 };
