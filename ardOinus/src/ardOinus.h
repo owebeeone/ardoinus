@@ -66,12 +66,12 @@ public:
 
 // Range claims allow the use of a resource claim than spans a linear
 // range of integers. An example where this is particularly useful for claiming 
-// ranges of EEPROM addresses.
+// ranges of EEPROM addresses. End is not inclusiveEnd = Begin + size.
 
 template <typename T, int Begin, int End>
 struct range_claim {
-  static_assert(End > Begin, "Incorrect range, End must be strictly after Begin.");
   static constexpr bool is_good = End > Begin;
+  static_assert(is_good, "Incorrect range, End must be strictly after Begin.");
 };
 
 template<typename T, typename U>
@@ -83,8 +83,8 @@ struct has_conflict<T, T> : std::true_type {};
 template<typename T, int Begin1, int End1, int Begin2, int End2>
 struct has_conflict<range_claim<T, Begin1, End1>, range_claim<T, Begin2, End2>> {
   static constexpr bool value = (End1 > Begin2) && (End2 > Begin1)
-    && range_claim<T, Begin1, End1>::is_good
-    && range_claim<T, Begin2, End2>::is_good;
+    || !range_claim<T, Begin1, End1>::is_good
+    || !range_claim<T, Begin2, End2>::is_good;
 };
 
 
@@ -551,7 +551,7 @@ public:
 template <>
 class SerialIf<0> {
 public:
-  using Resource = ardo_system::Serial0Resources;
+  using Resource = ardo_system::Serial0Resources0;
 
   inline static decltype(Serial)& get() {
     return Serial;
@@ -600,7 +600,7 @@ public:
 template <>
 class SerialIf<1> {
 public:
-  using Resource = ardo_system::Serial1Resources;
+  using Resource = ardo_system::Serial1Resources1;
 
   inline static decltype(Serial1)& get() {
     return Serial1;
@@ -613,7 +613,7 @@ public:
 template <>
 class SerialIf<2> {
 public:
-  using Resource = ardo_system::Serial2Resources;
+  using Resource = ardo_system::Serial2Resources2;
 
   inline static decltype(Serial1)& get() {
     return Serial2;

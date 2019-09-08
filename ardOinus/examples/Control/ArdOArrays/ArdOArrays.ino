@@ -2,7 +2,7 @@
 //
 
 #include "ardOinus.h"
-#include "ardo_time_poller.h"
+#include "ardo_time_poller.h" 
 
 // This ardOinus module template takes a sequence and a number of LED pins
 // to sequence an arbitrary set of LEDs.
