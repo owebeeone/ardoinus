@@ -1,11 +1,13 @@
 
-#ifndef SYS__ARDO_SYS_MOCK___H
-#define SYS__ARDO_SYS_MOCK___H
+#ifndef SYS__ARDO_SYS_ESP32___H
+#define SYS__ARDO_SYS_ESP32___H
 
 #include "ardo_resources.h"
 #include "setl_templ_utils.h"
 
+// Use the provided Arduino API.
 #define ARDO_USE_ARDUINO_COREIF
+
 namespace ardo_system {
 using ardo::GPIOResource;
 
@@ -19,4 +21,4 @@ using ardo::GPIOResource;
   using Serial2Resources2 = setl::TypeArgs<GPIOResource<17>, GPIOResource<16>>;
 }  // namespace ardo_system
 
-#endif
+#endif  // SYS__ARDO_SYS_ESP32___H
