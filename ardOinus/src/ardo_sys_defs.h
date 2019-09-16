@@ -21,12 +21,8 @@
 // Defines for Arduino Nano
 #if defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_UNO)
 
-#define ARDO_USE_ARDUINO_COREIF
-namespace ardo_system {
-using ardo::GPIOResource;
-#define ARDO_HAS_SERIAL0 1
-using Serial0Resources0 = setl::TypeArgs<GPIOResource<0>, GPIOResource<1>>;
-}  // namespace ardo_system
+#include "sys/ardo_sys_atmega328.h"
+
 
 #elif defined(ARDUINO_attiny)
 
@@ -141,9 +137,9 @@ struct CoreIF::NowTimeEvaluator::NowTime<CoreIF::MicrosTime> {
  */
 
 // Serial support. Set ARDO_HAS_SERIAL{0,1,2} to 1 get Serial support.
-#define ARDO_ANY_SERIAL (ARDO_HAS_SERIAL0 || ARDO_HAS_SERIAL1 || ARDO_HAS_SERIAL2)
+#define ARDO_HAS_ANY_SERIAL (ARDO_HAS_SERIAL0 || ARDO_HAS_SERIAL1 || ARDO_HAS_SERIAL2)
 
-#if ARDO_ANY_SERIAL
+#if ARDO_HAS_ANY_SERIAL
 template <unsigned PortN>
 class SerialIf {
 public:
@@ -237,6 +233,31 @@ public:
   }
 };
 #endif
+
+
+#if ARDO_USE_ARDUINO_HARDWARE_PWM
+namespace nfp {
+template <typename w_OutputPin, typename w_PwmParams>
+class HardwarePwmIF {
+public:
+  using PinType = w_OutputPin;
+  using value_type = std::uint8_t;
+
+  inline static void runSetup() {
+    // ardo::OutputPin setup is sufficient here.
+  }
+
+  inline static void runLoop() {}
+
+  inline static void set_pwm(value_type value) {
+    ::analogWrite(PinType::PIN, value);
+  }
+};
+
+} // namespace nfp
+
+#endif // ARDO_USE_ARDUINO_HARDWARE_PWM
+
 
 #endif // ARDO_USE_ARDUINO_COREIF
 

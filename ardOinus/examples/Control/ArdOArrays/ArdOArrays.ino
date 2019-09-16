@@ -1,5 +1,13 @@
 // This example is similar in function with the Arduino Arrays example.
 //
+template<class T, T w_value>
+struct integral_constant {
+  static constexpr T value = w_value;
+  using value_type = T;
+  using type = integral_constant;
+  constexpr operator value_type() const noexcept { return value; }
+  constexpr value_type operator()() const noexcept { return value; } //since c++14
+};
 
 #include "ardOinus.h"
 #include "ardo_time_poller.h" 

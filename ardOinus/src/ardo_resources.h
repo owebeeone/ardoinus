@@ -27,19 +27,33 @@ template <unsigned PortN>
 class SerialResource {};
 
 /**
+ * For hardware timer resource claims.
+ */
+template <unsigned N>
+class HardwareTimer {};
+
+/**
  * Module parameters must contain a "Claim" type which is a ResourceClaim below.
  * Any type may be a parameter to ResourceClaim which allows any library to
  * define a new claim type to manage finite resources. GPIOResource above is
  * not special but it should be used whenever a module makes use of a GPIO pin.
  * Examples of other possible resources would be timers, interrupts, network ports
  * nvram.
+ *
+ * Range claims allow the use of a resource claim than spans a continuous
+ * range of integers. An example where this is particularly useful for claiming 
+ * ranges of EEPROM addresses. End is not inclusive, i.e. End = Begin + size.
+ *
+ * The base type of a range claim is considered in conflict if the range claim
+ * with the type and the type itself is considered claimed. This can be useful
+ * with cases such as hardware timers where the claim for using a PWM timer
+ * can be shared with multiple GPIO pins in this case the GPIO pins can claim
+ * a "slot" for the timer and not be in conflict. However, if one uses the timer
+ * independently it would be in conflict with any GPIO pin using the same
+ * timer for PWM support.
  */
 
-// Range claims allow the use of a resource claim than spans a linear
-// range of integers. An example where this is particularly useful for claiming 
-// ranges of EEPROM addresses. End is not inclusiveEnd = Begin + size.
-
-template <typename T, int Begin, int End>
+template <typename T, int Begin, int End = Begin + 1>
 struct range_claim {
   static constexpr bool is_good = End > Begin;
   static_assert(is_good, "Incorrect range, End must be strictly after Begin.");
@@ -57,6 +71,12 @@ struct has_conflict<range_claim<T, Begin1, End1>, range_claim<T, Begin2, End2>> 
     || !range_claim<T, Begin1, End1>::is_good
     || !range_claim<T, Begin2, End2>::is_good;
 };
+
+template<typename T, int Begin, int End>
+struct has_conflict<range_claim<T, Begin, End>, T> : std::true_type {};
+
+template<typename T, int Begin, int End>
+struct has_conflict<T, range_claim<T, Begin, End>> : std::true_type {};
 
 
 // R is the set of resourced claimed. A resource may be any type or for a range 

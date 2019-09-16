@@ -17,11 +17,12 @@
 #define HIGH 1
 #define LED_BUILTIN 1
 
-void pinMode(unsigned pin, std::uint8_t mode);
-void digitalWrite(unsigned pin, std::uint8_t mode);
-int digitalRead(unsigned pin);
+void pinMode(int pin, std::uint8_t mode);
+void digitalWrite(int pin, std::uint8_t mode);
+int digitalRead(int pin);
 unsigned millis();
 unsigned micros();
+void analogWrite(int pin, int value);
 
 #define ARDO_DEV_MOCK_SERIAL
 
@@ -72,6 +73,8 @@ using ardo::GPIOResource;
 
 #define ARDO_HAS_SERIAL2 1
   using Serial2Resources2 = setl::TypeArgs<GPIOResource<104>, GPIOResource<105>>;
+
+#define ARDO_USE_ARDUINO_HARDWARE_PWM 1
 
 } // namespace ardo_system
 

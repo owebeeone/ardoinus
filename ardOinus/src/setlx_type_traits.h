@@ -22,13 +22,18 @@ struct conditional<false, T, F> {
   using type = F;
 };
 
-struct false_type {
-  static constexpr bool value = false;
+template<class T, T w_value>
+struct integral_constant {
+  static constexpr T value = w_value;
+  using value_type = T;
+  using type = integral_constant;
+  constexpr operator value_type() const noexcept { return value; }
+  constexpr value_type operator()() const noexcept { return value; }
 };
 
-struct true_type {
-  static constexpr bool value = true;
-};
+struct false_type : integral_constant<bool, false> {};
+
+struct true_type : integral_constant<bool, true> {};
 
 // is_volatile
 template <typename T>
