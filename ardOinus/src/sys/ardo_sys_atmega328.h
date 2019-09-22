@@ -82,11 +82,11 @@ class PinHwTimerMap<11> : public std::integral_constant<unsigned, 2> {};
 
 template <typename w_Pin, typename w_Parameters>
 class HardwarePwmResources {
-  constexpr static unsigned hwtimer = 
-    atmega328p_timers::PinHwTimerMap<w_Pin::PIN>::value;
 public:
   using Pin = w_Pin;
   using Parameters = w_Parameters;
+  constexpr static unsigned hwtimer =
+    atmega328p_timers::PinHwTimerMap<Pin::PIN>::value;
 
   // Pins are associated with timers. The range claim will conflict with
   // any other use of the timer not in a range claim.
@@ -99,7 +99,7 @@ public:
   // Parameters says.
   constexpr static std::uint8_t timer_bits = 8;
 
-  static void set_pwm(value_type value) {
+  static void setPwm(value_type value) {
     ::analogWrite(Pin::PIN, value);
   }
 };

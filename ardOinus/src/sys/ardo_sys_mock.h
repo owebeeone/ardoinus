@@ -111,7 +111,7 @@ public:
   // Use 9 bits in the mock.
   constexpr static std::uint8_t timer_bits = 9;
 
-  static void set_pwm(value_type value) {
+  static void setPwm(value_type value) {
     ::analogWrite(Pin::PIN, value);
   }
 };

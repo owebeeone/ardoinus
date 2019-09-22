@@ -19,7 +19,7 @@ template <
   typename w_ScalerSelector = setl::LinearScalerSelector<8>,
   typename w_HwPwmParameters = ardo_system::DefaultHwPwmParameters,
   typename... w_Bases >
-class HardwarePwm : /*public w_Pin,*/ public w_Bases... {
+class HardwarePwm : public w_Bases..., public setl::not_copyable {
 protected:
   HardwarePwm() {}  // Only the one instance allowed
 public:
@@ -32,11 +32,13 @@ public:
   using Pwm = ardo_system::HardwarePwmResources<
     Pin, HwPwmParameters>;
 
+  static const HardwarePwm pwm_pin;
+
   using Claims = ardo::ConcatenateResourceClaims<
     typename w_Pin::Claims, typename Pwm::Claims>;
 
-  inline static void set_pwm(const value_type& value) {
-    Pwm::set_pwm(Scaler::scale(value));
+  inline static void setPwm(const value_type& value) {
+    Pwm::setPwm(Scaler::scale(value));
   }
 
   inline static void runSetup() {
@@ -46,7 +48,15 @@ public:
   inline static void runLoop() {
     Pin::runLoop();
   }
+
+  // Overrides base class interface if given.
+  void setPwmPin(const std::uint32_t value) const {
+    setPwm(value_type(value));
+  }
 };
+
+template <  typename P, typename S, typename H, typename... B>
+  const HardwarePwm<P, S, H, B...> HardwarePwm<P, S, H, B...>::pwm_pin;
 
 }
 #endif // ARDO_PWM_OUTPUT___H

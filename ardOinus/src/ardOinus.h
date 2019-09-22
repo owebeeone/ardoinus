@@ -225,6 +225,10 @@ public:
   }
 };
 
+template <unsigned P, typename... Base>
+const OutputPin<P, CoreIF::OpenDrainLowOutput, Base...>
+OutputPin<P, CoreIF::OpenDrainLowOutput, Base...>::pin;
+
 /**
  * A digital output for open collector/drain pulled high when active.
  */
@@ -276,8 +280,8 @@ public:
 };
 
 template <unsigned P, typename... Base>
-const OutputPin<P, CoreIF::OpenDrainLowOutput, Base...> 
-    OutputPin<P, CoreIF::OpenDrainLowOutput, Base...>::pin;
+const OutputPin<P, CoreIF::OpenDrainHighOutput, Base...>
+    OutputPin<P, CoreIF::OpenDrainHighOutput, Base...>::pin;
 
 /**
  * The basic digital input pin.
