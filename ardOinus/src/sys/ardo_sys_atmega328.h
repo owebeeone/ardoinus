@@ -25,13 +25,13 @@ using Serial0Resources0 = setl::TypeArgs<GPIOResource<0>, GPIOResource<1>>;
 template <std::int8_t w_bits, std::int32_t w_frequency, std::int8_t w_channel>
 class HwPwmParameters {
 public:
-  constexpr std::int8_t bits = w_bits;
-  constexpr std::int32_t frequency = w_frequency;
-  constexpr std::int8_t channel = w_channel;
+  static constexpr std::int8_t bits = w_bits;
+  static constexpr std::int32_t frequency = w_frequency;
+  static constexpr std::int8_t channel = w_channel;
   using value_type = std::uint16_t;
 };
 
-using DefaultHwPwmParameters = HwPwmParameters<-1, -1, 0>;
+using DefaultHwPwmParameters = HwPwmParameters<8, -1, 0>;
 
 /**
  * From:
@@ -47,9 +47,17 @@ using DefaultHwPwmParameters = HwPwmParameters<-1, -1, 0>;
 // This namespace is not part of the public API.
 namespace atmega328p_timers {
 
+template <unsigned pin>
+class ProvideError {
+  static_assert(pin == pin -1, "Selected pin does not support PWM");
+};
+
 // Maps pin to hardware timer.
 template <unsigned pin>
-class PinHwTimerMap;
+class PinHwTimerMap {
+public:
+  static constexpr std::uint8_t value = ProvideError<pin>::value;
+};
 
 template <>
 class PinHwTimerMap<5> : public std::integral_constant<unsigned, 0> {};
@@ -82,7 +90,7 @@ public:
 
   // Pins are associated with timers. The range claim will conflict with
   // any other use of the timer not in a range claim.
-  using claim_value = setl::TypeArgs<
+  using Claims = ardo::ResourceClaim<
     ardo::range_claim<ardo::HardwareTimer<hwtimer>, Pin::PIN>>;
 
   using value_type = typename Parameters::value_type;

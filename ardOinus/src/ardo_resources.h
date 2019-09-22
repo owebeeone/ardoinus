@@ -79,8 +79,10 @@ template<typename T, int Begin, int End>
 struct has_conflict<T, range_claim<T, Begin, End>> : std::true_type {};
 
 
-// R is the set of resourced claimed. A resource may be any type or for a range 
-// of resources can be a range_claim.
+/**
+ * R is the set of resourced claimed. A resource may be any type or for a range 
+ * of resources can be a range_claim.
+ */
 template <typename... R>
 class ResourceClaim {
 public:
@@ -93,6 +95,14 @@ public:
   using has_resource = Scanner<setl::Operator<has_conflict, setl::OrEval>, S>;
 };
 
+/**
+ * Helper to concatenate two resource claims into a resource claim
+ * with both claim's resources.
+ */
+template <typename w_Claim1, typename w_Claim2>
+using ConcatenateResourceClaims = typename w_Claim2::Resources
+    ::template cat_type_arg<typename w_Claim1::Resources>
+      ::template eval<ResourceClaim>;
 }
 
 #endif

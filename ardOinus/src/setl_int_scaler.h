@@ -6,52 +6,108 @@
 
 namespace setl {
 
-// Computes Mersenne numbers - 2^n-1.
-constexpr std::uint32_t mersenne(std::uint32_t n) {
+/**
+ * Evaluates Mersenne numbers - 2^n-1.
+ */
+constexpr std::uint32_t mersenne(std::uint8_t n) {
   return n < 32 ? (1 << n) - 1 : ~std::uint32_t(0);
 }
 
 /**
- * scale_up_number will scale an integer range, 0..2^q-1, to a larger range,
- * 0..2^m-1 (i.e. m>q) so that the scaled limits are the same as the limits
- * of the target range. i.e. scale_up_number(m, q, mersenne(q)) == mersenne(m).
+ * scale_mersenne will scale an integer range, 0..2^q-1 (q=in_bits), to 
+ * a range, 0..2^m-1 (i.e. m=out_bist and m>q) so that the scaled limits 
+ * are the same as the limits of the target range. 
+ * i.e. scale_mersenne(m, q, mersenne(q)) == mersenne(m).
  * The scaling is linear (apart from rounding aliasing).
  */
-namespace nfp {
-constexpr std::uint32_t scale_up_number(
-  std::uint32_t m, std::uint32_t q, std::uint32_t value, std::uint32_t sum, std::uint32_t shift) {
-  return (shift + q) >= m 
-    ? (sum >> ((shift + q) % m)) + (value << (shift - ((shift + q) % m)))
-    : scale_up_number(m, q, value, sum + (value << shift), shift + q);
-}
-} // namespace nfp
+inline std::uint32_t scale_mersenne(
+  std::uint8_t out_bits, std::uint8_t in_bits, std::uint32_t value) {
+  if (out_bits <= in_bits) {
+    return value >> (in_bits - out_bits);
+  }
 
-constexpr std::uint32_t scale_up_number(
-  std::uint32_t m, std::uint32_t q, std::uint32_t value) {
-  return nfp::scale_up_number(m, q, value, 0, 0);
+  std::uint32_t result = value << (out_bits - in_bits);
+
+  if (out_bits > in_bits) {
+    result += result >> in_bits;
+  }
+
+  if (out_bits > 2 * in_bits) {
+    result += result >> (2 * in_bits);
+  }
+
+  if (out_bits > 4 * in_bits) {
+    result += result >> (4 * in_bits);
+  }
+
+  if (out_bits > 8 * in_bits) {
+    result += result >> (8 * in_bits);
+  }
+
+  if (out_bits > 16 * in_bits) {
+    result += result >> (16 * in_bits);
+  }
+
+  if (out_bits > 32 * in_bits) {  // 64 bit support!
+    result += result >> (32 * in_bits);
+  }
+
+  return result;
 }
 
 /**
- * scale_up_number<m,q> performs the same operations as above but the
- * template parameters allow for spedifying the input and output types.
+ * scale_mersenne<m,q> performs the same operations as above but the
+ * template parameters allow for specifying the input and output types.
  */
 template <
-  std::uint32_t m, 
-  std::uint32_t q,
-  typename out_type = typename TypeForMaxBits<m>::selected::type_unsigned,
-  typename in_type = typename TypeForMaxBits<q>::selected::type_unsigned>
-constexpr out_type scale_up_number(
-  in_type value, out_type sum = 0, std::uint32_t shift = 0) {
-  return (shift + q) >= m
-    ? (sum >> ((shift + q) % m)) + (out_type(value) << (shift - ((shift + q) % m)))
-    : scale_up_number<m, q>(value, sum + (out_type(value) << shift), shift + q);
+  std::uint8_t out_bits, 
+  std::uint8_t in_bits,
+  typename out_type = typename TypeForMaxBits<out_bits>::selected::type_unsigned,
+  typename in_type = typename TypeForMaxBits<in_bits>::selected::type_unsigned>
+inline out_type scale_mersenne(in_type value) {
+  static_assert(sizeof(out_type) * 8 >= out_bits, "Result type is too small");
+  static_assert(sizeof(in_type) * 8 >= in_bits, "Input type is too small");
+
+  if (out_bits <= in_bits) {
+    return value >> (in_bits - out_bits);
+  }
+
+  out_type result = value << (out_bits - in_bits);
+
+  if (out_bits > in_bits) {
+    result += result >> in_bits;
+  }
+
+  if (out_bits > 2 * in_bits) {
+    result += result >> (2 * in_bits);
+  }
+
+  if (out_bits > 4 * in_bits) {
+    result += result >> (4 * in_bits);
+  }
+
+  if (out_bits > 8 * in_bits) {
+    result += result >> (8 * in_bits);
+  }
+
+  if (out_bits > 16 * in_bits) {
+    result += result >> (16 * in_bits);
+  }
+
+  if (out_bits > 32 * in_bits) {  // 64 bit support!
+    result += result >> (32 * in_bits);
+  }
+
+  return result;
 }
 
-// Validate that the functions work as expected.
-static_assert(scale_up_number<11, 3>(mersenne(3)) == mersenne(11), "scale_up_number failed");
-static_assert(scale_up_number(11, 3, mersenne(3)) == mersenne(11), "scale_up_number failed");
-static_assert(scale_up_number<32, 3>(mersenne(3)) == mersenne(32), "scale_up_number failed");
-
+/**
+ * LinearScalerSelector will provide a scaler that will map a value
+ * range in unsigned bits to another range in unsigned bits linerarly.
+ * Imprtantly, the full range is mapped, even from smaller resolutions
+ * to higher resolutions. (i.e. zero is mapped to zero and max input
+ * is mapped to max output.
+ */
 template <
   std::uint8_t in_bits,
   typename T = typename TypeForMaxBits<in_bits>::selected::type_unsigned>
@@ -61,25 +117,14 @@ public:
 
   template <
     std::uint8_t out_bits,
-    typename O = typename TypeForMaxBits<out_bits>::selected::type_unsigned,
-    bool down_scale = (in_bits >= out_bits)> 
+    typename O = typename TypeForMaxBits<out_bits>::selected::type_unsigned> 
   class Scaler {
   public:
     using value_type = O;
     constexpr static value_type scale(in_value_type input) {
-      return input >> (in_bits - out_bits);
+      return setl::scale_mersenne<out_bits, in_bits, value_type, in_value_type>(input);
     }
   };
-
-  template <std::uint8_t out_bits, typename O>
-  class Scaler<out_bits, O, false> {
-  public:
-    using value_type = O;
-    constexpr value_type static scale(in_value_type input) {
-      return setl::scale_up_number<out_bits, in_bits, value_type, in_value_type>(input);
-    }
-  };
-
 };
 
 } // namespace setl

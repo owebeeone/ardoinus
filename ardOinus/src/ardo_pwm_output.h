@@ -9,77 +9,44 @@
 #include "setlx_cstdint.h"
 #include "setl_int_scaler.h"
 
-
-
-
-
 namespace ardo {
 
-/*
-class SofwarePwm {
-};
-
-class AutoImplPwm {
-};
-
-template <int pin, int channel, typename w_Implementation>
-class PwmPinSpec {
-
-};
-
-template <typename w_PinSpec, typename w_Scaler, setl::Frequency>
-class OutputPwm {
-
-};
-
-}
-
-using OutPwm =
-ardo::OutputPwm<
-  ardo::PwmPinSpec<3, 0, ardo::HardwarePwm>, 
-  setl::LinearScaler<8, 8>, 
-  setl::Frequency(35000)>;
-  
-
-template <typename w_Pin, typename w_Scaler = setl::LinearScaler<8, 8>>
-class HardwarePwm : public w_Pin {
-protected:
-//  OutputPin() {}  // Only the one instance allowed
-public:
-
-};
-
+/**
+ * HardwarePwm provides support for the PWM hardware.
+ */
 template <
-  typename w_Pin, 
-  typename w_HwPwmParameters = ardo_system::DefaultHwPwmParameters,
+  typename w_Pin,
   typename w_ScalerSelector = setl::LinearScalerSelector<8>,
+  typename w_HwPwmParameters = ardo_system::DefaultHwPwmParameters,
   typename... w_Bases >
-class HardwarePwm : public w_Pin, public w_Bases... {
+class HardwarePwm : /*public w_Pin,*/ public w_Bases... {
 protected:
   HardwarePwm() {}  // Only the one instance allowed
 public:
 
   using Pin = w_Pin;
   using HwPwmParameters = w_HwPwmParameters;
-  using Scaler = w_ScalerSelector::template Select<HwPwmParameters::timer_bits>;
+  static constexpr std::int8_t hw_bits = HwPwmParameters::bits;
+  using Scaler = typename w_ScalerSelector::template Scaler<hw_bits>;
   using value_type = typename Scaler::value_type;
-  using HardwarePwm = ardo_system::HardwarePwmResources<
+  using Pwm = ardo_system::HardwarePwmResources<
     Pin, HwPwmParameters>;
 
-  using Claims = ResourceClaim<GPIOResource<PIN>>;
+  using Claims = ardo::ConcatenateResourceClaims<
+    typename w_Pin::Claims, typename Pwm::Claims>;
 
-  void set_pwm(const value_type& value) {
-    HardwarePwm::set_pwm(Scaler::scale(value));
+  inline static void set_pwm(const value_type& value) {
+    Pwm::set_pwm(Scaler::scale(value));
   }
 
+  inline static void runSetup() {
+    Pin::runSetup();
+  }
+
+  inline static void runLoop() {
+    Pin::runLoop();
+  }
 };
 
-
-
-using PwmOutput = ardo::HardwarePwm<
-  ardo::OutputPin<1>, 
-  setl::LinearScalerSelector<8>
-  >;
-  */
 }
 #endif // ARDO_PWM_OUTPUT___H

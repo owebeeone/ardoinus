@@ -172,7 +172,7 @@ public:
   template <typename... T1>
   using catr = TypeArgs<T1..., T...>;
 
-  /// Concatentes TypeArfs with this container's template arguments.
+  /// Concatentes TypeArgs with this container's template arguments.
   template <typename Ta>
   using cat_type_arg = typename Ta::template catr<T...>;
 
