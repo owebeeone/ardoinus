@@ -26,14 +26,14 @@ public:
 
   using Pin = w_Pin;
   using HwPwmParameters = w_HwPwmParameters;
-  static constexpr std::int8_t hw_bits = HwPwmParameters::bits;
-  using Scaler = typename w_ScalerSelector::template Scaler<hw_bits>;
+  using Pwm = ardo_system::HardwarePwmResources<Pin, HwPwmParameters>;
+  static constexpr std::int8_t timer_bits = Pwm::timer_bits;
+  using Scaler = typename w_ScalerSelector::template Scaler<timer_bits>;
   using value_type = typename Scaler::value_type;
-  using Pwm = ardo_system::HardwarePwmResources<
-    Pin, HwPwmParameters>;
 
   static const HardwarePwm pwm_pin;
 
+  // 
   using Claims = ardo::ConcatenateResourceClaims<
     typename w_Pin::Claims, typename Pwm::Claims>;
 
