@@ -8,7 +8,7 @@
 #include "ardOinus.h"
 #include "setl_cyclic_int.h"
 
-namespace ardo {
+namespace ardox {
 
 /**
  * Provide basic time period based polling.
@@ -93,7 +93,7 @@ public:
 };
 
 /**
- * Provides a poller that will sequence throgh the given periods.
+ * Provides a poller that will sequence through the given periods.
  */
 template <typename w_Seq, typename w_TimeType = ardo::CoreIF::MillisTime>
 class TimeSequencePoller {

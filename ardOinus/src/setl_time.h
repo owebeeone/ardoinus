@@ -45,6 +45,11 @@ public:
     : value{ value }
   {}
 
+  template <typename U, TimeUnit u_units>
+  explicit Time(const Time<U, u_units>& other)
+    : value(setl::ConvertTime<u_units, UNITS>::convert(other.get()))
+  {}
+
   period_type operator-(const Time<T, UNITS>& rhs) const {
     return period_type(value - rhs.value);
   }
@@ -103,7 +108,7 @@ public:
 
   // Unit conversion constructor.
   template <typename U, TimeUnit u_units>
-  explicit Period(const Period<U, u_units>& value)
+  Period(const Period<U, u_units>& value)
     : value{ static_cast<type>(ConvertTime<u_units, UNITS>::convert(value.get())) }
   {}
 
@@ -126,9 +131,13 @@ public:
     return Period(value - rhs.value);
   }
 
+  Period operator -() const {
+    return Period(T{} - value);
+  }
+
   template <typename W>
   Period operator -() const {
-    return Period(-value);
+    return Period(W{} - value);
   }
 
   template <typename W>

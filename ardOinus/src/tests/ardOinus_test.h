@@ -4,6 +4,8 @@
 
 #include "ardo_time_poller.h"
 
+//#include "ardo_sequencer.h"
+
 namespace adro_test_do_not_use {
 auto& pin1 = ardo::OutputPin<1, ardo::CoreIF::Output>::pin;
 auto& pin2 = ardo::OutputPin<2, ardo::CoreIF::OpenDrainLowOutput>::pin;
@@ -20,7 +22,7 @@ bool getValue() {
 template <typename Seq, typename Params>
 class BlinkModule : public ardo::ModuleBase<Params> {
 public:
-  using LedPin = typename Params::template Param<0>::param;
+  using LedPin = typename Params::template Param<0>;
 
   static BlinkModule instance;
 
@@ -43,7 +45,7 @@ public:
     }
   }
 
-  ardo::TimeSequencePoller<Seq> timeSequence;
+  ardo::CyclicTimeSequencePoller<Seq> timeSequence;
 };
 
 template <typename Seq, typename Params>

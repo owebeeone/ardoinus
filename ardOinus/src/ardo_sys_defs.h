@@ -118,19 +118,21 @@ public:
   }
 };
 
-template <>
-struct CoreIF::NowTimeEvaluator::NowTime<CoreIF::MillisTime> {
-  static CoreIF::MillisTime get() {
+template <typename ST>
+struct CoreIF::NowTimeEvaluator::NowTime<setl::Time<ST, setl::TimeUnit::MILLIS>> {
+  static setl::Time<ST, setl::TimeUnit::MILLIS> get() {
     return CoreIF::nowMillis();
   }
 };
 
-template <>
-struct CoreIF::NowTimeEvaluator::NowTime<CoreIF::MicrosTime> {
-  static CoreIF::MicrosTime get() {
+
+template <typename ST>
+struct CoreIF::NowTimeEvaluator::NowTime<setl::Time<ST, setl::TimeUnit::MICROS>> {
+  static setl::Time<ST, setl::TimeUnit::MICROS> get() {
     return CoreIF::nowMicros();
   }
 };
+
 
 /**
  * Arduino serial port support.

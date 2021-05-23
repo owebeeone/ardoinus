@@ -40,7 +40,7 @@ using SerialModule = ardo::ModuleBase<ardo::Parameters<SerialChannel>>;
 
 
 struct MainModule : public ardo::ModuleBase<ardo::Parameters<ardo::InputPin<18>>> {
-  using Pin = MainModule::Params::Param<0>::param;
+  using Pin = MainModule::Params::Param<0>;
 
   static void runLoop() {
     if (Pin::get()) {

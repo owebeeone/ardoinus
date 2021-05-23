@@ -34,7 +34,7 @@ public:
     }
   }
 
-  ardo::TimeSequencePoller<Seq> timeSequence;
+  ardo::CyclicTimeSequencePoller<Seq> timeSequence;
 };
 
 template <typename Seq, typename Params>

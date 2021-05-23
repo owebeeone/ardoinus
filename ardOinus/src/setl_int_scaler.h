@@ -104,7 +104,7 @@ inline out_type scale_mersenne(in_type value) {
 /**
  * LinearScalerSelector will provide a scaler that will map a value
  * range in unsigned bits to another range in unsigned bits linerarly.
- * Imprtantly, the full range is mapped, even from smaller resolutions
+ * Importantly, the full range is mapped, even from smaller resolutions
  * to higher resolutions. (i.e. zero is mapped to zero and max input
  * is mapped to max output.
  */

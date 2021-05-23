@@ -456,10 +456,13 @@ struct SelfParamsConflictTest<Res> {
 template <typename Res1, typename Res2, typename... Ress>
 struct SelfParamsConflictTest<Res1, Res2, Ress...> {
   using value_type = bool;
+  static constexpr value_type res1_res2_conflict = has_conflict<Res1, Res2>::value;
   static constexpr value_type value =
-    has_conflict<Res1, Res2>::value
+    res1_res2_conflict
     || SelfParamsConflictTest<Res1, Ress...>::value
     || SelfParamsConflictTest<Res2, Ress...>::value;
+
+  static_assert(!res1_res2_conflict, "Found resource conflict in same module.");
 };
 
 template <typename PL, typename PR>
@@ -587,7 +590,7 @@ struct SelfModuleParamsConflictTest<Param1, Param2, Params...> {
     || SelfModuleParamsConflictTest<Param1, Params...>::value
     || SelfModuleParamsConflictTest<Param2, Params...>::value;
 
-  static_assert(!value, "Application has resource conflict.");
+  static_assert(!value, "Application has resource conflict within same module.");
 };
 
 }  // namespace nfp

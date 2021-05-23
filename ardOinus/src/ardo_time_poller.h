@@ -1,4 +1,3 @@
-
 /**
  * Time polling function.
  */
@@ -20,6 +19,10 @@ class TimePoller {
 public:
   using StateType = w_StateType;
   using TimeType = w_TimeType;
+
+  TimePoller() = default;
+
+  TimePoller(TimeType from) : from(from) {}
 
   /** Sets the start time with now() time. */
   void setNow() {
@@ -97,7 +100,7 @@ public:
 };
 
 /**
- * Provides a poller that will sequence throgh the given periods cyclicly.
+ * Provides a poller that will sequence through the given periods cyclicly.
  */
 template <typename w_Seq, typename w_TimeType = ardo::CoreIF::MillisTime>
 class CyclicTimeSequencePoller {
@@ -119,6 +122,10 @@ public:
 
   void init() {
     poller.setNow();
+  }
+
+  void reset() {
+    poller.reset();
   }
 
   TimePoller<setl::CyclicInt<Sequence::count>, TimeType> poller;

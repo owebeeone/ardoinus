@@ -27,6 +27,8 @@
 
 #include "tests/circular_buffer_test.h"
 
+#include "tests/ardo_singleton_test.h"
+
 
 #if HAS_STDIOSTREAM
 #undef std

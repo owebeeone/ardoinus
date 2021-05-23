@@ -20,8 +20,8 @@
 void pinMode(int pin, std::uint8_t mode);
 void digitalWrite(int pin, std::uint8_t mode);
 int digitalRead(int pin);
-unsigned millis();
-unsigned micros();
+unsigned long millis();
+unsigned long micros();
 void analogWrite(int pin, int value);
 
 #define ARDO_DEV_MOCK_SERIAL
@@ -59,7 +59,7 @@ struct EEPROMType
   unsigned char values[4096];
 };
 
-EEPROMType EEPROM;
+extern EEPROMType EEPROM;
 
 
 namespace ardo_system {

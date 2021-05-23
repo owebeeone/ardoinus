@@ -11,24 +11,24 @@ namespace ardo_fastled {
 
 // The FastLED resource.
 class FastLEDParameter {
-private:
-  FastLEDParameter() = delete;
-public:
-  using Claims = ardo::ResourceClaim<decltype(FastLED)>;
+  private:
+    FastLEDParameter() = delete;
+  public:
+    using Claims = ardo::ResourceClaim<decltype(FastLED)>;
 
-  inline static void runSetup() {}
-  inline static void runLoop() {}
+    inline static void runSetup() {}
+    inline static void runLoop() {}
 };
 
 template <
   unsigned w_count,
-  typename w_LedPin, 
+  typename w_LedPin,
   template<uint8_t DATA_PIN, EOrder RGB_ORDER> class w_Type,
   EOrder w_colorOrder,
   uint8_t w_brightness
-  >
+>
 class LedStrip : public ardo::ModuleBase<ardo::Parameters<w_LedPin, FastLEDParameter>> {
-public:
+ public:
   constexpr static unsigned COUNT = w_count;
   constexpr static EOrder COLOR_ORDER = w_colorOrder;
   using LedPin = w_LedPin;
@@ -74,12 +74,23 @@ public:
     return leds[index];
   }
 
-private:
+  static void setBrightness(std::uint8_t scale) {
+    instance.instanceSetBrightness(scale);
+  }
 
+  void instanceSetBrightness(std::uint8_t scale) {
+    if (FastLED.getBrightness() == scale) {
+      return;
+    }
+    FastLED.setBrightness(scale);
+    has_changed = true;
+  }
+
+ private:
   bool has_changed = true;
   CRGB leds[COUNT];
 
-public:
+ public:
   static LedStrip instance;
 };
 
@@ -90,7 +101,7 @@ template <
   EOrder w_colorOrder,
   uint8_t w_brightness
 >
-LedStrip<w_count, w_LedPin, w_Type, w_colorOrder, w_brightness>
+  LedStrip<w_count, w_LedPin, w_Type, w_colorOrder, w_brightness>
   LedStrip<w_count, w_LedPin, w_Type, w_colorOrder, w_brightness>::instance;
 
 } // namespace
