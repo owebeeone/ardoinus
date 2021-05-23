@@ -15,13 +15,13 @@
 #include "ardo_time_poller.h"  // A time poller class.
 #include "ardo_color_space.h"
 #include "setlx_array.h"
+#include "ardo_packet_reassembler.h"
 
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>
 
 #include "ssid_creds.h" // contains symbols ssid and password
-#include "C:/Users/gianni/source/repos/PaketReassembler/PaketReassembler/ardo_packet_reassembler.h"
 
 
 #define PL_VERSION "V1.1"

@@ -31,8 +31,8 @@
 #ifndef ARDOINUS___H
 #define ARDOINUS___H
 
+#include "ardo_singleton.h"
 #include "ardo_resources.h"
-
 #include "ardo_sys_defs.h"
 
 #include "setl_time.h"
@@ -462,7 +462,7 @@ struct SelfParamsConflictTest<Res1, Res2, Ress...> {
     || SelfParamsConflictTest<Res1, Ress...>::value
     || SelfParamsConflictTest<Res2, Ress...>::value;
 
-  static_assert(!res1_res2_conflict, "Found resource conflict in same module.");
+  static_assert(!res1_res2_conflict, "Found resource conflict in same claim.");
 };
 
 template <typename PL, typename PR>
@@ -535,7 +535,8 @@ template <typename...w_Ms>
 using ModuleClosure = typename nfp::ModuleClosureVa<setl::TypeArgs<>, w_Ms...>::type;
 
 /**
- * Module base class.
+ * Module base class. Use this type of base class if no instance is required.
+ * Otherwise use the ModuleInstanceBase class to create a singleton instance.
  */
 template <
   typename w_Params = Parameters<>,
@@ -562,6 +563,33 @@ public:
 
   static void runLoop() {
     // Provide an empty setup method.
+  }
+};
+
+/**
+ * Provides an instance of the module. The provided module's instance functions
+ * instanceLoop() and instanceSetup() are called from the provided static functions.
+ */
+template <
+  typename w_Module,
+  typename w_Params = Parameters<>,
+  typename w_Deps = DependentModules<>>
+class ModuleInstanceBase :
+    public ModuleBase<w_Params, w_Deps>,
+    public Singleton<w_Module> {
+public:
+  inline static void runSetup() {
+    w_Module::instance.instanceSetup();
+  }
+
+  inline static void runLoop() {
+    w_Module::instance.instanceLoop();
+  }
+
+  inline void instanceSetup() {
+  }
+
+  inline void instanceLoop() {
   }
 };
 
@@ -654,7 +682,7 @@ public:
   static_assert(!has_conflict, "Application has resource conflict.");
 };
 
-}  // namespace
+}  // namespace ardo
 
 #define ARDOINUS___H_DONE
 #endif

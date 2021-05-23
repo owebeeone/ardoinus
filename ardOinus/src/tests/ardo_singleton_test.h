@@ -8,56 +8,93 @@
 
 namespace singleton_test {
 
+template <typename Seq, typename Params>
+class BlinkModule : 
+    public ardo::Singleton<BlinkModule<Seq, Params>>, public ardo::ModuleBase<Params> {
+public:
+  using LedPin = typename Params::template Param<0>;
 
-  template <typename Seq, typename Params>
-  class BlinkModule : 
-      public ardo::Singleton<BlinkModule<Seq, Params>>, public ardo::ModuleBase<Params> {
-  public:
-    using LedPin = typename Params::template Param<0>;
-
-
-    static void loop() {
-      BlinkModule::instance.instanceLoop();
-    }
-
-    void instanceLoop() {
-      if (timeSequence.poll()) {
-        switch (timeSequence.state() & 1) {
-          case 0: {
-            LedPin::set(true);
-            break;
-          }
-          case 1: {
-            LedPin::set(false);
-            break;
-          }
-        }
-      }
-    }
-
-    ardo::CyclicTimeSequencePoller<Seq> timeSequence;
-  };
-
-  using setl_test::assertThat;
-
-  using Blinker2 = BlinkModule<ardo::Sequence<1000, 500>, ardo::Parameters<ardo::OutputPin<2>>>;
-  using Blinker3 = BlinkModule<ardo::Sequence<750, 400>, ardo::Parameters<ardo::OutputPin<3>>>;
-
-  // Define the main app with 2 blinker modules.
-  using mainApp = ardo::Application<Blinker2, Blinker3>;
-
-  void setup() {
-    mainApp::runSetup();
+  static void runLoop() {
+    BlinkModule::instance.instanceLoop();
   }
 
-  void loop() {
-    mainApp::runLoop();
+  void instanceLoop() {
+    if (timeSequence.poll()) {
+      LedPin::set(timeSequence.state() & 1);
+    }
   }
 
-  class Test_DO_BOT_USE : setl_test::SetlTest {
+  ardo::CyclicTimeSequencePoller<Seq> timeSequence;
+};
 
-    bool run() override {
+#if !defined(LED_BUILTIN)
+#define LED_BUILTIN 1
+#endif
 
-    }
-  };
+using Blinker2 = BlinkModule<ardo::Sequence<1000, 100, 100, 100, 100>, ardo::Parameters<ardo::OutputPin<LED_BUILTIN>>>;
+using Blinker3 = BlinkModule<ardo::Sequence<750, 400>, ardo::Parameters<ardo::OutputPin<3>>>;
+
+// Define the main app with 2 blinker modules.
+using mainApp = ardo::Application<Blinker2, Blinker3>;
+
+void setup() {
+  mainApp::runSetup();
 }
+
+void loop() {
+  mainApp::runLoop();
+}
+
+class Test_DO_NOT_USE : setl_test::SetlTest {
+
+  bool run() override {
+
+  }
+};
+
+} // namespace singleton_test
+
+namespace moduleinstance_test {
+
+template <typename Seq, typename Params>
+class BlinkModule :
+  public ardo::ModuleInstanceBase<BlinkModule<Seq, Params>, Params> {
+public:
+  using LedPin = typename Params::template Param<0>;
+
+  void instanceLoop() {
+    if (timeSequence.poll()) {
+      LedPin::set(timeSequence.state() & 1);
+    }
+  }
+
+  ardo::CyclicTimeSequencePoller<Seq> timeSequence;
+};
+
+#if !defined(LED_BUILTIN)
+#define LED_BUILTIN 1
+#endif
+
+using Blinker2 = BlinkModule<ardo::Sequence<1000, 100, 100, 100, 100>, ardo::Parameters<ardo::OutputPin<LED_BUILTIN>>>;
+using Blinker3 = BlinkModule<ardo::Sequence<750, 400>, ardo::Parameters<ardo::OutputPin<3>>>;
+
+// Define the main app with 2 blinker modules.
+using mainApp = ardo::Application<Blinker2, Blinker3>;
+
+void setup() {
+  mainApp::runSetup();
+}
+
+void loop() {
+  mainApp::runLoop();
+}
+
+class Test_DO_NOT_USE : setl_test::SetlTest {
+
+  bool run() override {
+  }
+};
+
+} // namespace moduleinstance_test
+
+

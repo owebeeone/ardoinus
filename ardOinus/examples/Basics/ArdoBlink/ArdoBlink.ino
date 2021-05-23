@@ -38,7 +38,7 @@ public:
 };
 
 // C++ requires the instantiation of the static instance outside the class.
-// You can use ardo::ModuleInstance or ardo::Singleton from ardo_singleton.h
+// You can use ardo::ModuleInstanceBase or ardo::Singleton from ardo_singleton.h
 // to eliminate this boilerplate code.
 template <typename Seq, typename Params>
 BlinkModule<Seq, Params> BlinkModule<Seq, Params>::instance;
