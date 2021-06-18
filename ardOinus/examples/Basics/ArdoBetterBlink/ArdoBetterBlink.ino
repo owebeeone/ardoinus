@@ -10,7 +10,6 @@
 
 #include "ardo_time_poller.h"  // Time polling helpers.
 
-
 // A basic blinking module that will follow the given ardo::Sequence
 // specification for periods between transitions.
 //
