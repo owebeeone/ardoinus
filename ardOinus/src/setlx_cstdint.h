@@ -3,16 +3,6 @@
 #ifndef SETL_CSTDINT__H
 #define SETL_CSTDINT__H
 
-#include "setl_support.h"
-
-#ifdef HAS_STD_LIB
-#include <cstdint>
-#else
-
-#include "setlx_type_traits.h"
-
-namespace std {
-
 namespace nfp {
 
 template <unsigned size, typename... T>
@@ -42,6 +32,17 @@ using UnsignedTypes = TypeList<
   unsigned char, unsigned short, unsigned int, unsigned long, unsigned long long>;
 
 } // namespace nfp
+
+
+#include "setl_support.h"
+
+#ifdef HAS_STD_LIB
+#include <cstdint>
+#else
+
+#include "setlx_type_traits.h"
+
+namespace std {
 
 using int8_t = nfp::SignedTypes::FindSize<1>::type;
 using int16_t = nfp::SignedTypes::FindSize<2>::type;

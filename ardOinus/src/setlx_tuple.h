@@ -51,4 +51,5 @@ struct tuple_element<0, std::tuple<T, Ts...>> {
 
 }  // namespace std
 
+#endif  // else HAS_STD_LIB
 #endif  // SETLX_TUPLE_H

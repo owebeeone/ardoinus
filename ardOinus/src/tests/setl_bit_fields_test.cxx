@@ -3,7 +3,11 @@
 
 namespace TestBitFields {
 
-  
+using TestUnsignedType = setl::UnsignedType<char, short, signed char, unsigned char, char>::type;
+
+constexpr bool TestHasType = setl::has_type<int, std::tuple<bool, char>>::value;
+constexpr bool TestHasTypeT = setl::has_type<int, std::tuple<bool, char, int>>::value;
+
 static_assert(setl::Max<5, 6, 7>::value == 7, "Max should be 7.");
 
 using TestABS = setl::AddBitShifts<unsigned, 1, 2, setl::MaskShift<unsigned, 2, 2>>;
@@ -66,4 +70,234 @@ static_assert(TAMSTestAGMSI::convert(0x2) == 0x10, "Computed converted value is 
 static_assert(TAMSTestAGMSI::convert(0x4) == 0x20, "Computed converted value is incorrect");
 static_assert(TAMSTestAGMSI::convert(0x8) == 0x0, "Computed converted value is incorrect");
 
+
+using TestTypesOfBits1 = setl::TypesOfBits<setl::BitsRW<signed char, 1>, setl::BitsRW<bool, 2>>::type;
+using TestTypesOfBits1T = setl::UnsignedType<TestTypesOfBits1>::type;
+
+
+
+constexpr unsigned debug_mode = 1;
+
+template <unsigned mode>
+struct RegisterSelector;
+
+template <>
+struct RegisterSelector<0> {
+  template <typename T, ptrdiff_t w_addrx>
+  using IoAccessor = setl::McuRegister<T, w_addrx>;
+};
+
+constexpr unsigned mcu_io_memory_size = 4096;
+unsigned char mcu_io_memory[mcu_io_memory_size];
+unsigned char* const mcu_io_memory_ptr{ mcu_io_memory };
+
+template <>
+struct RegisterSelector<1> {
+  template <typename T, ptrdiff_t w_addrx>
+  using IoAccessor = setl::DebugMcuRegister<T, w_addrx, mcu_io_memory_size, mcu_io_memory_ptr>;
+};
+
+template <typename w_BitfieldType,
+  typename w_Register,
+  template <typename T, ptrdiff_t u_addrx> typename RegisterType = RegisterSelector<debug_mode>::IoAccessor>
+using Register = setl::IoRegister<w_BitfieldType, w_Register, RegisterType>;
+
+#define ADDR_MMIO_BYTE(mem_addr) ((ptrdiff_t) (mem_addr))
+#define ADDR_MMIO_WORD(mem_addr) ((ptrdiff_t) (mem_addr))
+#define ADDR_MMIO_DWORD(mem_addr) ((ptrdiff_t) (mem_addr))
+#define ADDR_SFR_MEM8(mem_addr) ADDR_MMIO_BYTE(mem_addr)
+#define ADDR_SFR_MEM16(mem_addr) ADDR_MMIO_WORD(mem_addr)
+#define ADDR_SFR_MEM32(mem_addr) ADDR_MMIO_DWORD(mem_addr)
+#define ADDR_SFR_IO8(io_addr) ADDR_MMIO_BYTE((io_addr) + __SFR_OFFSET)
+#define ADDR_SFR_IO16(io_addr) ADDR_MMIO_WORD((io_addr) + __SFR_OFFSET)
+
+#define SIZE_SFR_MEM8(mem_addr) (1)
+#define SIZE_SFR_MEM16(mem_addr) (2)
+#define SIZE_SFR_MEM32(mem_addr) (4)
+#define SIZE_SFR_IO8(io_addr) (1)
+#define SIZE_SFR_IO16(io_addr) (2)
+
+
+enum class EnumCOM1 : unsigned char {
+  disconnect = 0b00,
+  toggle = 0b01,
+  clear = 0b10,
+  set = 0b11
+};
+
+inline constexpr const char* EnumToStr(EnumCOM1 value) {
+  switch (value) {
+  case EnumCOM1::disconnect: return "disconnect";
+  case EnumCOM1::toggle: return "toggle";
+  case EnumCOM1::clear: return "clear";
+  case EnumCOM1::set: return "set";
+  default: return "";
+  }
+}
+
+
+
+//template <typename E,
+//  template <typename T, unsigned...ubits> typename B,
+//  unsigned...bits>
+//  inline std::ostream& operator<<(std::ostream& ostr, const B<E, bits...>& value) {
+//  return ostr << value.value;
+//}
+
+using BitsCOM1A = setl::BitsRW<EnumCOM1, COM1A1, COM1A0>;
+using BitsCOM1B = setl::BitsRW<EnumCOM1, COM1B1, COM1B0>;
+
+enum class TypeWGM1 : unsigned char {
+  normal = 0b0000,
+  pwm_phase_correct_8bit = 0b0001,
+  pwm_phase_correct_9bit = 0b0010,
+  pwm_phase_correct_10bit = 0b0011,
+  ctc_ocr1a = 0b0100,
+  fast_pwm_8bit = 0b0101,
+  fast_pwm_9bit = 0b0110,
+  fast_pwm_10bit = 0b0111,
+  pwm_phase_freq_correct_icr1 = 0b1000,
+  pwm_phase_freq_correct_ocr1a = 0b1001,
+  pwm_phase_correct_icr1 = 0b1010,
+  pwm_phase_correct_ocr1a = 0b1011,
+  ctc_icr1 = 0b1100,
+  reserved_d = 0b1101,
+  fast_pwm_icr1 = 0b1110,
+  fast_pwm_ocr1a = 0b1111,
+};
+
+
+
+
+using setl::NA;
+
+using BitsWGM1_10 = setl::BitsRW<TypeWGM1, NA, NA, WGM11, WGM10>;
+using BitsWGM1_32 = setl::BitsRW<TypeWGM1, WGM13, WGM12, NA, NA>;
+
+template <typename T, ptrdiff_t w_addr>
+struct MemRegisterDef {
+  static constexpr ptrdiff_t addr = w_addr;
+  using type = T;
+};
+
+template <typename T, ptrdiff_t w_addr>
+struct IoRegisterDef {
+  static constexpr ptrdiff_t uu__SFR_OFFSET = 0x20;
+  static constexpr ptrdiff_t addr = w_addr + uu__SFR_OFFSET;
+  using type = T;
+};
+
+using rrTCCR1A = MemRegisterDef<std::uint8_t, 0x80>;  // See TCCR1A
+
+using FieldsTCCR1A = setl::BitFields<BitsCOM1A, BitsCOM1B, BitsWGM1_10>;
+using RegisterTCCR1A = Register<FieldsTCCR1A, rrTCCR1A>;
+
+using TestBW = setl::BitTypesTraits<RegisterTCCR1A::FormatType, BitsCOM1A, BitsWGM1_10>;
+using TestBitTypesTraits = TestBW::traits;
+constexpr bool TestBitTypesTraits_all_contained = TestBitTypesTraits::all_contained;
+constexpr unsigned TestBitTypesTraits_in_mask = TestBitTypesTraits::in_mask;
+constexpr unsigned TestBitTypesTraits_collision_mask = TestBitTypesTraits::collision_mask;
+
+constexpr bool TestContains1 = RegisterTCCR1A::FormatType::contains<BitsCOM1A>;
+constexpr bool TestContains2 = RegisterTCCR1A::FormatType::contains<BitsWGM1_32>;
+
+enum class TypeCS1 : unsigned char {
+  no_clk = 0b000,
+  clk1 = 0b001,
+  clk8 = 0b010,
+  clk64 = 0b011,
+  clk256 = 0b100,
+  clk1024 = 0b101,
+  ext_clk_falling = 0b110,
+  ext_clk_rising = 0b111,
+};
+
+using BitsICNC1 = setl::BitsRW<bool, ICNC1>;
+using BitsICES1 = setl::BitsRW<bool, ICES1>;
+
+using BitsCS11 = setl::BitsRW<TypeCS1, CS12, CS11, CS10>;
+
+using FieldsTCCR1B = setl::Format<std::uint8_t, BitsWGM1_32, BitsCS11, BitsICES1, BitsICNC1>;
+
+using rrTCCR1B = MemRegisterDef<std::uint8_t, 0x81>;
+using RegisterTCCR1B = Register<FieldsTCCR1B, rrTCCR1B>;
+
 }  // namespace TestBitFields
+
+#include <iostream>
+
+template <typename E,
+  template <typename T, unsigned...ubits> typename B,
+  E enable = static_cast<E>(sizeof(EnumToStr(static_cast<E>(0)))),
+  unsigned...bits>
+inline std::ostream& operator<<(std::ostream& ostr, const B<E, bits...>& value) {
+  return ostr << TestBitFields::EnumToStr(value.value);
+}
+
+inline std::ostream& operator<<(std::ostream& ostr, TestBitFields::TypeWGM1 value) {
+  return ostr << "TypeWGM1(" << static_cast<unsigned>(value) << ")";
+}
+
+namespace TestBitFields {
+
+TypeWGM1 getTypeWGM1() {
+  BitsCOM1A com1a;
+  BitsCOM1B com1b;
+
+  BitsWGM1_10 wgm1_10;
+  BitsWGM1_32 wgm1_32;
+  std::cout << "N test1\n";
+  Assign(wgm1_10, com1a, com1b) = RegisterTCCR1A::Read();
+  std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
+  RegisterTCCR1A::ioregister::set(0xff);
+  Assign(wgm1_10, com1a, com1b) = RegisterTCCR1A::Read();
+  std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
+
+  std::cout << "N test2a\n";
+  Assign(com1a, com1b) = RegisterTCCR1A::Read(0xff);
+  std::cout << "test2b\n";
+  std::cout << "com1a: " << com1a << "\n";
+  com1a = RegisterTCCR1A::Read(0x7f);
+  std::cout << "com1a: " << com1a << "\n";
+
+  return {};
+}
+
+using BTEvaltr = setl::BitTypesEvaluator<RegisterTCCR1A::FormatType, BitsCOM1A, BitsCOM1B>;
+using BTEvaltrTraits = BTEvaltr::traits;
+constexpr unsigned collision = BTEvaltr::traits::collision_mask;
+
+TypeWGM1 rwTypeWGM1() {
+  auto registerValue = RegisterTCCR1A::Read(0xff);
+  BitsCOM1A com1a;
+  BitsCOM1B com1b;
+  BitsWGM1_10 wgm1_10;
+
+  std::cout << "N test3\n";
+  setl::Assign(com1a, com1b) = registerValue;
+  com1a = registerValue;
+
+  std::cout << "N test4\n";
+  std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
+  RegisterTCCR1A::Write(registerValue, com1a, BitsCOM1B{ EnumCOM1::clear });
+  std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
+
+  setl::Assign(wgm1_10, com1a, com1b) = RegisterTCCR1A::Read();
+  std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
+  RegisterTCCR1A::ReadModifyWrite(
+    BitsCOM1A{ EnumCOM1::toggle },
+    BitsCOM1B{ EnumCOM1::disconnect },
+    BitsWGM1_10{ TypeWGM1::pwm_phase_correct_9bit });
+  std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
+  setl::Assign(wgm1_10, com1a, com1b) = RegisterTCCR1A::Read();
+  std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
+
+  return {};
+}
+
+
+void runtest() {
+  getTypeWGM1();
+  rwTypeWGM1();
+
+}
