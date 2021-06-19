@@ -321,6 +321,35 @@ enum class BitOps : unsigned {
   ReadWrite
 };
 
+/**
+ * Provides a distinguising type for Bits types.
+ */
+template <std::uint64_t w_distinguisher_code, typename T>
+struct SemanticType {
+  using type = T;
+  static constexpr ::uint64_t distinguisher_code = w_distinguisher_code;
+};
+
+/**
+ * Provides a constant evaluator for a hash code from a string.
+ */
+inline constexpr std::uint32_t hash(const char* s, unsigned shift = 1) {
+  return s[0] ? std::uint32_t(s[0]) ^ shift * hash(s + 1, shift + 1) : 0;
+}
+
+template <typename T>
+struct GetTypeOfHelper {
+  using type = T;
+};
+
+template <std::uint64_t w_distinguisher_code, typename T>
+struct GetTypeOfHelper<SemanticType<w_distinguisher_code, T>> {
+  using type = T;
+};
+
+template <typename T>
+using GetTypeOf = typename GetTypeOfHelper<T>::type;
+
 template <BitOps w_ops, typename T, unsigned...bits>
 struct Bits {
   static constexpr BitOps ops{ w_ops };
@@ -352,9 +381,10 @@ struct Bits {
 };
 
 template <typename T, unsigned...bits>
-struct BitsRO : Bits<BitOps::ReadOnly, T, bits...> {
-  using super = Bits<BitOps::ReadOnly, T, bits...>;
-  using type = T;
+struct BitsRO : Bits<BitOps::ReadOnly, GetTypeOf<T>, bits...> {
+  using super = Bits<BitOps::ReadOnly, GetTypeOf<T>, bits...>;
+  using type = GetTypeOf<T>;
+  using outer_type = T;
 
   BitsRO() = default;
 
@@ -372,10 +402,10 @@ struct BitsRO : Bits<BitOps::ReadOnly, T, bits...> {
 };
 
 template <typename T, unsigned...bits>
-struct BitsWO : Bits<BitOps::WriteOnly, T, bits...> {
-  using super = Bits<BitOps::WriteOnly, T, bits...>;
-  using slice_type = T;
-  using type = typename slice_type::type;
+struct BitsWO : Bits<BitOps::WriteOnly, GetTypeOf<T>, bits...> {
+  using super = Bits<BitOps::WriteOnly, GetTypeOf<T>, bits...>;
+  using type = GetTypeOf<T>;
+  using outer_type = T;
 
   BitsWO() = default;
 
@@ -385,9 +415,10 @@ struct BitsWO : Bits<BitOps::WriteOnly, T, bits...> {
 };
 
 template <typename T, unsigned...bits>
-struct BitsRW : Bits<BitOps::ReadWrite, T, bits...> {
-  using super = Bits<BitOps::ReadWrite, T, bits...>;
-  using type = typename T;
+struct BitsRW : Bits<BitOps::ReadWrite, GetTypeOf<T>, bits...> {
+  using super = Bits<BitOps::ReadWrite, GetTypeOf<T>, bits...>;
+  using type = GetTypeOf<T>;
+  using outer_type = T;
 
   BitsRW() = default;
 
@@ -403,6 +434,7 @@ struct BitsRW : Bits<BitOps::ReadWrite, T, bits...> {
     return *this;
   }
 };
+
 
 // Catentate two tuples.
 template <typename T, typename U>
