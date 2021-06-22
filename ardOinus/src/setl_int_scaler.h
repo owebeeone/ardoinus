@@ -7,18 +7,24 @@
 namespace setl {
 
 /**
- * Evaluates Mersenne numbers - 2^n-1.
+ * Evaluates Mersenne numbers, i.e. 2^n-1.
  */
 constexpr std::uint32_t mersenne(std::uint8_t n) {
   return n < 32 ? (1 << n) - 1 : ~std::uint32_t(0);
 }
+
+template <std::uint8_t n>
+constexpr UnsignedTypeForMaxBits<n> mersenne_u =
+   n < (sizeof(UnsignedTypeForMaxBits<n>) * 8) ? (1 << n) - 1 : ~UnsignedTypeForMaxBits<n>(0);;
 
 /**
  * scale_mersenne will scale an integer range, 0..2^q-1 (q=in_bits), to 
  * a range, 0..2^m-1 (i.e. m=out_bist and m>q) so that the scaled limits 
  * are the same as the limits of the target range. 
  * i.e. scale_mersenne(m, q, mersenne(q)) == mersenne(m).
- * The scaling is linear (apart from rounding aliasing).
+ * The scaling is linear (apart from rounding aliasing). The scale factor is
+ * double(mersenne(out_bits)) / double(mersenne(in_bits)) but this code does
+ * no floating point math.
  */
 inline std::uint32_t scale_mersenne(
   std::uint8_t out_bits, std::uint8_t in_bits, std::uint32_t value) {

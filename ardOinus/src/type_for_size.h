@@ -120,6 +120,13 @@ public:
     <max_bits, TypeTraits::Integer7, TypeTraits::Integer15, TypeTraits::Integer31>::selected;
 };
 
+template <std::uint32_t n>
+using UnsignedTypeForMaxBits = typename TypeForMaxBits<n>::selected::type_unsigned;
+
+template <std::uint32_t n>
+using SignedTypeForMaxBits = typename TypeForMaxBits<n>::selected::type_signed;
+
+
 } // namespace
 
 #endif
