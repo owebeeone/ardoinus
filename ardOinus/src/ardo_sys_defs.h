@@ -18,6 +18,21 @@
 #include "setlx_cstdint.h"
 #include "setlx_type_traits.h"
 
+#ifdef _MSC_VER 
+
+#define __AVR
+#define __AVR_ATmega328P__ 1
+#define __AVR_DEVICE_NAME__ atmega328p
+#define AVR_MOCK_IOREGISTERS 1
+
+#endif // _MSC_VER
+
+
+#ifdef __AVR
+
+#include "ardo_mcu_avr.h"
+
+#endif
 
 // Defines for Arduino Nano
 #if defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_UNO)

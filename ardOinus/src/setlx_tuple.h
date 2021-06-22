@@ -21,7 +21,7 @@ struct tuple<> {};
 
 template <typename T, typename... Ts>
 struct tuple<T, Ts...> : public tuple<Ts...> {
-   tuple(const T& value, const Ts...& rest) 
+   tuple(const T& value, const Ts&... rest) 
      : tuple<Ts...>(rest...), value(value)
    {}
 

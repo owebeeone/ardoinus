@@ -65,7 +65,7 @@ struct MaskShifts {
   using catenate = MaskShifts<addMS..., MS...>;
 
   /// Applies a template to the set of MaskShift operations.
-  template <template <typename...MS> typename Other>
+  template <template <typename...MT> typename Other>
   using apply = Other<MS...>;
 
   /// Applies a template to the set of MaskShift operations with an associated
@@ -74,7 +74,7 @@ struct MaskShifts {
     typename Ta, 
     Ta w_mask, 
     int w_shift, 
-    template <typename Tb, Tb v_mask, int v_shift, typename...MS> typename Other>
+    template <typename Tb, Tb v_mask, int v_shift, typename...MT> typename Other>
   using applyTMS = Other<Ta, w_mask, w_shift, MS...>;
 };
 
@@ -164,7 +164,7 @@ struct UintList {
   using catenate_back = UintList<Ns..., wNs...>;
 
   /// Apply this list of values to another template.
-  template <typename T, template <typename T, unsigned...wNs> typename Func>
+  template <typename T, template <typename U, unsigned...wNs> typename Func>
   using eval = Func<T, Ns...>;
 };
 
@@ -604,8 +604,10 @@ struct Assigner<w_Proxy> {
   const Assigner& operator=(const BitValue<w_FormatType>& value) const {
     static_assert(w_FormatType::template contains<ProxyType>,
       "Cannot assign value not containing result type");
+    using FormatTypeType = typename w_FormatType::type;
+    using TypesOfBitsType = typename TypesOfBits<w_Proxy>::type;
     using unsigned_type = typename UnsignedType<
-      cat_tuples<std::tuple<w_FormatType::type>, TypesOfBits<w_Proxy>::type>>::type;
+      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     Assign<w_FormatType>(static_cast<unsigned_type>(value.value));
     return *this;
   }
@@ -630,7 +632,7 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
     static_assert(w_FormatType::template contains<ProxyType>,
       "Cannot assign value not containing result type");
     const Assigner<w_Proxies...>& super{ *this };
-    super.Assign<w_FormatType, T>(value);
+    super.template Assign<w_FormatType, T>(value);
 
     using appliers = BitTypeAppliers<T, ProxyType>;
     proxy->value = static_cast<typename ProxyType::type>(appliers::applier::convert(value));
@@ -640,9 +642,11 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
   const Assigner& operator=(const BitValue<w_FormatType>& value) const {
     static_assert(w_FormatType::template contains<ProxyType>,
       "Cannot assign value not containing result type");
+
+    using FormatTypeType = typename w_FormatType::type;
+    using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
     using unsigned_type = typename UnsignedType<
-        cat_tuples<std::tuple<w_FormatType::type>,
-        TypesOfBits<w_Proxy, w_Proxies...>::type>>::type;
+        cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     Assign<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }
