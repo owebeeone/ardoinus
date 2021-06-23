@@ -15,7 +15,8 @@ constexpr std::uint32_t mersenne(std::uint8_t n) {
 
 template <std::uint8_t n>
 constexpr UnsignedTypeForMaxBits<n> mersenne_u =
-   n < (sizeof(UnsignedTypeForMaxBits<n>) * 8) ? (1 << n) - 1 : ~UnsignedTypeForMaxBits<n>(0);;
+   n < (sizeof(UnsignedTypeForMaxBits<n>) * 8) 
+      ? (UnsignedTypeForMaxBits<n>(1) << n) - 1 : ~UnsignedTypeForMaxBits<n>(0);;
 
 /**
  * scale_mersenne will scale an integer range, 0..2^q-1 (q=in_bits), to 
