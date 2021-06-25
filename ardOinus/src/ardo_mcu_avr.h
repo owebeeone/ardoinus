@@ -33,6 +33,9 @@ struct RegisterSelector<1> {
 constexpr unsigned debug_mode = 0;
 #endif
 
+template <typename T, ptrdiff_t w_addrx>
+using IoAccessor = typename RegisterSelector<debug_mode>::IoAccessor<T, w_addrx>::IoAccessor;
+
 }  // namespace avr
 }  // namespace sys
 }  // namespace ardo
