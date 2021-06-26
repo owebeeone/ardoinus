@@ -129,6 +129,19 @@ struct DividerMappings<T, Ts...> {
  * resolution_bits_of_top_comparator : The bit width of the "top" value comparator.
  * phase_correct_mode : If true, the clock frequency is divided by 2.
  */
+
+template <typename T>
+constexpr std::uint32_t getClockDividerMultiple(
+  T minimum_frequency,
+  std::uint32_t timer_clock_frequency,
+  std::uint8_t resolution_bits_of_top_comparator,
+  bool phase_correct_mode) {
+  return timer_clock_frequency
+      / ((phase_correct_mode ? 2ul : 1ul)
+         * minimum_frequency
+         * setl::mersenne(resolution_bits_of_top_comparator));
+}
+
 template <typename EnumT, typename T>
 constexpr EnumT getClockDivider(
   T minimum_frequency,
@@ -138,12 +151,12 @@ constexpr EnumT getClockDivider(
   using Traits = TccrEnumTraits<EnumT>;
   using FreqMapping = typename Traits::FreqMapping;
   return FreqMapping::findLargestLessThanOrEq(
-    timer_clock_frequency
-    / ((phase_correct_mode ? 2u : 1u)
-      * minimum_frequency
-      * setl::mersenne(resolution_bits_of_top_comparator)));
+    getClockDividerMultiple(
+      minimum_frequency, 
+      timer_clock_frequency, 
+      resolution_bits_of_top_comparator, 
+      phase_correct_mode));
 }
-
 
 /**
  * Define register TCCR1B CS1n definitions.
@@ -184,13 +197,10 @@ struct TccrEnumTraits<EnumCS1> {
   static constexpr EnumT end_range = EnumT::clk1024;
 };
 
-//static_assert(
-//  getClockDivider<EnumCS1>(100000, 16000000, 16, false) == EnumCS1::clk1,
-//  "Clockdivider computation failed or 100kHz and 16 bit comparator.");
-//
+static_assert(
+  getClockDivider<EnumCS1>(100000, 16000000, 16, false) == EnumCS1::clk1,
+  "Clockdivider computation failed or 100kHz and 16 bit comparator.");
 
-/*
-constexpr EnumCS1 s = getClockDivider<EnumCS1>(2, 16000000, 16, true);
 static_assert(
   getClockDivider<EnumCS1>(2, 16000000, 16, true) == EnumCS1::clk8,
   "Clockdivider computation failed or 2Hz and 16 bit comparator in phase correct mode.");
@@ -199,11 +209,9 @@ static_assert(
   getClockDivider<EnumCS1>(2, 16000000, 16, false) == EnumCS1::clk64,
   "Clockdivider computation failed or 2Hz and 16 bit comparator.");
 
-constexpr auto ZZ = getClockDivider<EnumCS1>(10, 16000000, 16, false);
-
-static constexpr EnumCS1 XX = Cs1DividerMapping::findLargestLessThanOrEq(0);
-static constexpr std::uint32_t YY = Cs1DividerMapping::find(EnumCS1::clk256);
-*/
+static_assert(
+  getClockDivider<EnumCS1>(0.5, 16000000, 16, false) == EnumCS1::clk256,
+  "Clockdivider computation failed or 0.5Hz and 16 bit comparator.");
 
 /**
  * Controls for output compare register modes.

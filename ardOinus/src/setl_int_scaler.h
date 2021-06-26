@@ -10,7 +10,7 @@ namespace setl {
  * Evaluates Mersenne numbers, i.e. 2^n-1.
  */
 constexpr std::uint32_t mersenne(std::uint8_t n) {
-  return n < 32 ? (1 << n) - 1 : ~std::uint32_t(0);
+  return n < 32 ? (std::uint32_t(1) << n) - 1 : ~std::uint32_t(0);
 }
 
 template <std::uint8_t n>
