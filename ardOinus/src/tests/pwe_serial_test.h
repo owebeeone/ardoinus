@@ -1,9 +1,7 @@
 
 #if HAS_STDIOSTREAM
-#undef std
 #include <iostream>
 using std::cout;
-#define std stdx
 #define SILENT_TEST 1
 #else 
 #define SILENT_TEST 1

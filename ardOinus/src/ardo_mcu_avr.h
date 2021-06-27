@@ -19,8 +19,8 @@ struct RegisterSelector {
 constexpr unsigned debug_mode = AVR_MOCK_IOREGISTERS;
 
 constexpr unsigned mcu_io_memory_size = 4096;
-unsigned char mcu_io_memory[mcu_io_memory_size];
-unsigned char* const mcu_io_memory_ptr{ mcu_io_memory };
+extern unsigned char mcu_io_memory[mcu_io_memory_size];
+extern unsigned char* const mcu_io_memory_ptr;
 
 template <>
 struct RegisterSelector<1> {
@@ -34,7 +34,7 @@ constexpr unsigned debug_mode = 0;
 #endif
 
 template <typename T, ptrdiff_t w_addrx>
-using IoAccessor = typename RegisterSelector<debug_mode>::IoAccessor<T, w_addrx>::IoAccessor;
+using IoAccessor = typename RegisterSelector<debug_mode>::IoAccessor<T, w_addrx>;
 
 }  // namespace avr
 }  // namespace sys

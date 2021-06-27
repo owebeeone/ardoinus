@@ -76,10 +76,7 @@ struct range_claim {
 };
 
 template<typename T, typename U>
-struct has_conflict : std::false_type {};
-
-template<typename T>
-struct has_conflict<T, T> : std::true_type {};
+struct has_conflict : std::is_same<T, U> {};
 
 template<typename T, int Begin1, int End1, int Begin2, int End2>
 struct has_conflict<range_claim<T, Begin1, End1>, range_claim<T, Begin2, End2>> {

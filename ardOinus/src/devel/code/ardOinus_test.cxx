@@ -4,7 +4,6 @@
 
 #if HAS_STDIOSTREAM
 #include <iostream>
-#define std stdx
 #endif
 
 
@@ -31,7 +30,6 @@
 
 
 #if HAS_STDIOSTREAM
-#undef std
 
 int main(int, char **)
 {

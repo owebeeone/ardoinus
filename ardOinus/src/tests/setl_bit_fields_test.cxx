@@ -1,5 +1,7 @@
 
 #include "setl_bit_fields.h"
+#include "ardOinus.h"
+
 
 namespace TestBitFields {
 
@@ -144,8 +146,10 @@ inline constexpr const char* EnumToStr(EnumCOM1 value) {
 //  return ostr << value.value;
 //}
 
-using BitsCOM1A = setl::BitsRW<EnumCOM1, COM1A1, COM1A0>;
-using BitsCOM1B = setl::BitsRW<EnumCOM1, COM1B1, COM1B0>;
+using namespace ardo::sys::avr::mcu;
+
+using BitsCOM1A = setl::BitsRW<EnumCOM1, ccCOM1A1, ccCOM1A0>;
+using BitsCOM1B = setl::BitsRW<EnumCOM1, ccCOM1B1, ccCOM1B0>;
 
 enum class TypeWGM1 : unsigned char {
   normal = 0b0000,
@@ -171,8 +175,8 @@ enum class TypeWGM1 : unsigned char {
 
 using setl::NA;
 
-using BitsWGM1_10 = setl::BitsRW<TypeWGM1, NA, NA, WGM11, WGM10>;
-using BitsWGM1_32 = setl::BitsRW<TypeWGM1, WGM13, WGM12, NA, NA>;
+using BitsWGM1_10 = setl::BitsRW<TypeWGM1, NA, NA, ccWGM11, ccWGM10>;
+using BitsWGM1_32 = setl::BitsRW<TypeWGM1, ccWGM13, ccWGM12, NA, NA>;
 
 template <typename T, ptrdiff_t w_addr>
 struct MemRegisterDef {
@@ -212,10 +216,10 @@ enum class TypeCS1 : unsigned char {
   ext_clk_rising = 0b111,
 };
 
-using BitsICNC1 = setl::BitsRW<bool, ICNC1>;
-using BitsICES1 = setl::BitsRW<bool, ICES1>;
+using BitsICNC1 = setl::BitsRW<bool, ccICNC1>;
+using BitsICES1 = setl::BitsRW<bool, ccICES1>;
 
-using BitsCS11 = setl::BitsRW<TypeCS1, CS12, CS11, CS10>;
+using BitsCS11 = setl::BitsRW<TypeCS1, ccCS12, ccCS11, ccCS10>;
 
 using FieldsTCCR1B = setl::Format<std::uint8_t, BitsWGM1_32, BitsCS11, BitsICES1, BitsICNC1>;
 
@@ -295,9 +299,9 @@ TypeWGM1 rwTypeWGM1() {
   return {};
 }
 
+} // namespace
 
 void runtest() {
-  getTypeWGM1();
-  rwTypeWGM1();
-
+  TestBitFields::getTypeWGM1();
+  TestBitFields::rwTypeWGM1();
 }

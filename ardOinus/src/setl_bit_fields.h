@@ -105,8 +105,8 @@ struct AddBitShifts<T, w_mask, w_shift, MS, MSs...> {
 };
 
 /**
- * The bit position that is not used. If the bit position has no corresponding,
- * input bit use NA.
+ * Generic "Not Applicable" value.
+ * If used in bit positions, it indicates the bit is not used in the bitfield.
  */
 constexpr unsigned NA{~0u};
 
@@ -280,9 +280,9 @@ struct ApplyMaskShift<MaskShift<T, w_mask, w_shift>> {
 
 /// Case of ApplyMaskShift for masking all bits and zero shift.
 template <typename T>
-struct ApplyMaskShift<MaskShift<T, ~T{0}, 0>> {
-  static constexpr T in_mask = ~T{0};
-  static constexpr T out_mask = ~T{0};
+struct ApplyMaskShift<MaskShift<T, ~(T()), 0>> {
+  static constexpr T in_mask = ~(T());
+  static constexpr T out_mask = ~(T());
   static constexpr T convert(T value) {
     return value;
   }
@@ -785,12 +785,12 @@ struct IoRegister {
   }
 
   /**
-   * Perform a write operation with the given  bit field values with the provided
+   * Perform a write operation with the given bit field values with the provided
    * default value.
    */
   template <typename...BitsTypes>
   static void Write(
-      const BitValue<FormatType>& defaultBits, BitsTypes...bitsValues) {
+      const BitValue<FormatType>& defaultBits, const BitsTypes&...bitsValues) {
     using Evaluator = BitTypesEvaluator<FormatType, BitsTypes...>;
     auto new_bits = Evaluator::evaluate(bitsValues...);
     auto mask = Evaluator::traits::in_mask;
@@ -800,6 +800,17 @@ struct IoRegister {
     } else {
       ioregister::set(static_cast<type>(new_bits));
     }
+  }
+
+  /**
+   * Perform a write operation with the given bit field values.
+   */
+  template <typename...BitsTypes>
+  static void Write(const BitsTypes&...bitsValues) {
+    using Evaluator = BitTypesEvaluator<FormatType, BitsTypes...>;
+    auto new_bits = Evaluator::evaluate(bitsValues...);
+    auto mask = Evaluator::traits::in_mask;
+    ioregister::set(static_cast<type>(new_bits));
   }
 
   /**
