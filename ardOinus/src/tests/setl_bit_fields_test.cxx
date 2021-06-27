@@ -2,6 +2,8 @@
 #include "setl_bit_fields.h"
 #include "ardOinus.h"
 
+#include "setl_test_framework.h"
+#include <bitset>
 
 namespace TestBitFields {
 
@@ -299,9 +301,47 @@ TypeWGM1 rwTypeWGM1() {
   return {};
 }
 
+template <typename EnumT, typename T>
+std::uint32_t localClockTimerTop(
+    EnumT clock_divider,
+    T selected_frequency,
+    std::uint32_t timer_clock_frequency,
+    bool phase_correct_mode) {
+  return ardo::sys::avr::mcu::getClockTimerTop(
+    clock_divider, selected_frequency, timer_clock_frequency, phase_correct_mode);
+}
+
+inline void setupTimer() {
+  ardo::sys::avr::mcu::TC1<56000, false, 16000000>::setFastPwm();
+}
+
+void dividerTests() {
+  using namespace ardo::sys::avr::mcu;
+  std::cout << "Before RegisterTCCR1AB: " << std::bitset<16>(RegisterTCCR1AB::Read().value) << "\n";;
+  std::cout << "Before RegisterIRC1: " << (RegisterIRC1::Read().value) << "\n";;
+  TestBitFields::setupTimer();
+  std::cout << "After RegisterTCCR1AB: " << std::bitset<16>(RegisterTCCR1AB::Read().value) << "\n";;
+  std::cout << "After RegisterIRC1: " << (RegisterIRC1::Read().value) << "\n";;
+
+  std::cout << "cs1_divider_multiple = " << findDividerMultiple(TC1<56000, false, 16000000>::cs1_value) << "\n";
+  std::cout << "top_count = " << TC1<56000, false, 16000000>::top_count << "\n";
 } // namespace
 
-void runtest() {
+void runBitfieldsTest() {
   TestBitFields::getTypeWGM1();
   TestBitFields::rwTypeWGM1();
+  TestBitFields::dividerTests();
 }
+
+}
+
+struct BitFieldsTest : setl_test::SetlTest
+{
+  bool run() override {
+    TestBitFields::runBitfieldsTest();
+    return true;
+  }
+
+};
+
+BitFieldsTest tBitFieldsTest;

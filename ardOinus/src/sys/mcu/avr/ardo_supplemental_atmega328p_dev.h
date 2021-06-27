@@ -156,6 +156,16 @@ constexpr EnumT getClockDivider(
 }
 
 /**
+ * Returns the multiple for a divider setting.
+ */
+template <typename EnumT>
+constexpr decltype(
+    TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(TccrEnumTraits<EnumT>::start_range))
+  findDividerMultiple(EnumT cs1_value) {
+  return TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(cs1_value);
+}
+
+/**
  * Returns the "top count" for the timer with the given clock divider setting.
  * If an invalid clock_divider is given, 
  */
@@ -172,6 +182,7 @@ constexpr std::uint32_t getClockTimerTop(
       * selected_frequency
       * FreqMapping::findDividerMultiple(clock_divider));
 }
+
 /**
  * Define register TCCR1B CS1n definitions.
  */
@@ -354,8 +365,8 @@ struct Timer16 {
   static constexpr auto top_count = getClockTimerTop(
     cs1_value, setup_frequency, base_frequency, phase_correct_mode);
 
-  //static_assert(cs1_value != EnumCS1::no_clk, "Impossible frequency settings for timer.");
- // static_assert(top_count >= 2u, "Impossible frequency settings for timer.");
+  static_assert(cs1_value != EnumCS1::no_clk, "Impossible frequency settings for timer.");
+  static_assert(top_count >= 2u, "Impossible frequency settings for timer.");
 
   /**
    *
@@ -371,14 +382,8 @@ template <
   bool w_phase_correct_mode,
   std::uint32_t w_base_frequency  // Usually CPU clock frequency.
 >
-using TC1 = Timer16<RegisterTCCR1AB, RegisterIRC1, w_setup_frequency, w_base_frequency, w_phase_correct_mode>;
+using TC1 = Timer16<RegisterTCCR1AB, RegisterIRC1, w_setup_frequency, w_phase_correct_mode, w_base_frequency>;
 
-constexpr auto YYY = TC1<56000, false, 16000000>::cs1_value;
-constexpr auto XXX = TC1<56000, false, 16000000>::top_count;
-
-inline void setupTimer() {
-  TC1<56000, false, 16000000>::setFastPwm();
-}
 
 }  // arch_atmega328p
 }  // namespace avr

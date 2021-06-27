@@ -62,7 +62,7 @@ inline void TestRegister::run() {
   }
 }
 
-unsigned runAllTests() {
+inline unsigned runAllTests() {
   TestRegister::getRegister().run();
   return TestRegister::getRegister().success;
 }
