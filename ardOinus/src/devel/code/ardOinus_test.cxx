@@ -38,6 +38,7 @@ int main(int, char **)
   std::cout << "successfull tests = " << setl_test::runAllTests() << "\n";
 
   std::cout << "Goodbye world!\n";
+
 }
 
 #endif

@@ -6,7 +6,9 @@
 #ifndef ardo_supplemental_atmega328p_defs__h
 #define ardo_supplemental_atmega328p_defs__h
 
+#include "setl_cat_tuple.h"
 #include "setl_int_scaler.h"
+#include "setl_system.h"
 #include "setlx_cstdint.h"
 #include "ardo_supplemental_atmega328p.h"
 
@@ -382,8 +384,303 @@ template <
   bool w_phase_correct_mode,
   std::uint32_t w_base_frequency  // Usually CPU clock frequency.
 >
-using TC1 = Timer16<RegisterTCCR1AB, RegisterIRC1, w_setup_frequency, w_phase_correct_mode, w_base_frequency>;
+using TC1 = Timer16<
+  RegisterTCCR1AB, RegisterIRC1, w_setup_frequency, w_phase_correct_mode, w_base_frequency>;
 
+// Defines bits for ports. e.g.
+// using BitsPORTB7 = setl::BitsRW<setl::SemanticType<setl::hash("PORTB7"), bool>, ccPORTB7>;
+#define MakePortBit(TYPE, LETTER, N) \
+using Bits ## TYPE ## LETTER ## N = setl::BitsRW<setl::SemanticType<setl::hash(#TYPE #LETTER #N), bool>, cc ## ## TYPE ## LETTER ## N>
+
+#define MakePort8(TYPE, RTYPE, LETTER) \
+MakePortBit(TYPE, LETTER, 7); \
+MakePortBit(TYPE, LETTER, 6); \
+MakePortBit(TYPE, LETTER, 5); \
+MakePortBit(TYPE, LETTER, 4); \
+MakePortBit(TYPE, LETTER, 3); \
+MakePortBit(TYPE, LETTER, 2); \
+MakePortBit(TYPE, LETTER, 1); \
+MakePortBit(TYPE, LETTER, 0); \
+ \
+using Fields ## TYPE ## LETTER = setl::BitFields< \
+  Bits ## TYPE ## LETTER ## 7, \
+  Bits ## TYPE ## LETTER ## 6, \
+  Bits ## TYPE ## LETTER ## 5, \
+  Bits ## TYPE ## LETTER ## 4, \
+  Bits ## TYPE ## LETTER ## 3, \
+  Bits ## TYPE ## LETTER ## 2, \
+  Bits ## TYPE ## LETTER ## 1, \
+  Bits ## TYPE ## LETTER ## 0>; \
+ \
+using Register ## TYPE ## LETTER = Register<Fields ## TYPE ## LETTER, rr ## RTYPE ## LETTER>; \
+// end MakePort8
+
+#define MakePortRegisters8(LETTER) \
+MakePort8(PORT, PORT, LETTER) \
+MakePort8(DD, DDR, LETTER) \
+MakePort8(PIN, PIN, LETTER) \
+// End MakePortRegisters
+
+// PORT/DDR/PIN C7 does not exist for atmega328p, defining here to simplify.
+constexpr unsigned ccPORTC7 = 7;
+constexpr unsigned ccDDC7 = 7;
+constexpr unsigned ccPINC7 = 7;
+
+MakePortRegisters8(B)
+MakePortRegisters8(C)
+MakePortRegisters8(D)
+
+#undef MakePortRegisters8
+#undef MakePort8
+#undef MakePortBit
+
+template <
+  typename w_PortBit,
+  typename w_PinBit,
+  typename w_DdBit,
+  typename w_PortReg,
+  typename w_PinReg,
+  typename w_DdReg>
+struct GpioPortDefinition {
+  using PortBit = w_PortBit;
+  using PinBit = w_PinBit;
+  using DdBit = w_DdBit;
+  using PortReg = w_PortReg;
+  using PinReg = w_PinReg;
+  using DdReg = w_DdReg;
+};
+
+/**
+ * Appliers provides a template class that may be used to perform a number
+ * bitfield operations.
+ */
+template <typename...w_Appliers>
+struct Appliers;
+
+template <typename w_BitField, typename w_BitField::type w_value, typename w_Register>
+struct Applier {
+  template <typename...w_Appliers>
+  friend struct Appliers;
+
+private:
+  static void apply() {
+    w_Register::ReadModifyWrite(w_BitField{w_value});
+  }
+};
+
+template <>
+struct Appliers<> {
+  template <typename...v_Appliers>
+  friend struct Appliers;
+
+  using types = std::tuple<>;
+  static void apply() {
+  }
+};
+
+template <typename w_Applier, typename...w_Appliers>
+struct Appliers<w_Applier, w_Appliers...> {
+  template <typename...v_Appliers>
+  friend struct Appliers;
+  friend struct ApplierRunner;
+
+  using types = std::tuple<w_Applier, w_Appliers...>;
+
+ private:
+  static void apply() {
+    w_Applier::apply();
+    Appliers<w_Appliers...>::apply();
+  }
+};
+
+/**
+ * Provides "apply" frunctions that execute the given bit Appliers. One of the
+ * functions performs a synchronization (memory barrier) as may be needed on some
+ * microcontrollers.
+ */
+struct ApplierRunner {
+ protected:
+  /// Applies the given "Appliers" and performs a sync barrier.
+  template <typename w_Appliers>
+  static void applySync() {
+    setl::System::MemoryBarrier barrier;
+    w_Appliers::apply();
+  }
+
+  /// Applies the given "Appliers".
+  template <typename w_Appliers>
+  static void applyNoSync() {
+    w_Appliers::apply();
+  }
+};
+
+/**
+ * Interface for GPIO ports.
+ * Provides configuration support either by function or configuration
+ * types. i.e the following are equivalent, however ppPB7::ConfigureInputPullup
+ * may be used as a template configuration parameter:
+ *   ppPB7::configure<ppPB7::ConfigureInputPullup>();
+ *   ppPB7::configure(false, true);  // Can be used dynamically.
+ */
+template <
+  typename w_GpioPort,
+  typename w_GpioPortDefinition>
+struct GpioPort : ApplierRunner, w_GpioPortDefinition{
+  using DerivedPort = w_GpioPort;
+  using GpioPortDefinition = w_GpioPortDefinition;
+  using PortBit = typename GpioPortDefinition::PortBit;
+  using PinBit = typename GpioPortDefinition::PinBit;
+  using DdBit = typename GpioPortDefinition::DdBit;
+  using PortReg = typename GpioPortDefinition::PortReg;
+  using PinReg = typename GpioPortDefinition::PinReg;
+  using DdReg = typename GpioPortDefinition::DdReg;
+
+  template <bool is_output, bool with_pullup>
+  using Configure = Appliers<
+    Applier<DdBit, is_output, DdReg>, Applier<PortBit, with_pullup, PortReg>>;
+
+  template <bool is_output, bool with_pullup>
+  using ConfigureLevelFirst = Appliers<
+    Applier<PortBit, with_pullup, PortReg>, Applier<DdBit, is_output, DdReg>> ;
+
+  // Table 13-1 of the ATMEGA328P datasheet defines these bits.
+  // These assume the ccPUD bit rrMCUCR is 0 (false).
+  using ConfigureInput = Configure<false, false>;
+  using ConfigureInputPullup = Configure<false, true>;
+  using ConfigureOutputFalse = Configure<true, false>;
+  using ConfigureOutputTrue = Configure<true, true>;
+
+ public:
+  /// configure the GPIO based on the Configure<out, pullup> template type.
+  template <typename w_Configuration>
+  static void configure() {
+    // ApplierRunner performs state synchronization.
+    ApplierRunner::applySync<w_Configuration>();
+  }
+
+  static void configure(bool is_output, bool with_pullup) {
+    // Synchronization block.
+    { // AVR needs gpio pin register configurations changes to have a 
+      // synchronizing clock cycle.
+      setl::System::MemoryBarrier barrier;
+      DdReg::ReadModifyWrite(DdBit{ is_output });
+      PortReg::ReadModifyWrite(PortBit{ with_pullup });
+    }
+  }
+
+  /// Sets the level of the output bit (true = HIGH, false = LOW).
+  static void set(bool out) {
+    PortReg::ReadModifyWrite(PortBit{ out });
+  }
+
+  /// Gets the current value of the GPIO pin.
+  static bool get() {
+    PinBit pin = PinReg::Read();
+    return pin.value;
+  }
+};
+
+#define MakeGpioPort(L, N) \
+struct ppP ## L ## N : GpioPort<ppP ## L ## N, GpioPortDefinition< \
+  BitsPORT ## L ## N, BitsPIN ## L ## N, BitsDD ## L ## N, \
+  RegisterPORT ## L, RegisterPIN ## L, RegisterDD ## L>> \
+{}; \
+// End MakeGpioPort
+
+MakeGpioPort(B, 0)
+MakeGpioPort(B, 1)
+MakeGpioPort(B, 2)
+MakeGpioPort(B, 3)
+MakeGpioPort(B, 4)
+MakeGpioPort(B, 5)
+MakeGpioPort(B, 6)
+MakeGpioPort(B, 7)
+MakeGpioPort(C, 0)
+MakeGpioPort(C, 1)
+MakeGpioPort(C, 2)
+MakeGpioPort(C, 3)
+MakeGpioPort(C, 4)
+MakeGpioPort(C, 5)
+MakeGpioPort(C, 6)
+MakeGpioPort(D, 0)
+MakeGpioPort(D, 1)
+MakeGpioPort(D, 2)
+MakeGpioPort(D, 3)
+MakeGpioPort(D, 4)
+MakeGpioPort(D, 5)
+MakeGpioPort(D, 6)
+MakeGpioPort(D, 7)
+#undef MakeGpioPort
+
+/**
+ * An input only GPIO port. Use when the GPIO should never change mode.
+ */
+template <typename w_Gpio, bool with_pullup>
+struct InputGpioPort {
+  using Gpio = w_Gpio;
+  using Configuration = typename Gpio::template Configure<false, with_pullup>;
+
+  static void configure() {
+    Gpio::template configure<Configuration>();
+  }
+
+  /// Gets the current value of the GPIO pin.
+  static bool get() {
+    return Gpio::get();
+  }
+};
+
+/**
+ * An output only GPIO port. Use when the GPIO should never change mode.
+ */
+template <typename w_Gpio, bool default_value = false>
+struct OutputGpioPort {
+  using Gpio = w_Gpio;
+  using Configuration = typename Gpio::template Configure<true, default_value>;
+
+  static void configure() {
+    Gpio::template configure<Configuration>();
+  }
+
+  /// Sets the level of the output bit (true = HIGH, false = LOW).
+  static void set(bool out) {
+    return Gpio::set(out);
+  }
+
+  /// Gets the current value of the GPIO pin.
+  static bool get() {
+    return Gpio::get();
+  }
+};
+
+/**
+ * A biderectional GPIO port. Use when emulating an "open drain"/ 
+ * "open collector" input, output type protocols.
+ */
+template <typename w_Gpio, bool with_pullup = true>
+struct BidirectionalGpioPort {
+  using Gpio = w_Gpio;
+  using ConfigurationHigh = typename Gpio::template Configure<false, with_pullup>;
+  using ConfigurationOutLow = typename Gpio::template ConfigureLevelFirst<true, false>;
+
+  static void configure() {
+    return Gpio::template configure<ConfigurationHigh>();
+  }
+
+  /// Sets the level of the output bit (true = HIGH, false = LOW).
+  static void set(bool out) {
+    if (out) {
+      Gpio::template configure<ConfigurationHigh>();
+    } else {
+      Gpio::template configure<ConfigurationOutLow>();
+    }
+  }
+
+  /// Gets the current value of the GPIO pin.
+  static bool get() {
+    return Gpio::get();
+  }
+};
 
 }  // arch_atmega328p
 }  // namespace avr

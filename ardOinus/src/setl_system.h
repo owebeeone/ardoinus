@@ -3,6 +3,10 @@
 
 #include "setl_utils.h"
 
+#if defined(__AVR__)
+#include <avr/cpufunc.h> 
+#endif
+
 namespace setl {
 
 // The memory barrier you have when you're not having a memory barrier.
@@ -17,6 +21,9 @@ public:
   }
 
   static void writeBarrier() {
+#if defined(__AVR__)
+    _NOP();
+#endif
   }
 
   struct MemoryBarrier : public not_copyable {

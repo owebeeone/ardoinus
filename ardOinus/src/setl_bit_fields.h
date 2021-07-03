@@ -6,6 +6,7 @@
 #ifndef SETL_BIT_FIELDS___H
 #define SETL_BIT_FIELDS___H
 
+#include "setl_cat_tuple.h"
 #include "setlx_cstddef.h"
 #include "setlx_cstdint.h"
 #include "setlx_tuple.h"
@@ -359,21 +360,27 @@ struct Bits {
   using ShiftMaskInfo = GroupMaskShifts<UT, bits...>;
 
   Bits() = default;
-  Bits(const type& value)
+  explicit Bits(const type& value)
     : value{value}
   {}
 
   operator type() {
     return value;
   }
+
   template <typename w_FormatType>
-  void read_value(const BitValue<w_FormatType>& value) {
+  static type read_from(const BitValue<w_FormatType>& value) {
 
     using unsigned_type = typename UnsignedType<w_FormatType::type, type>::type;
 
     using applier = typename Bits::template ShiftMaskInfo<unsigned_type>::group::template apply<ApplyMaskShift>;
-    this->value = static_cast<type>(
+    return static_cast<type>(
       applier::convert(static_cast<unsigned_type>(value.value)));
+  }
+
+  template <typename w_FormatType>
+  void read_value(const BitValue<w_FormatType>& value) {
+    this->value = read_from(value);
   }
 
   // Instantiations of this class contain the value read or written.
@@ -391,6 +398,14 @@ struct BitsRO : Bits<BitOps::ReadOnly, GetTypeOf<T>, bits...> {
   BitsRO(const type& value)
     : super{ value }
   {}
+
+  template <typename w_FormatType>
+  BitsRO(const BitValue<w_FormatType>& value)
+    : super{ super::read_from(value) }
+  {
+    static_assert(w_FormatType::template contains<BitsRO>,
+      "Cannot assign value not containing result type");
+  }
 
   template <typename w_FormatType>
   BitsRO& operator=(const BitValue<w_FormatType>& value) {
@@ -427,6 +442,14 @@ struct BitsRW : Bits<BitOps::ReadWrite, GetTypeOf<T>, bits...> {
   {}
 
   template <typename w_FormatType>
+  BitsRW(const BitValue<w_FormatType>& value)
+    : super{ super::read_from(value) }
+  {
+    static_assert(w_FormatType::template contains<BitsRW>,
+      "Cannot assign value not containing result type");
+  }
+
+  template <typename w_FormatType>
   BitsRW& operator=(const BitValue<w_FormatType>& value) {
     static_assert(w_FormatType::template contains<BitsRW>,
       "Cannot assign value not containing result type");
@@ -435,15 +458,6 @@ struct BitsRW : Bits<BitOps::ReadWrite, GetTypeOf<T>, bits...> {
   }
 };
 
-
-// Catentate two tuples.
-template <typename T, typename U>
-struct cat_tuples;
-
-template <typename...Ts, typename...Us>
-struct cat_tuples<std::tuple<Ts...>, std::tuple<Us...>> {
-  using type = std::tuple<Ts..., Us...>;
-};
 
 // Create list of types from tuple of Bits types.
 template <typename...Bs>

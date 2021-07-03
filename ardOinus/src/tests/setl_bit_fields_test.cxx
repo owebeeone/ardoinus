@@ -121,13 +121,7 @@ using Register = setl::IoRegister<w_BitfieldType, w_Register, RegisterType>;
 #define SIZE_SFR_IO8(io_addr) (1)
 #define SIZE_SFR_IO16(io_addr) (2)
 
-
-enum class EnumCOM1 : unsigned char {
-  disconnect = 0b00,
-  toggle = 0b01,
-  clear = 0b10,
-  set = 0b11
-};
+using ardo::sys::avr::mcu::EnumCOM1;
 
 inline constexpr const char* EnumToStr(EnumCOM1 value) {
   switch (value) {
@@ -139,8 +133,6 @@ inline constexpr const char* EnumToStr(EnumCOM1 value) {
   }
 }
 
-
-
 //template <typename E,
 //  template <typename T, unsigned...ubits> typename B,
 //  unsigned...bits>
@@ -149,9 +141,6 @@ inline constexpr const char* EnumToStr(EnumCOM1 value) {
 //}
 
 using namespace ardo::sys::avr::mcu;
-
-using BitsCOM1A = setl::BitsRW<EnumCOM1, ccCOM1A1, ccCOM1A0>;
-using BitsCOM1B = setl::BitsRW<EnumCOM1, ccCOM1B1, ccCOM1B0>;
 
 enum class TypeWGM1 : unsigned char {
   normal = 0b0000,
@@ -244,6 +233,12 @@ inline std::ostream& operator<<(std::ostream& ostr, TestBitFields::TypeWGM1 valu
   return ostr << "TypeWGM1(" << static_cast<unsigned>(value) << ")";
 }
 
+template <typename T, unsigned...bits>
+inline std::ostream& operator<<(std::ostream& ostr, const setl::BitsRW<T, bits...>& value) {
+  return ostr << typeid(value).name() << "(" << static_cast<unsigned>(value.value) << ")";
+}
+
+
 namespace TestBitFields {
 
 TypeWGM1 getTypeWGM1() {
@@ -285,7 +280,7 @@ TypeWGM1 rwTypeWGM1() {
 
   std::cout << "N test4\n";
   std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
-  RegisterTCCR1A::Write(registerValue, com1a, BitsCOM1B{ EnumCOM1::clear });
+  RegisterTCCR1A::Write(registerValue, com1a, BitsCOM1B( EnumCOM1::clear ));
   std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
 
   setl::Assign(wgm1_10, com1a, com1b) = RegisterTCCR1A::Read();
@@ -325,15 +320,61 @@ void dividerTests() {
 
   std::cout << "cs1_divider_multiple = " << findDividerMultiple(TC1<56000, false, 16000000>::cs1_value) << "\n";
   std::cout << "top_count = " << TC1<56000, false, 16000000>::top_count << "\n";
-} // namespace
+
+  BitsCOM1A bc1a = RegisterTCCR1AB::Read();
+}
+
+inline void TestPort() {
+  using namespace ardo::sys::avr::mcu;
+  struct zzPB7 : GpioPort<zzPB7, GpioPortDefinition<
+    BitsPORTB7, BitsPINB7, BitsDDB7, RegisterPORTB, RegisterPINB, RegisterDDB>>
+  {};
+
+  zzPB7::configure<zzPB7::ConfigureInputPullup>();
+  zzPB7::configure(false, true);
+  zzPB7::configure<zzPB7::ConfigureInput>();
+  zzPB7::configure<zzPB7::ConfigureOutputFalse>();
+  zzPB7::configure<zzPB7::ConfigureOutputTrue>();
+  zzPB7::set(false);
+  zzPB7::get();
+
+  zzPB7::PinBit pin = zzPB7::PinReg::Read();
+
+  using InPB7 = InputGpioPort<zzPB7, true>;
+  InPB7::get();
+
+  using OutPB7 = OutputGpioPort<zzPB7, true>;
+  OutPB7::set(true);
+  OutPB7::get();
+
+  using BidiPB7 = BidirectionalGpioPort<zzPB7, true>;
+  BidiPB7::set(true);
+  BidiPB7::set(false);
+  BidiPB7::get();
+
+
+  ppPC6::configure<ppPC6::ConfigureInputPullup>();
+  ppPD0::configure<ppPD0::ConfigureInputPullup>();
+
+  InputGpioPort<ppPC6, true>::get();
+  OutputGpioPort<ppPC6>::get();
+  OutputGpioPort<ppPC6>::set(true);
+
+  BidirectionalGpioPort<ppPC6, true>::get();
+  BidirectionalGpioPort<ppPC6>::get();
+  BidirectionalGpioPort<ppPC6>::set(true);
+  BidirectionalGpioPort<ppPC6>::set(false);
+}
+
 
 void runBitfieldsTest() {
-  TestBitFields::getTypeWGM1();
-  TestBitFields::rwTypeWGM1();
-  TestBitFields::dividerTests();
+  getTypeWGM1();
+  rwTypeWGM1();
+  dividerTests();
+  TestPort();
 }
 
-}
+} // namespace
 
 struct BitFieldsTest : setl_test::SetlTest
 {
@@ -341,7 +382,8 @@ struct BitFieldsTest : setl_test::SetlTest
     TestBitFields::runBitfieldsTest();
     return true;
   }
-
 };
 
 BitFieldsTest tBitFieldsTest;
+
+setl_test::SetlTest& datest = tBitFieldsTest;
