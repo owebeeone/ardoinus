@@ -6,7 +6,7 @@
 #ifndef SETL_BIT_FIELDS___H
 #define SETL_BIT_FIELDS___H
 
-#include "setl_cat_tuple.h"
+#include "setl_cat_tuples.h"
 #include "setlx_cstddef.h"
 #include "setlx_cstdint.h"
 #include "setlx_tuple.h"

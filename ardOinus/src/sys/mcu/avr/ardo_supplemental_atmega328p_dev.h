@@ -6,7 +6,7 @@
 #ifndef ardo_supplemental_atmega328p_defs__h
 #define ardo_supplemental_atmega328p_defs__h
 
-#include "setl_cat_tuple.h"
+#include "setl_cat_tuples.h"
 #include "setl_int_scaler.h"
 #include "setl_system.h"
 #include "setlx_cstdint.h"
@@ -16,6 +16,89 @@ namespace ardo {
 namespace sys {
 namespace avr {
 namespace arch_atmega328p {
+
+/**
+ * RootDependencies et al. Allows for a graph of resource dependencies
+ * to determine what resources conflict if attempting to use them together.
+ * The depencency graph must be acyclic (DAG). A resource that depends on
+ * itself or nothing else is a root resource.
+ */
+namespace nfp {
+// The nfp namespace is not part of the supported interface.
+template <typename...T>
+struct RootDependencyFinder;
+
+template <typename T, typename w_Deps>
+struct RootDependencyOfHelper;
+
+template <typename T>
+struct RootDependencyOfHelper<T, std::tuple<T>> {
+  using result = std::tuple<T>;
+};
+
+template <typename T>
+struct RootDependencyOfHelper<T, std::tuple<>> {
+  using result = std::tuple<T>;
+};
+
+template <typename T, typename...D>
+struct RootDependencyOfHelper<T, std::tuple<D...>> {
+  using result = typename RootDependencyFinder<D...>::root_deps;
+};
+
+template <typename T>
+struct RootDependencyOf {
+  using result = typename RootDependencyOfHelper<
+    T, typename T::dependencies>::result;
+};
+
+template <>
+struct RootDependencyFinder<> {
+  using root_deps = std::tuple<>;
+};
+
+template <typename T, typename...Ts>
+struct RootDependencyFinder<T, Ts...> {
+  using t_deps = typename RootDependencyOf<T>::result;
+  using ts_deps = typename RootDependencyFinder<Ts...>::root_deps;
+  using root_deps = typename setl::cat_tuples<t_deps, ts_deps>::type;
+};
+
+template <typename T>
+struct RootDependencyHelper;
+
+template <typename...P>
+struct RootDependencyHelper<std::tuple<P...>> {
+  using root_deps = typename RootDependencyFinder<P...>::root_deps;
+};
+} // namespace nfp
+
+/**
+ * Defines a resouce dependency.
+ * T is a resource type.
+ * P is a tuple of all resources T depends on.
+ * 
+ * For example: The SPI resource depends on the MISO, MOSI, SCK, SS
+ * resources. Hence Dependency<SPI, std::tuple<MISO, MOSI, SCK, SS>> 
+ * defines such a relationship. All the dependent resources must also
+ * be derived from Dependency.
+ */
+template <typename T, typename P=std::tuple<T>>
+struct Dependency;
+
+template <typename T, typename...Ps>
+struct Dependency<T, std::tuple<Ps...>> {
+  using self = T;
+  using dependencies = std::tuple<Ps...>;
+};
+
+/**
+ * Tuple of root dependencies of a resource.
+ */
+template <typename T>
+using RootDependencies = typename nfp::RootDependencyHelper<
+  typename T::dependencies>::root_deps;
+
 
 // Add only atmega328p specific resources here.
 // Resources in this namespace will appear in the ardo::sys::avr::mcu
@@ -69,12 +152,10 @@ struct DividerMappings<T> {
   static constexpr EnumT findLargestLessThanOrEq(std::uint32_t divider) {
     return divider <= T::divider ? T::cs1_value : null_value;
   }
-
 };
 
 template <typename T, typename...Ts>
 struct DividerMappings<T, Ts...> {
-
   using EnumT = typename T::EnumT;
   static constexpr EnumT start_range = TccrEnumTraits<EnumT>::start_range;
   static constexpr EnumT null_value = TccrEnumTraits<EnumT>::null_value;
@@ -128,7 +209,6 @@ struct DividerMappings<T, Ts...> {
  * resolution_bits_of_top_comparator : The bit width of the "top" value comparator.
  * phase_correct_mode : If true, the clock frequency is divided by 2.
  */
-
 template <typename T>
 constexpr std::uint32_t getClockDividerMultiple(
   T minimum_frequency,
@@ -163,13 +243,13 @@ constexpr EnumT getClockDivider(
 template <typename EnumT>
 constexpr decltype(
     TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(TccrEnumTraits<EnumT>::start_range))
-  findDividerMultiple(EnumT cs1_value) {
-  return TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(cs1_value);
+  findDividerMultiple(EnumT value) {
+  return TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(value);
 }
 
 /**
  * Returns the "top count" for the timer with the given clock divider setting.
- * If an invalid clock_divider is given, 
+ * If an invalid clock_divider is given the unit clock divider is assumed.
  */
 template <typename EnumT, typename T>
 constexpr std::uint32_t getClockTimerTop(
@@ -247,6 +327,10 @@ static_assert(
 static_assert(
   getClockTimerTop(EnumCS1::clk1024, 0.5, 16000000, true) == 15625ul,
   "getClockTimerTop computation failed or 0.5kHz and clk1024 clock divider on phase correct mode.");
+
+static_assert(
+  getClockTimerTop(EnumCS1::no_clk, 1, 16000000, true) == 8000000ul,
+  "getClockTimerTop computation failed for invalid divider.");
 
 /**
  * Controls for output compare register modes.
@@ -327,6 +411,7 @@ using RegisterTCCR1AB = Register<FieldsTCCR1AB, rrTCCR1AB>;
 using FieldsTCCR1B = setl::BitFields<BitsWGM1_32, BitsCS11, BitsICES1, BitsICNC1>;
 using RegisterTCCR1B = Register<FieldsTCCR1B, rrTCCR1B>;
 
+// Defines the 16 bits for the ICR1 register. 
 using BitsICR1 = setl::BitsRW<setl::SemanticType<setl::hash("ICR1"), std::uint16_t>,
   ccICR1H7 + 8,
   ccICR1H6 + 8,
@@ -387,6 +472,9 @@ template <
 using TC1 = Timer16<
   RegisterTCCR1AB, RegisterIRC1, w_setup_frequency, w_phase_correct_mode, w_base_frequency>;
 
+/**
+ * Defines GPIO ports.
+ */
 // Defines bits for ports. e.g.
 // using BitsPORTB7 = setl::BitsRW<setl::SemanticType<setl::hash("PORTB7"), bool>, ccPORTB7>;
 #define MakePortBit(TYPE, LETTER, N) \
@@ -434,6 +522,9 @@ MakePortRegisters8(D)
 #undef MakePort8
 #undef MakePortBit
 
+/**
+ * Collects all the bits and registers for a single GPIO port.
+ */
 template <
   typename w_PortBit,
   typename w_PinBit,
@@ -525,7 +616,10 @@ struct ApplierRunner {
 template <
   typename w_GpioPort,
   typename w_GpioPortDefinition>
-struct GpioPort : ApplierRunner, w_GpioPortDefinition{
+struct GpioPort : 
+    Dependency<w_GpioPort, std::tuple<w_GpioPort>>,
+    ApplierRunner, 
+    w_GpioPortDefinition {
   using DerivedPort = w_GpioPort;
   using GpioPortDefinition = w_GpioPortDefinition;
   using PortBit = typename GpioPortDefinition::PortBit;
@@ -681,6 +775,204 @@ struct BidirectionalGpioPort {
     return Gpio::get();
   }
 };
+
+struct ppADC6 : Dependency<ppADC6, std::tuple<ppADC6>> {
+};
+
+struct ppADC7 : Dependency<ppADC7, std::tuple<ppADC7>> {
+};
+
+struct ppT0 : Dependency<ppT0, std::tuple<ppPD4>> {
+};
+
+struct ppT1 : Dependency<ppT1, std::tuple<ppPD5>> {
+};
+
+struct ppXCK : Dependency<ppXCK, std::tuple<ppPD4>> {
+};
+
+struct ppADC0 : Dependency<ppADC0, std::tuple<ppPC0>> {
+};
+
+struct ppADC1 : Dependency<ppADC1, std::tuple<ppPC1>> {
+};
+
+struct ppADC2 : Dependency<ppADC2, std::tuple<ppPC2>> {
+};
+
+struct ppADC3 : Dependency<ppADC3, std::tuple<ppPC3>> {
+};
+
+struct ppADC4 : Dependency<ppADC4, std::tuple<ppPC4>> {
+};
+
+struct ppADC5 : Dependency<ppADC5, std::tuple<ppPC5>> {
+};
+
+struct ppCLKO : Dependency<ppCLKO, std::tuple<ppPB0>> {
+};
+
+struct ppICP1 : Dependency<ppICP1, std::tuple<ppPB0>> {
+};
+
+struct ppINT0 : Dependency<ppINT0, std::tuple<ppPD2>> {
+};
+
+struct ppINT1 : Dependency<ppINT1, std::tuple<ppPD3>> {
+};
+
+struct ppOC0A : Dependency<ppOC0A, std::tuple<ppPD6>> {
+};
+
+struct ppOC0B : Dependency<ppOC0B, std::tuple<ppPD5>> {
+};
+
+struct ppOC1A : Dependency<ppOC1A, std::tuple<ppPB1>> {
+};
+
+struct ppOC1B : Dependency<ppOC1B, std::tuple<ppPB2>> {
+};
+
+struct ppOC2A : Dependency<ppOC2A, std::tuple<ppPB3>> {
+};
+
+struct ppOC2B : Dependency<ppOC2B, std::tuple<ppPD3>> {
+};
+
+struct ppRESET : Dependency<ppRESET, std::tuple<ppPC6>> {
+};
+
+struct ppTOSC1 : Dependency<ppTOSC1, std::tuple<ppPB6>> {
+};
+
+struct ppTOSC2 : Dependency<ppTOSC2, std::tuple<ppPB7>> {
+};
+
+struct ppPCINT0 : Dependency<ppPCINT0, std::tuple<ppPB0>> {
+};
+
+struct ppPCINT1 : Dependency<ppPCINT1, std::tuple<ppPB1>> {
+};
+
+struct ppPCINT2 : Dependency<ppPCINT2, std::tuple<ppPB2>> {
+};
+
+struct ppPCINT3 : Dependency<ppPCINT3, std::tuple<ppPB3>> {
+};
+
+struct ppPCINT4 : Dependency<ppPCINT4, std::tuple<ppPB4>> {
+};
+
+struct ppPCINT5 : Dependency<ppPCINT5, std::tuple<ppPB5>> {
+};
+
+struct ppPCINT6 : Dependency<ppPCINT6, std::tuple<ppPB6>> {
+};
+
+struct ppPCINT7 : Dependency<ppPCINT7, std::tuple<ppPB7>> {
+};
+
+struct ppPCINT8 : Dependency<ppPCINT8, std::tuple<ppPC0>> {
+};
+
+struct ppPCINT9 : Dependency<ppPCINT9, std::tuple<ppPC1>> {
+};
+
+struct ppPCINT10 : Dependency<ppPCINT10, std::tuple<ppPC2>> {
+};
+
+struct ppPCINT11 : Dependency<ppPCINT11, std::tuple<ppPC3>> {
+};
+
+struct ppPCINT12 : Dependency<ppPCINT12, std::tuple<ppPC4>> {
+};
+
+struct ppPCINT13 : Dependency<ppPCINT13, std::tuple<ppPC5>> {
+};
+
+struct ppPCINT14 : Dependency<ppPCINT14, std::tuple<ppPC6>> {
+};
+
+struct ppPCINT16 : Dependency<ppPCINT16, std::tuple<ppPD0>> {
+};
+
+struct ppPCINT17 : Dependency<ppPCINT17, std::tuple<ppPD1>> {
+};
+
+struct ppPCINT18 : Dependency<ppPCINT18, std::tuple<ppPD2>> {
+};
+
+struct ppPCINT19 : Dependency<ppPCINT19, std::tuple<ppPD3>> {
+};
+
+struct ppPCINT20 : Dependency<ppPCINT20, std::tuple<ppPD4>> {
+};
+
+struct ppPCINT21 : Dependency<ppPCINT21, std::tuple<ppPD5>> {
+};
+
+struct ppPCINT22 : Dependency<ppPCINT22, std::tuple<ppPD6>> {
+};
+
+struct ppPCINT23 : Dependency<ppPCINT23, std::tuple<ppPD7>> {
+};
+
+struct ppAIN0 : Dependency<ppAIN0, std::tuple<ppPD6>> {
+};
+
+struct ppAIN1 : Dependency<ppAIN1, std::tuple<ppPD7>> {
+};
+
+struct ppAIN : Dependency<ppAIN, std::tuple<ppAIN0, ppAIN1>> {
+};
+
+struct ppSCL : Dependency<ppSCL, std::tuple<ppPC5>> {
+};
+
+struct ppSDA : Dependency<ppSDA, std::tuple<ppPC4>> {
+};
+
+struct ppI2C0 : Dependency<ppI2C0, std::tuple<ppSCL, ppSDA>> {
+};
+
+struct ppSS : Dependency<ppSS, std::tuple<ppPB2>> {
+};
+
+struct ppSCK : Dependency<ppSCK, std::tuple<ppPB5>> {
+};
+
+struct ppMISO : Dependency<ppMISO, std::tuple<ppPB4>> {
+};
+
+struct ppMOSI : Dependency<ppMOSI, std::tuple<ppPB3>> {
+};
+
+struct ppSPI0 : Dependency<ppSPI0, std::tuple<ppMISO, ppMOSI, ppSCK, ppSS>> {
+};
+
+struct ppRXD : Dependency<ppRXD, std::tuple<ppPD0>> {
+};
+
+struct ppTXD : Dependency<ppTXD, std::tuple<ppPD1>> {
+};
+
+struct ppUSART0 : Dependency<ppUSART0, std::tuple<ppRXD, ppTXD>> {
+};
+
+struct ppXTAL1 : Dependency<ppXTAL1, std::tuple<ppPB6>> {
+};
+
+struct ppXTAL2 : Dependency<ppXTAL2, std::tuple<ppPB7>> {
+};
+
+struct ppXTAL : Dependency<ppXTAL, std::tuple<ppXTAL1, ppXTAL2>> {
+};
+
+static_assert(
+  std::is_same<
+    RootDependencies<ppUSART0>,
+    std::tuple<ppPD0, ppPD1>>::value,
+  "Failed to find correct root dependencies for USART0.");
 
 }  // arch_atmega328p
 }  // namespace avr

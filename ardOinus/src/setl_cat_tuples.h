@@ -2,8 +2,8 @@
  * std::tuple utilities.
  */
 
-#ifndef SETL_CAT_TUPLE___H
-#define SETL_CAT_TUPLE___H
+#ifndef SETL_CAT_TUPLES___H
+#define SETL_CAT_TUPLES___H
 
 #include "setlx_tuple.h"
 #include "setlx_type_traits.h"
@@ -70,4 +70,4 @@ static_assert(
 
 } // namespace setl
 
-#endif  // SETL_CAT_TUPLE___H
+#endif  // SETL_CAT_TUPLES___H
