@@ -18,6 +18,95 @@ namespace avr {
 namespace arch_atmega328p {
 
 /**
+ * Appliers provides a template class that may be used to perform a number
+ * bitfield operations.
+ */
+template <typename...w_Appliers>
+struct Appliers;
+
+/**
+ * Applied the given bit field in a ReadModifyWrite.
+ */
+template <typename w_BitField, typename w_BitField::type w_value, typename w_Register>
+struct Applier {
+  template <typename...w_Appliers>
+  friend struct Appliers;
+
+  using Register = w_Register;
+
+ private:
+  static void apply() {
+    Register::ReadModifyWrite(w_BitField{ w_value });
+  }
+};
+
+/**
+ * Applier taking a set of registers in a tuple. The register selected
+ * is the register that supports the given field.
+ */
+template <typename w_BitField, typename w_BitField::type w_value, typename...w_Registers>
+struct Applier<w_BitField, w_value, std::tuple<w_Registers...>> {
+  template <typename...w_Appliers>
+  friend struct Appliers;
+
+  using Finder = setl::FindRegisterForField<w_BitField, std::tuple<w_Registers...>>;
+  static_assert(Finder::value, "Given bitfield is not supported in the given registers.");
+  using Register = typename Finder::type;
+
+ private:
+  static void apply() {
+    Register::ReadModifyWrite(w_BitField{ w_value });
+  }
+};
+
+template <>
+struct Appliers<> {
+  template <typename...v_Appliers>
+  friend struct Appliers;
+
+  using types = std::tuple<>;
+  static void apply() {
+  }
+};
+
+template <typename w_Applier, typename...w_Appliers>
+struct Appliers<w_Applier, w_Appliers...> {
+  template <typename...v_Appliers>
+  friend struct Appliers;
+  friend struct ApplierRunner;
+
+  using types = std::tuple<w_Applier, w_Appliers...>;
+
+private:
+  static void apply() {
+    w_Applier::apply();
+    Appliers<w_Appliers...>::apply();
+  }
+};
+
+/**
+ * Provides "apply" frunctions that execute the given bit Appliers. One of the
+ * functions performs a synchronization (memory barrier) as may be needed on some
+ * microcontrollers.
+ */
+struct ApplierRunner {
+protected:
+  /// Applies the given "Appliers" and performs a sync barrier.
+  template <typename w_Appliers>
+  static void applySync() {
+    setl::System::MemoryBarrier barrier;
+    w_Appliers::apply();
+  }
+
+  /// Applies the given "Appliers".
+  template <typename w_Appliers>
+  static void applyNoSync() {
+    w_Appliers::apply();
+  }
+};
+
+
+/**
  * RootDependencies et al. Allows for a graph of resource dependencies
  * to determine what resources conflict if attempting to use them together.
  * The depencency graph must be acyclic (DAG). A resource that depends on
@@ -266,7 +355,7 @@ constexpr std::uint32_t getClockTimerTop(
 }
 
 /**
- * Define register TCCR1B CS1n definitions.
+ * Define register TCCR0B/TCCR1B CS1n definitions.
  */
 enum class EnumCS1 : unsigned char {
   no_clk = 0b000,
@@ -278,6 +367,9 @@ enum class EnumCS1 : unsigned char {
   ext_clk_falling = 0b110,
   ext_clk_rising = 0b111,
 };
+
+// Timer counter 0 uses the same bit definitions.
+using EnumCS0 = EnumCS1;
 
 /**
  * Mapping of EnumCS1 to divider value.
@@ -292,7 +384,7 @@ using Cs1DividerMapping = DividerMappings<
 >;
 
 /**
- * Traits for the EnumCS1 used by getClockDivider to discover
+ * Traits for EnumCS1 used by getClockDivider to discover
  * the clock divider for a specific frequency.
  */
 template <>
@@ -304,8 +396,54 @@ struct TccrEnumTraits<EnumCS1> {
   static constexpr EnumT end_range = EnumT::clk1024;
 };
 
+
+/**
+ * Define register TCCR2B CS2n definitions.
+ */
+enum class EnumCS2 : unsigned char {
+  no_clk = 0b000,
+  clk1 = 0b001,
+  clk8 = 0b010,
+  clk32 = 0b011,
+  clk64 = 0b100,
+  clk128 = 0b101,
+  clk256 = 0b110,
+  clk1024 = 0b111
+};
+
+/**
+ * Mapping of EnumCS2 to divider value.
+ */
+ // Note: must be in ascending divider order.
+using Cs2DividerMapping = DividerMappings<
+  DividerMapping<EnumCS2, EnumCS2::clk1, 1>,
+  DividerMapping<EnumCS2, EnumCS2::clk8, 8>,
+  DividerMapping<EnumCS2, EnumCS2::clk32, 32>,
+  DividerMapping<EnumCS2, EnumCS2::clk64, 64>,
+  DividerMapping<EnumCS2, EnumCS2::clk128, 128>,
+  DividerMapping<EnumCS2, EnumCS2::clk256, 256>,
+  DividerMapping<EnumCS2, EnumCS2::clk1024, 1024>
+>;
+
+/**
+ * Traits for EnumCS2 used by getClockDivider to discover
+ * the clock divider for a specific frequency.
+ */
+template <>
+struct TccrEnumTraits<EnumCS2> {
+  using EnumT = EnumCS2;
+  using FreqMapping = Cs2DividerMapping;
+  static constexpr EnumT null_value = EnumT::no_clk;
+  static constexpr EnumT start_range = EnumT::clk1;
+  static constexpr EnumT end_range = EnumT::clk1024;
+};
+
 static_assert(
   getClockDivider<EnumCS1>(100000, 16000000, 16, false) == EnumCS1::clk1,
+  "Clockdivider computation failed or 100kHz and 16 bit comparator.");
+
+static_assert(
+  getClockDivider<EnumCS2>(100000, 16000000, 16, false) == EnumCS2::clk1,
   "Clockdivider computation failed or 100kHz and 16 bit comparator.");
 
 static_assert(
@@ -314,6 +452,10 @@ static_assert(
 
 static_assert(
   getClockDivider<EnumCS1>(2, 16000000, 16, false) == EnumCS1::clk256,
+  "Clockdivider computation failed or 2Hz and 16 bit comparator.");
+
+static_assert(
+  getClockDivider<EnumCS2>(2, 16000000, 16, false) == EnumCS2::clk128,
   "Clockdivider computation failed or 2Hz and 16 bit comparator.");
 
 static_assert(
@@ -333,23 +475,60 @@ static_assert(
   "getClockTimerTop computation failed for invalid divider.");
 
 /**
- * Controls for output compare register modes.
+ * Controls for timer output compare register modes.
  */
-enum class EnumCOM1 : unsigned char {
+enum class EnumCOMn : unsigned char {
   disconnect = 0b00,
-  toggle = 0b01,
+  toggle = 0b01, // Reserved for Fast PWM mode on COM2A
   clear = 0b10,
   set = 0b11
 };
 
 /**
- * Bit field definitions for the COM1A and COM1B fields.
+ * Bit field definitions for the COMnA and COMnB fields.
  */
-using BitsCOM1A = setl::BitsRW<EnumCOM1, ccCOM1A1, ccCOM1A0>;
-using BitsCOM1B = setl::BitsRW<EnumCOM1, ccCOM1B1, ccCOM1B0>;
+using BitsCOM0A = setl::BitsRW<
+  setl::SemanticType<setl::hash("COM0A"), EnumCOMn>, ccCOM0A1, ccCOM0A0>;
+using BitsCOM0B = setl::BitsRW<
+  setl::SemanticType<setl::hash("COM0B"), EnumCOMn>, ccCOM0B1, ccCOM0B0>;
+using BitsCOM1A = setl::BitsRW<
+  setl::SemanticType<setl::hash("COM1A"), EnumCOMn>, ccCOM1A1, ccCOM1A0>;
+using BitsCOM1B = setl::BitsRW<
+  setl::SemanticType<setl::hash("COM1B"), EnumCOMn>, ccCOM1B1, ccCOM1B0>;
+using BitsCOM2A = setl::BitsRW<
+  setl::SemanticType<setl::hash("COM2A"), EnumCOMn>, ccCOM2A1, ccCOM2A0>;
+using BitsCOM2B = setl::BitsRW<
+  setl::SemanticType<setl::hash("COM2B"), EnumCOMn>, ccCOM2B1, ccCOM2B0>;
 
 /**
- * Defines for operating modes of the timer/counter.
+ * Defines for operating modes of timer/counter 0.
+ */
+enum class EnumWGM0 : unsigned char {
+  normal = 0b000,
+  pwm_phase_correct_8bit = 0b001,
+  ctc_ocra = 0b010,
+  fast_pwm_8bit = 0b011,
+  reserved_8 = 0b100,
+  pwm_phase_correct_ocra = 0b101,
+  reserved_6 = 0b110,
+  fast_pwm_ocra = 0b111,
+};
+
+// Timer/counter 2 uses the same WGM bits as timer/counter 0.
+using EnumWGM2 = EnumWGM0;
+
+/**
+ * Mapping of EnumWGM0 to constants for top values.
+ */
+ // Note: must be in ascending divider order.
+using Wgm0TopCountMapping = DividerMappings<
+  DividerMapping<EnumWGM0, EnumWGM0::normal, setl::mersenne(8)>,
+  DividerMapping<EnumWGM0, EnumWGM0::pwm_phase_correct_8bit, setl::mersenne(8)>,
+  DividerMapping<EnumWGM0, EnumWGM0::fast_pwm_8bit, setl::mersenne(8)>
+>;
+
+/**
+ * Defines for operating modes of timer/counter 1.
  */
 enum class EnumWGM1 : unsigned char {
   normal = 0b0000,
@@ -384,9 +563,77 @@ using Wgm1TopCountMapping = DividerMappings<
   DividerMapping<EnumWGM1, EnumWGM1::fast_pwm_10bit, setl::mersenne(10)>
 >;
 
+// Define registers for timer/counter 0
+using BitsWGM0_10 = setl::BitsRW<EnumWGM0, NA, ccWGM01, ccWGM00>;
+using BitsWGM0_2 = setl::BitsRW<EnumWGM0, ccWGM02, NA, NA>;
+// Define bitfields when treating TCCR0A + TCCR0B as a 16 bit value.
+using BitsWGM0_210 = setl::BitsRW<EnumWGM0, ccWGM02 + 8, ccWGM01, ccWGM00>;
+
+using BitsCS01 = setl::BitsRW<EnumCS0, ccCS02, ccCS01, ccCS00>;
+// Define bitfields when treating TCCR0A + TCCR0B as a 16 bit value.
+using BitsCS01_16 = setl::BitsRW<EnumCS0, ccCS02 + 8, ccCS01 + 8, ccCS00 + 8>;
+
+// Define force output compare bits for timer/counter 0.
+using BitsFOC0A = setl::BitsRW<setl::SemanticType<setl::hash("FOC0A"), bool>, ccFOC0A>;
+using BitsFOC0B = setl::BitsRW<setl::SemanticType<setl::hash("FOC0B"), bool>, ccFOC0B>;
+// Define 16 bit register modes for these bits.
+using BitsFOC0A_16 = setl::BitsRW<setl::SemanticType<setl::hash("FOC0A"), bool>, ccFOC0A + 8>;
+using BitsFOC0B_16 = setl::BitsRW<setl::SemanticType<setl::hash("FOC0B"), bool>, ccFOC0B + 8>;
+
+// Define register TCCR0A.
+using FieldsTCCR0A = setl::BitFields<BitsCOM0A, BitsCOM0B, BitsWGM0_10>;
+using RegisterTCCR0A = Register<FieldsTCCR0A, rrTCCR0A>;
+
+// Define register TCCR0B.
+using FieldsTCCR0B = setl::BitFields<BitsFOC0A, BitsFOC0B, BitsWGM0_2, BitsCS01>;
+using RegisterTCCR0B = Register<FieldsTCCR0B, rrTCCR0B>;
+
+// Define register TCCR0AB.
+using FieldsTCCR0AB = setl::BitFields<
+  BitsCOM0A, BitsCOM0B, 
+  BitsWGM0_210, 
+  BitsFOC0A_16, BitsFOC0B_16, 
+  BitsCS01_16>;
+using rrTCCR0AB = rrTCCR0A::ForType<std::uint16_t>;
+using RegisterTCCR0AB = Register<FieldsTCCR0AB, rrTCCR0AB>;
+
+// Define registers for timer/counter 2
+using BitsWGM2_10 = setl::BitsRW<EnumWGM2, NA, ccWGM21, ccWGM20>;
+using BitsWGM2_2 = setl::BitsRW<EnumWGM2, ccWGM22, NA, NA>;
+// Define bitfields when treating TCCR2A + TCCR2B as a 16 bit value.
+using BitsWGM2_210 = setl::BitsRW<EnumWGM2, ccWGM22 + 8, ccWGM21, ccWGM20>;
+
+using BitsCS21 = setl::BitsRW<EnumCS2, ccCS22, ccCS21, ccCS20>;
+// Define bitfields when treating TCCR2A + TCCR2B as a 16 bit value.
+using BitsCS21_16 = setl::BitsRW<EnumCS2, ccCS22 + 8, ccCS21 + 8, ccCS20 + 8>;
+
+// Define force output compare bits for timer/counter 2.
+using BitsFOC2A = setl::BitsRW<setl::SemanticType<setl::hash("FOC2A"), bool>, ccFOC2A>;
+using BitsFOC2B = setl::BitsRW<setl::SemanticType<setl::hash("FOC2B"), bool>, ccFOC2B>;
+// Define 16 bit register modes for these bits.
+using BitsFOC2A_16 = setl::BitsRW<setl::SemanticType<setl::hash("FOC2A"), bool>, ccFOC2A + 8>;
+using BitsFOC2B_16 = setl::BitsRW<setl::SemanticType<setl::hash("FOC2B"), bool>, ccFOC2B + 8>;
+
+// Define register TCCR2A.
+using FieldsTCCR2A = setl::BitFields<BitsCOM2A, BitsCOM2B, BitsWGM2_10>;
+using RegisterTCCR2A = Register<FieldsTCCR2A, rrTCCR2A>;
+
+// Define register TCCR0B.
+using FieldsTCCR2B = setl::BitFields<BitsFOC2A, BitsFOC2B, BitsWGM2_2, BitsCS21>;
+using RegisterTCCR2B = Register<FieldsTCCR2B, rrTCCR2B>;
+
+// Define register TCCR0AB.
+using FieldsTCCR2AB = setl::BitFields<
+  BitsCOM2A, BitsCOM2B, 
+  BitsWGM2_210, 
+  BitsFOC2A_16, BitsFOC2B_16, 
+  BitsCS21_16>;
+using rrTCCR2AB = rrTCCR2A::ForType<std::uint16_t>;
+using RegisterTCCR2AB = Register<FieldsTCCR2AB, rrTCCR2AB>;
+
 using BitsWGM1_10 = setl::BitsRW<EnumWGM1, NA, NA, ccWGM11, ccWGM10>;
 using BitsWGM1_32 = setl::BitsRW<EnumWGM1, ccWGM13, ccWGM12, NA, NA>;
-// Define bitfields when treating TCCR1A and TCCR1B as a 16 bit value.
+// Define bitfields when treating TCCR1A + TCCR1B as a 16 bit value.
 using BitsWGM1_3210 = setl::BitsRW<EnumWGM1, ccWGM13 + 8, ccWGM12 + 8, ccWGM11, ccWGM10>;
 
 using BitsCS11 = setl::BitsRW<EnumCS1, ccCS12, ccCS11, ccCS10>;
@@ -403,13 +650,20 @@ using FieldsTCCR1A = setl::BitFields<BitsCOM1A, BitsCOM1B, BitsWGM1_10>;
 using FieldsTCCR1AB = setl::BitFields<
   BitsCOM1A, BitsCOM1B, BitsWGM1_3210, BitsCS11_16, BitsICNC1_16, BitsICES1_16>;
 
-// Add a TCCR1AB 16 bit register.
-using rrTCCR1AB = MemRegisterDef<std::uint16_t, 0x80>;
-using RegisterTCCR1AB = Register<FieldsTCCR1AB, rrTCCR1AB>;
-
-
 using FieldsTCCR1B = setl::BitFields<BitsWGM1_32, BitsCS11, BitsICES1, BitsICNC1>;
 using RegisterTCCR1B = Register<FieldsTCCR1B, rrTCCR1B>;
+
+// Add a TCCR1AB 16 bit register using TCCR1A's address.
+using rrTCCR1AB = rrTCCR1A::ForType<std::uint16_t>;
+using RegisterTCCR1AB = Register<FieldsTCCR1AB, rrTCCR1AB>;
+
+// Forced output compare bit definitions for timer/counter 1.
+using BitsFOC1A = setl::BitsRW<setl::SemanticType<setl::hash("FOC1A"), bool>, ccFOC1A>;
+using BitsFOC1B = setl::BitsRW<setl::SemanticType<setl::hash("FOC1B"), bool>, ccFOC1B>;
+using FieldsTCCR1C = setl::BitFields<BitsFOC1A, BitsFOC1B>;
+using RegisterTCCR1C = Register<FieldsTCCR1C, rrTCCR1C>;
+
+constexpr auto xx = RegisterTCCR1C::FormatType::contains<BitsCOM1A>;
 
 // Defines the 16 bits for the ICR1 register. 
 using BitsICR1 = setl::BitsRW<setl::SemanticType<setl::hash("ICR1"), std::uint16_t>,
@@ -433,6 +687,43 @@ using BitsICR1 = setl::BitsRW<setl::SemanticType<setl::hash("ICR1"), std::uint16
 
 using FieldsICR1 = setl::BitFields<BitsICR1>;
 using RegisterIRC1 = Register<FieldsICR1, rrICR1>;
+
+template <
+  typename w_BitsWGM_16,
+  typename w_BitsCS,
+  typename w_BitsICNC,
+  typename w_BitsICES,
+  typename w_BitsICR,
+  typename w_BitsFOCA,
+  typename w_BitsFOCB,
+  typename...w_Registers
+>
+struct TimerDefinition
+{
+  using BitsWGM_16 = w_BitsWGM_16;
+  using BitsCS = w_BitsCS;
+  using BitsICNC = w_BitsICNC;
+  using BitsICES = w_BitsICES;
+  using BitsICR = w_BitsICR;
+  using BitsFOCA = w_BitsFOCA;
+  using BitsFOCB = w_BitsFOCB;
+  using Registers = std::tuple<w_Registers...>;
+
+};
+
+using Timer1Def = TimerDefinition<
+  BitsWGM1_3210,
+  BitsCS11_16,
+  BitsICNC1_16,
+  BitsICES1_16,
+  BitsICR1,
+  BitsFOC1A,
+  BitsFOC1B,
+
+  RegisterTCCR1AB,
+  RegisterTCCR1C,
+  RegisterIRC1
+>;
 
 template <
   typename w_RegisterTCCRAB,
@@ -541,69 +832,6 @@ struct GpioPortDefinition {
   using DdReg = w_DdReg;
 };
 
-/**
- * Appliers provides a template class that may be used to perform a number
- * bitfield operations.
- */
-template <typename...w_Appliers>
-struct Appliers;
-
-template <typename w_BitField, typename w_BitField::type w_value, typename w_Register>
-struct Applier {
-  template <typename...w_Appliers>
-  friend struct Appliers;
-
-private:
-  static void apply() {
-    w_Register::ReadModifyWrite(w_BitField{w_value});
-  }
-};
-
-template <>
-struct Appliers<> {
-  template <typename...v_Appliers>
-  friend struct Appliers;
-
-  using types = std::tuple<>;
-  static void apply() {
-  }
-};
-
-template <typename w_Applier, typename...w_Appliers>
-struct Appliers<w_Applier, w_Appliers...> {
-  template <typename...v_Appliers>
-  friend struct Appliers;
-  friend struct ApplierRunner;
-
-  using types = std::tuple<w_Applier, w_Appliers...>;
-
- private:
-  static void apply() {
-    w_Applier::apply();
-    Appliers<w_Appliers...>::apply();
-  }
-};
-
-/**
- * Provides "apply" frunctions that execute the given bit Appliers. One of the
- * functions performs a synchronization (memory barrier) as may be needed on some
- * microcontrollers.
- */
-struct ApplierRunner {
- protected:
-  /// Applies the given "Appliers" and performs a sync barrier.
-  template <typename w_Appliers>
-  static void applySync() {
-    setl::System::MemoryBarrier barrier;
-    w_Appliers::apply();
-  }
-
-  /// Applies the given "Appliers".
-  template <typename w_Appliers>
-  static void applyNoSync() {
-    w_Appliers::apply();
-  }
-};
 
 /**
  * Interface for GPIO ports.
@@ -774,6 +1002,23 @@ struct BidirectionalGpioPort {
   static bool get() {
     return Gpio::get();
   }
+};
+
+template <typename w_ComBits, typename w_RegisterTccnA>
+struct TimerCompareDefinition {
+  using ComBits = w_ComBits;
+  using RegisterTccnA = w_RegisterTccnA;
+
+};
+
+template <typename w_Self, typename w_Gpio, typename w_Defn>
+struct TimerCompare {
+  using Self = w_Self;
+  using Gpio = w_Gpio;
+  using Definition = w_Defn;
+  using ComBits = typename Definition::ComBits;
+  using RegisterTccnA = typename Definition::RegisterTccnA;
+
 };
 
 struct ppADC6 : Dependency<ppADC6, std::tuple<ppADC6>> {

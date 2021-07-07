@@ -19,6 +19,10 @@ template <typename T, ptrdiff_t w_addr>
 struct MemRegisterDef {
   static constexpr ptrdiff_t addr = w_addr;
   using type = T;
+
+  /// Provide a MemRegisterDef for an alternate type.
+  template <typename Talt>
+  using ForType = MemRegisterDef<Talt, addr>;
 };
 
 template <typename T, ptrdiff_t w_addr, ptrdiff_t w_offset>
@@ -26,6 +30,10 @@ struct IoRegisterDef {
   static constexpr ptrdiff_t offset = w_offset;
   static constexpr ptrdiff_t addr = w_addr + offset;
   using type = T;
+
+  /// Provide an IoRegisterDef for an alternate type.
+  template <typename Talt>
+  using ForType = IoRegisterDef<Talt, w_addr, offset>;
 };
 
 }  // namespace nfp

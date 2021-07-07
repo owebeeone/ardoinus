@@ -121,14 +121,14 @@ using Register = setl::IoRegister<w_BitfieldType, w_Register, RegisterType>;
 #define SIZE_SFR_IO8(io_addr) (1)
 #define SIZE_SFR_IO16(io_addr) (2)
 
-using ardo::sys::avr::mcu::EnumCOM1;
+using ardo::sys::avr::mcu::EnumCOMn;
 
-inline constexpr const char* EnumToStr(EnumCOM1 value) {
+inline constexpr const char* EnumToStr(EnumCOMn value) {
   switch (value) {
-  case EnumCOM1::disconnect: return "disconnect";
-  case EnumCOM1::toggle: return "toggle";
-  case EnumCOM1::clear: return "clear";
-  case EnumCOM1::set: return "set";
+  case EnumCOMn::disconnect: return "disconnect";
+  case EnumCOMn::toggle: return "toggle";
+  case EnumCOMn::clear: return "clear";
+  case EnumCOMn::set: return "set";
   default: return "";
   }
 }
@@ -280,14 +280,14 @@ TypeWGM1 rwTypeWGM1() {
 
   std::cout << "N test4\n";
   std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
-  RegisterTCCR1A::Write(registerValue, com1a, BitsCOM1B( EnumCOM1::clear ));
+  RegisterTCCR1A::Write(registerValue, com1a, BitsCOM1B( EnumCOMn::clear ));
   std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
 
   setl::Assign(wgm1_10, com1a, com1b) = RegisterTCCR1A::Read();
   std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
   RegisterTCCR1A::ReadModifyWrite(
-    BitsCOM1A{ EnumCOM1::toggle },
-    BitsCOM1B{ EnumCOM1::disconnect },
+    BitsCOM1A{ EnumCOMn::toggle },
+    BitsCOM1B{ EnumCOMn::disconnect },
     BitsWGM1_10{ TypeWGM1::pwm_phase_correct_9bit });
   std::cout << "com1a: " << com1a << ", com1b: " << com1b << ", wgm1_10: " << wgm1_10 << "\n";
   setl::Assign(wgm1_10, com1a, com1b) = RegisterTCCR1A::Read();

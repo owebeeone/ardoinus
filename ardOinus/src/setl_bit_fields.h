@@ -562,9 +562,12 @@ struct BitTypesEvaluatorHelper<w_UnsignedType, w_FormatType, w_BitsType, w_BitsT
 
   using traits = typename BitTypesTraits<w_FormatType, w_BitsType, w_BitsTypes...>::traits;
   using unsigned_type = typename traits::unsigned_type;
+  static constexpr bool contained = w_FormatType::template contains<w_BitsType>;
 
   static constexpr unsigned_type evaluate(w_BitsType bitValue, w_BitsTypes...bitsValues) {
-    return traits::appliers::inv_applier::convert(static_cast<unsigned_type>(bitValue.value))
+    return (contained 
+      ? traits::appliers::inv_applier::convert(static_cast<unsigned_type>(bitValue.value))
+      : 0)
       | BitTypesEvaluatorHelper<w_UnsignedType, w_FormatType, w_BitsTypes...>::evaluate(bitsValues...);
   }
 };
@@ -587,7 +590,6 @@ struct BitTypesEvaluator {
     return helper::evaluate(bitsValues...);
   }
 };
-
 
 /**
  * Assigns multiple bitfields from a single value.
@@ -660,14 +662,13 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
     using unsigned_type = typename UnsignedType<
-        cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     Assign<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }
 
   ProxyType* proxy;
 };
-
 
 template <typename...w_Proxies>
 Assigner<w_Proxies...> Assign(w_Proxies&... proxies) {
@@ -841,6 +842,144 @@ struct IoRegister {
         | (static_cast<type>(~mask) & defaultBits.value)};
     }
     return BitValue<FormatType>{static_cast<type>(new_bits)};
+  }
+};
+
+
+// For FindRegisterForField.
+namespace nfp {
+  template <typename w_BitField, typename...w_Registers>
+  struct FindRegisterForFieldHelper;
+
+  template <typename w_BitField>
+  struct FindRegisterForFieldHelper<w_BitField> {
+    using type = void;
+    static constexpr bool value = false;
+  };
+
+  template <typename w_BitField, typename w_Register, typename...w_Registers>
+  struct FindRegisterForFieldHelper<w_BitField, w_Register, w_Registers...> {
+  private:
+    static constexpr bool selected = w_Register::FormatType::template contains<w_BitField>;
+  public:
+    using type = typename std::conditional<selected,
+      w_Register,
+      FindRegisterForFieldHelper<w_BitField, w_Registers...>>::type;
+    static constexpr bool value = std::conditional<selected,
+      std::true_type,
+      FindRegisterForFieldHelper<w_BitField, w_Registers...>>::value;
+  };
+}  // namespace nfp
+
+/**
+ * Find the register in the given tuple that supports the given bit field.
+ * value is true if the supporting register is found.
+ */
+template <typename w_BitField, typename w_RegistersTuple>
+struct FindRegisterForField;
+
+template <typename w_BitField, typename...w_Registers>
+struct FindRegisterForField<w_BitField, std::tuple<w_Registers...>> {
+private:
+  using HelperType = nfp::FindRegisterForFieldHelper<w_BitField, w_Registers...>;
+public:
+  // True if the corresponding register for bitfield was found.
+  static constexpr bool value = HelperType::value;
+  /// Register that supports the bitfield.
+  using type = typename HelperType::type;
+};
+
+template <typename...Rs>
+struct RegisterSelectorHelper;
+
+template <>
+struct RegisterSelectorHelper<> {
+
+};
+
+template <typename R, typename...Rs>
+struct RegisterSelectorHelper<R, Rs...> {
+  // ?? Collect all the bitfields for R.
+};
+
+namespace nfp {
+
+template <bool do_not_assert, typename Bs, typename Rs>
+struct BitsToRegistersChecker;
+
+template <bool do_not_assert, typename...Rs>
+struct BitsToRegistersChecker<do_not_assert, std::tuple<>, std::tuple<Rs...>> {
+  static constexpr bool all_used = true;
+};
+
+template <bool do_not_assert, typename B, typename...Bs, typename...Rs>
+struct BitsToRegistersChecker<do_not_assert, std::tuple<B, Bs...>, std::tuple<Rs...>> {
+  using MapperForRest = BitsToRegistersChecker<do_not_assert, std::tuple<Bs...>, std::tuple<Rs...>>;
+  using FinderResult = FindRegisterForField<B, std::tuple<Rs...>>;
+  static constexpr bool value = MapperForRest::value && FinderResult::value;
+
+  static_assert(
+    do_not_assert || FinderResult::value, 
+    "Bitfield was not contained in any of the registers provided.");
+};
+
+template <typename R, typename...Bs>
+struct RegisterToBitsFinder;
+
+template <typename R>
+struct RegisterToBitsFinder<R> : std::false_type {};
+
+template <typename R, typename B, typename...Bs>
+struct RegisterToBitsFinder<R, B, Bs...> {
+  using type = bool;
+  static constexpr type value = R::FormatType::template contains<B>
+      || RegisterToBitsFinder<R, Bs...>::value;
+};
+
+} // Namespace nfp
+
+/**
+ * Support bitfield operations across a number of registers, automatically
+ * choosing the correct register for each associated bitfield.
+ */
+template <typename Tuple>
+struct RegisterSelector;
+
+template <>
+struct RegisterSelector<std::tuple<>> {
+  template <typename Tuple>
+  friend struct RegisterSelector;
+ private:
+  template <typename...BitsTypes>
+  static void ReadModifyWriteImpl(BitsTypes...bitsValues) {
+  }
+};
+
+template <typename R, typename...Rs>
+struct RegisterSelector<std::tuple<R, Rs...>> {
+ private:
+  template <typename...BitsTypes>
+  static void ReadModifyWriteImpl(BitsTypes...bitsValues) {
+    // Only perform a read if there are any bits to write.
+    if (nfp::RegisterToBitsFinder<R, BitsTypes...>::value) {
+      R::ReadModifyWrite(bitsValues...);
+    }
+    RegisterSelector<std::tuple<Rs...>>::ReadModifyWriteImpl(bitsValues...);
+  }
+ public:
+  /**
+   * Perform a write operation with the given bit field values by first reading
+   * the register (if any bits will survive the write) and then writing the new
+   * values in a single write.
+   */
+  template <typename...BitsTypes>
+  static void ReadModifyWrite(BitsTypes...bitsValues) {
+    // Make sure all bits are used.
+    static_assert(
+      nfp::BitsToRegistersChecker<
+          false, std::tuple<BitsTypes...>, std::tuple<R, Rs...>>::value,
+      "Bitfield was not contained in any of the registers provided.");
+    ReadModifyWriteImpl(bitsValues...);
   }
 };
 
