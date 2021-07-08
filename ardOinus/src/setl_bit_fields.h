@@ -516,18 +516,24 @@ struct BitTypesTraitsHelper<
   using FormatType = w_FormatType;
   using unsigned_type = w_UnsignedType;
   using appliers = BitTypeAppliers<unsigned_type, BitType>;
+  static constexpr bool contained = w_FormatType::template contains<w_BitsType>;
 
-  /// All w_BitsTypes are specified in FormatType. 
+  /// Are all w_BitsTypes are specified in FormatType. 
   static constexpr bool all_contained =
-    w_FormatType::template contains<w_BitsType>
+    contained
     && BitTypesTraitsHelper<unsigned_type, FormatType, w_BitsTypes...>::all_contained;
 
+  // This only contribututes to in_mask if it is contained.
+  static constexpr auto this_in_mask = 
+      (contained ? appliers::applier::in_mask : unsigned_type{ 0 });
+
   /// The mask of all the incoming bittypes.
-  static constexpr unsigned_type in_mask = appliers::applier::in_mask
+  static constexpr unsigned_type in_mask = 
+    this_in_mask
     | BitTypesTraitsHelper<unsigned_type, FormatType, w_BitsTypes...>::in_mask;
 
   /// If non zero there are some w_BitsTypes writing to the same bits.
-  static constexpr unsigned_type collision_mask = (appliers::applier::in_mask
+  static constexpr unsigned_type collision_mask = (this_in_mask
     & BitTypesTraitsHelper<unsigned_type, FormatType, w_BitsTypes...>::in_mask)
     | BitTypesTraitsHelper<unsigned_type, FormatType, w_BitsTypes...>::collision_mask;
 };
@@ -567,12 +573,14 @@ struct BitTypesEvaluatorHelper<w_UnsignedType, w_FormatType, w_BitsType, w_BitsT
   static constexpr unsigned_type evaluate(w_BitsType bitValue, w_BitsTypes...bitsValues) {
     return (contained 
       ? traits::appliers::inv_applier::convert(static_cast<unsigned_type>(bitValue.value))
-      : 0)
+      : unsigned_type{0})
       | BitTypesEvaluatorHelper<w_UnsignedType, w_FormatType, w_BitsTypes...>::evaluate(bitsValues...);
   }
 };
 
-template <typename w_FormatType, typename...w_BitsTypes>
+template <bool allow_unreferenced, 
+          typename w_FormatType,
+          typename...w_BitsTypes>
 struct BitTypesEvaluator {
 
   using bits_traits = BitTypesTraits<w_FormatType, w_BitsTypes...>;
@@ -580,7 +588,7 @@ struct BitTypesEvaluator {
   using unsigned_type = typename traits::unsigned_type;
   using helper = BitTypesEvaluatorHelper<unsigned_type, w_FormatType, w_BitsTypes...>;
 
-  static_assert(traits::all_contained, 
+  static_assert(allow_unreferenced || traits::all_contained,
     "The target value does not contain all the bit values provided.");
 
   static_assert(!traits::collision_mask,
@@ -786,9 +794,9 @@ struct IoRegister {
    * the register (if any bits will survive the write) and then writing the new
    * values in a single write.
    */
-  template <typename...BitsTypes>
-  static void ReadModifyWrite(BitsTypes...bitsValues) {
-    using Evaluator = BitTypesEvaluator<FormatType, BitsTypes...>;
+  template <bool allow_unreferenced, typename...BitsTypes>
+  static void ReadModifyWriteEx(BitsTypes...bitsValues) {
+    using Evaluator = BitTypesEvaluator<allow_unreferenced, FormatType, BitsTypes...>;
     auto new_bits = Evaluator::evaluate(bitsValues...);
     auto mask = Evaluator::traits::in_mask;
     if (~mask) {
@@ -800,13 +808,23 @@ struct IoRegister {
   }
 
   /**
+   * Perform a write operation with the given bit field values by first reading
+   * the register (if any bits will survive the write) and then writing the new
+   * values in a single write.
+   */
+  template <typename...BitsTypes>
+  static void ReadModifyWrite(BitsTypes...bitsValues) {
+    ReadModifyWriteEx<false>(bitsValues...);
+  }
+
+  /**
    * Perform a write operation with the given bit field values with the provided
    * default value.
    */
   template <typename...BitsTypes>
   static void Write(
       const BitValue<FormatType>& defaultBits, const BitsTypes&...bitsValues) {
-    using Evaluator = BitTypesEvaluator<FormatType, BitsTypes...>;
+    using Evaluator = BitTypesEvaluator<false, FormatType, BitsTypes...>;
     auto new_bits = Evaluator::evaluate(bitsValues...);
     auto mask = Evaluator::traits::in_mask;
     if (~mask) {
@@ -822,7 +840,7 @@ struct IoRegister {
    */
   template <typename...BitsTypes>
   static void Write(const BitsTypes&...bitsValues) {
-    using Evaluator = BitTypesEvaluator<FormatType, BitsTypes...>;
+    using Evaluator = BitTypesEvaluator<false, FormatType, BitsTypes...>;
     auto new_bits = Evaluator::evaluate(bitsValues...);
     auto mask = Evaluator::traits::in_mask;
     ioregister::set(static_cast<type>(new_bits));
@@ -834,7 +852,7 @@ struct IoRegister {
   template <typename...BitsTypes>
   static BitValue<FormatType> Evaluate(
       const BitValue<FormatType>& defaultBits, BitsTypes...bitsValues) {
-    using Evaluator = BitTypesEvaluator<FormatType, BitsTypes...>;
+    using Evaluator = BitTypesEvaluator<false, FormatType, BitsTypes...>;
     auto new_bits = Evaluator::evaluate(bitsValues...);
     auto mask = Evaluator::traits::in_mask;
     if (~mask) {
@@ -848,27 +866,27 @@ struct IoRegister {
 
 // For FindRegisterForField.
 namespace nfp {
-  template <typename w_BitField, typename...w_Registers>
-  struct FindRegisterForFieldHelper;
+template <typename w_BitField, typename...w_Registers>
+struct FindRegisterForFieldHelper;
 
-  template <typename w_BitField>
-  struct FindRegisterForFieldHelper<w_BitField> {
-    using type = void;
-    static constexpr bool value = false;
-  };
+template <typename w_BitField>
+struct FindRegisterForFieldHelper<w_BitField> {
+  using type = void;
+  static constexpr bool value = false;
+};
 
-  template <typename w_BitField, typename w_Register, typename...w_Registers>
-  struct FindRegisterForFieldHelper<w_BitField, w_Register, w_Registers...> {
-  private:
-    static constexpr bool selected = w_Register::FormatType::template contains<w_BitField>;
-  public:
-    using type = typename std::conditional<selected,
-      w_Register,
-      FindRegisterForFieldHelper<w_BitField, w_Registers...>>::type;
-    static constexpr bool value = std::conditional<selected,
-      std::true_type,
-      FindRegisterForFieldHelper<w_BitField, w_Registers...>>::value;
-  };
+template <typename w_BitField, typename w_Register, typename...w_Registers>
+struct FindRegisterForFieldHelper<w_BitField, w_Register, w_Registers...> {
+private:
+  static constexpr bool selected = w_Register::FormatType::template contains<w_BitField>;
+public:
+  using type = typename std::conditional<selected,
+    w_Register,
+    FindRegisterForFieldHelper<w_BitField, w_Registers...>>::type;
+  static constexpr bool value = std::conditional<selected,
+    std::true_type,
+    FindRegisterForFieldHelper<w_BitField, w_Registers...>>::type::value;
+};
 }  // namespace nfp
 
 /**
@@ -909,7 +927,7 @@ struct BitsToRegistersChecker;
 
 template <bool do_not_assert, typename...Rs>
 struct BitsToRegistersChecker<do_not_assert, std::tuple<>, std::tuple<Rs...>> {
-  static constexpr bool all_used = true;
+  static constexpr bool value = true;
 };
 
 template <bool do_not_assert, typename B, typename...Bs, typename...Rs>
@@ -955,16 +973,71 @@ struct RegisterSelector<std::tuple<>> {
   }
 };
 
+namespace nfp { // For internal use only. This API can change.
+
+// Helper class to find and select operations for registers provided.
+template <typename Rt, typename Bt, bool selected>
+struct RegisterSelectorHelper;
+
+template <typename R0, typename...Bs>
+struct RegisterSelectorHelper<std::tuple<R0>, std::tuple<Bs...>, false> {
+  // Last register's RMW function needed as a null function.
+  static void ReadModifyWrite(Bs...bitsValues) {
+  }
+};
+
+template <typename R0, typename...Bs>
+struct RegisterSelectorHelper<std::tuple<R0>, std::tuple<Bs...>, true> {
+  static void ReadModifyWrite(Bs...bitsValues) {
+    R0::template ReadModifyWriteEx<true>(bitsValues...);
+  }
+};
+
+template <typename R0, typename R1, typename...Rs, typename...Bs>
+struct RegisterSelectorHelper<std::tuple<R0, R1, Rs...>, std::tuple<Bs...>, false>
+  : RegisterSelectorHelper<std::tuple<R1, Rs...>,
+                           std::tuple<Bs...>,
+                           RegisterToBitsFinder<R1, Bs...>::value> {
+
+};
+
+template <typename R0, typename R1, typename...Rs, typename...Bs>
+struct RegisterSelectorHelper<std::tuple<R0, R1, Rs...>, std::tuple<Bs...>, true>
+  : RegisterSelectorHelper<std::tuple<R1, Rs...>,
+                           std::tuple<Bs...>,
+                           RegisterToBitsFinder<R1, Bs...>::value> {
+
+  using super = RegisterSelectorHelper<std::tuple<R1, Rs...>,
+    std::tuple<Bs...>,
+    RegisterToBitsFinder<R1, Bs...>::value>;
+
+  static void ReadModifyWrite(Bs...bitsValues) {
+    R0::template ReadModifyWriteEx<true>(bitsValues...);
+    super::ReadModifyWrite(bitsValues...);
+  }
+};
+
+}  // namespace nfp
+
+/**
+ * Provides multi-register operations. Sometimes bitfields are defined in
+ * different registers for semantically the same bitfields. This allows
+ * client code to specify all the possible destination registers and the
+ * required bitfield values to operate on. Only the registers whose bitfields
+ * are present will have their values changed.
+ */
 template <typename R, typename...Rs>
 struct RegisterSelector<std::tuple<R, Rs...>> {
  private:
   template <typename...BitsTypes>
   static void ReadModifyWriteImpl(BitsTypes...bitsValues) {
-    // Only perform a read if there are any bits to write.
-    if (nfp::RegisterToBitsFinder<R, BitsTypes...>::value) {
-      R::ReadModifyWrite(bitsValues...);
-    }
-    RegisterSelector<std::tuple<Rs...>>::ReadModifyWriteImpl(bitsValues...);
+    static constexpr bool contained = nfp::RegisterToBitsFinder<R, BitsTypes...>::value;
+    using RSHelper = nfp::RegisterSelectorHelper<
+        std::tuple<R, Rs...>, std::tuple<BitsTypes...>, contained>;
+
+    // RSHelper::ReadModifyWrite functions are only provided for registers whose
+    // bitfields are present in the parameters.
+    RSHelper::ReadModifyWrite(bitsValues...);
   }
  public:
   /**

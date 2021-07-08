@@ -212,10 +212,16 @@ using BitsICES1 = setl::BitsRW<bool, ccICES1>;
 
 using BitsCS11 = setl::BitsRW<TypeCS1, ccCS12, ccCS11, ccCS10>;
 
-using FieldsTCCR1B = setl::Format<std::uint8_t, BitsWGM1_32, BitsCS11, BitsICES1, BitsICNC1>;
+using FieldsTCCR1B = setl::BitFields<BitsWGM1_32, BitsCS11, BitsICES1, BitsICNC1>;
 
 using rrTCCR1B = MemRegisterDef<std::uint8_t, 0x81>;
 using RegisterTCCR1B = Register<FieldsTCCR1B, rrTCCR1B>;
+
+using RegSelectorTCCR1 = setl::RegisterSelector<std::tuple<RegisterTCCR1B, RegisterTCCR1A>>;
+
+inline void testRegSelector() {
+  RegSelectorTCCR1::ReadModifyWrite(BitsCOM1A{EnumCOMn::disconnect}, BitsICNC1{true});
+}
 
 }  // namespace TestBitFields
 
@@ -264,7 +270,7 @@ TypeWGM1 getTypeWGM1() {
   return {};
 }
 
-using BTEvaltr = setl::BitTypesEvaluator<RegisterTCCR1A::FormatType, BitsCOM1A, BitsCOM1B>;
+using BTEvaltr = setl::BitTypesEvaluator<false, RegisterTCCR1A::FormatType, BitsCOM1A, BitsCOM1B>;
 using BTEvaltrTraits = BTEvaltr::traits;
 constexpr unsigned collision = BTEvaltr::traits::collision_mask;
 
@@ -368,6 +374,7 @@ inline void TestPort() {
 
 
 void runBitfieldsTest() {
+  testRegSelector();
   getTypeWGM1();
   rwTypeWGM1();
   dividerTests();
