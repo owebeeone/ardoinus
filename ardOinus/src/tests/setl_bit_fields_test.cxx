@@ -217,12 +217,6 @@ using FieldsTCCR1B = setl::BitFields<BitsWGM1_32, BitsCS11, BitsICES1, BitsICNC1
 using rrTCCR1B = MemRegisterDef<std::uint8_t, 0x81>;
 using RegisterTCCR1B = Register<FieldsTCCR1B, rrTCCR1B>;
 
-using RegSelectorTCCR1 = setl::RegisterSelector<std::tuple<RegisterTCCR1B, RegisterTCCR1A>>;
-
-inline void testRegSelector() {
-  RegSelectorTCCR1::ReadModifyWrite(BitsCOM1A{EnumCOMn::disconnect}, BitsICNC1{true});
-}
-
 }  // namespace TestBitFields
 
 #include <iostream>
@@ -246,6 +240,31 @@ inline std::ostream& operator<<(std::ostream& ostr, const setl::BitsRW<T, bits..
 
 
 namespace TestBitFields {
+  
+
+using bbTest2 = setl::BitsRW<bool, 2>;
+using bbTest1 = setl::BitsRW<bool, 1>;
+using FieffTestldsTCCR1B = setl::BitFields<bbTest1, bbTest2>;
+using rrTestA = MemRegisterDef<std::uint8_t, 0x89>;  // a test
+
+using RegSelectorTCCR1 = setl::RegisterSelector<std::tuple<RegisterTCCR1B, RegisterTCCR1A>>;
+
+
+inline void testRegSelector() {
+  RegSelectorTCCR1::ReadModifyWrite(BitsCOM1A{EnumCOMn::disconnect}, BitsICNC1{false});
+  BitsCOM1A a0 = RegisterTCCR1A::Read();
+  BitsICNC1 b0 = RegisterTCCR1B::Read();
+  RegSelectorTCCR1::ReadModifyWrite(BitsCOM1A{EnumCOMn::set}, BitsICNC1{true});
+  BitsCOM1A a;
+  BitsICNC1 b;
+  RegSelectorTCCR1::Read(a, b);
+  BitsCOM1A a1 = RegisterTCCR1A::Read();
+  BitsICNC1 b1 = RegisterTCCR1B::Read();
+
+  std::cout << "a0: " << int(a0.value) << ", b0: " << b0.value << "\n";
+  std::cout << "a: " << int(a.value) << ", b: " << b.value << "\n";
+  std::cout << "a1: " << int(a1.value) << ", b1: " << b1.value << "\n";
+}
 
 TypeWGM1 getTypeWGM1() {
   BitsCOM1A com1a;

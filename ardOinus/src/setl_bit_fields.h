@@ -636,7 +636,29 @@ struct Assigner<w_Proxy> {
     return *this;
   }
 
-  ProxyType* proxy;
+  /**
+   * AssignSparse will assign only the fields associated with the format/register
+   * provided.
+   */
+  template <typename w_FormatType, typename T>
+  void AssignSparse(const T& value) const {
+    if (w_FormatType::template contains<ProxyType>) {
+      using appliers = BitTypeAppliers<T, ProxyType>;
+      proxy->value = static_cast<typename ProxyType::type>(appliers::applier::convert(value));
+    }
+  }
+
+  template <typename w_FormatType>
+  const Assigner& AssignSparse(const BitValue<w_FormatType>& value) const {
+    using FormatTypeType = typename w_FormatType::type;
+    using TypesOfBitsType = typename TypesOfBits<w_Proxy>::type;
+    using unsigned_type = typename UnsignedType<
+      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+    AssignSparse<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
+    return *this;
+  }
+
+  ProxyType* const proxy;
 };
 
 template <typename w_Proxy, typename...w_Proxies>
@@ -675,7 +697,31 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
     return *this;
   }
 
-  ProxyType* proxy;
+  /**
+   * AssignSparse will assign only the fields associated with the format/register
+   * provided.
+   */
+  template <typename w_FormatType, typename T>
+  void AssignSparse(const T& value) const {
+    const Assigner<w_Proxies...>& super{ *this };
+    super.template AssignSparse<w_FormatType, T>(value);
+    if (w_FormatType::template contains<ProxyType>) {
+      using appliers = BitTypeAppliers<T, ProxyType>;
+      proxy->value = static_cast<typename ProxyType::type>(appliers::applier::convert(value));
+    }
+  }
+
+  template <typename w_FormatType>
+  const Assigner& AssignSparse(const BitValue<w_FormatType>& value) const {
+    using FormatTypeType = typename w_FormatType::type;
+    using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
+    using unsigned_type = typename UnsignedType<
+      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+    AssignSparse<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
+    return *this;
+  }
+
+  ProxyType* const proxy;
 };
 
 template <typename...w_Proxies>
@@ -981,8 +1027,12 @@ struct RegisterSelectorHelper;
 
 template <typename R0, typename...Bs>
 struct RegisterSelectorHelper<std::tuple<R0>, std::tuple<Bs...>, false> {
-  // Last register's RMW function needed as a null function.
+  // Last register's RMW function must exist.
   static void ReadModifyWrite(Bs...bitsValues) {
+  }
+
+  // Last register's assign function must exist.
+  static void Read(Bs&...bitsValues) {
   }
 };
 
@@ -991,14 +1041,19 @@ struct RegisterSelectorHelper<std::tuple<R0>, std::tuple<Bs...>, true> {
   static void ReadModifyWrite(Bs...bitsValues) {
     R0::template ReadModifyWriteEx<true>(bitsValues...);
   }
+
+  static void Read(Bs&...bitsValues) {
+    Assigner<Bs...>(bitsValues...).AssignSparse(R0::Read());
+  }
 };
 
+// If a register does not participate with the given bitfields, then
+// no fuctions to read or or write are provided.
 template <typename R0, typename R1, typename...Rs, typename...Bs>
 struct RegisterSelectorHelper<std::tuple<R0, R1, Rs...>, std::tuple<Bs...>, false>
   : RegisterSelectorHelper<std::tuple<R1, Rs...>,
                            std::tuple<Bs...>,
                            RegisterToBitsFinder<R1, Bs...>::value> {
-
 };
 
 template <typename R0, typename R1, typename...Rs, typename...Bs>
@@ -1014,6 +1069,13 @@ struct RegisterSelectorHelper<std::tuple<R0, R1, Rs...>, std::tuple<Bs...>, true
   static void ReadModifyWrite(Bs...bitsValues) {
     R0::template ReadModifyWriteEx<true>(bitsValues...);
     super::ReadModifyWrite(bitsValues...);
+  }
+
+  static void Read(Bs&...bitsRefs) {
+    // Assign the bit fields for this register.
+    Assigner<Bs...>(bitsRefs...).AssignSparse(R0::Read());
+    // Assign the bit fields for the next available register.
+    super::Read(bitsRefs...);
   }
 };
 
@@ -1053,6 +1115,24 @@ struct RegisterSelector<std::tuple<R, Rs...>> {
           false, std::tuple<BitsTypes...>, std::tuple<R, Rs...>>::value,
       "Bitfield was not contained in any of the registers provided.");
     ReadModifyWriteImpl(bitsValues...);
+  }
+
+  /**
+   * Read the passed in bit field values from the selected registers.
+   * Only the registers whose associated bitfields will be read and only once.
+   */
+  template <typename...BitsTypes>
+  static void Read(BitsTypes&...bitsRefs) {
+    // Make sure all bit types can be read.
+    static_assert(
+      nfp::BitsToRegistersChecker<
+      false, std::tuple<BitsTypes...>, std::tuple<R, Rs...>>::value,
+      "Bitfield was not contained in any of the registers provided.");
+
+    static constexpr bool contained = nfp::RegisterToBitsFinder<R, BitsTypes...>::value;
+    using RSHelper = nfp::RegisterSelectorHelper<
+      std::tuple<R, Rs...>, std::tuple<BitsTypes...>, contained>;
+    RSHelper::Read(bitsRefs...);
   }
 };
 
