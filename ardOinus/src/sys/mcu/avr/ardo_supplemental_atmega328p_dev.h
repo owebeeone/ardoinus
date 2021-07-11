@@ -18,6 +18,59 @@ namespace avr {
 namespace arch_atmega328p {
 
 /**
+ * Defines a bitfield and a corrsponding value.
+ */
+template <typename w_BitField>
+struct ApplierReader {
+  using BitField = w_BitField;
+
+  template <typename Register>
+  static typename BitField::type read() {
+    BitField value;
+    Register::Read(value);
+    return value.value;
+  }
+};
+template <>
+struct ApplierReader<void> {
+  using BitField = void;
+
+  template <typename Register>
+  static void read() {
+  }
+};
+
+/**
+ * Defines a bitfield and a corrsponding value.
+ */
+template <typename w_BitField, typename w_BitField::type w_value>
+struct ApplierValue {
+  template <typename...w_Appliers>
+  friend struct Appliers;
+  template <typename v_BitField, typename v_BitField::type v_value, typename v_Register>
+  friend struct Applier;
+
+  using BitField = w_BitField;
+  static constexpr typename BitField::type value = w_value;
+
+ private:
+  template <typename Register>
+  static void apply() {
+    Register::ReadModifyWrite(BitField{ w_value });
+  }
+};
+
+/**
+ * Appliers provides a template class that may be used to perform a number
+ * bitfield operations.
+ */
+template <typename...w_ApplierValues>
+struct ApplierValues {
+  using ApplierValueTypes = std::tuple<w_ApplierValues...>;
+};
+
+
+/**
  * Appliers provides a template class that may be used to perform a number
  * bitfield operations.
  */
@@ -32,11 +85,12 @@ struct Applier {
   template <typename...w_Appliers>
   friend struct Appliers;
 
+  using ApplierValueType = ApplierValue<w_BitField, w_value>;
   using Register = w_Register;
 
  private:
   static void apply() {
-    Register::ReadModifyWrite(w_BitField{ w_value });
+    ApplierValueType::template apply<Register>();
   }
 };
 
@@ -597,6 +651,59 @@ using FieldsTCCR0AB = setl::BitFields<
 using rrTCCR0AB = rrTCCR0A::ForType<std::uint16_t>;
 using RegisterTCCR0AB = Register<FieldsTCCR0AB, rrTCCR0AB>;
 
+using BitsTCNT0 = setl::BitsRW<setl::SemanticType<setl::hash("TCNT0"), std::uint8_t>,
+  ccTCNT0_7,
+  ccTCNT0_6,
+  ccTCNT0_5,
+  ccTCNT0_4,
+  ccTCNT0_3,
+  ccTCNT0_2,
+  ccTCNT0_1,
+  ccTCNT0_0
+>;
+using FieldsTCNT0 = setl::BitFields<BitsTCNT0>;
+using RegisterTCNT0 = Register<FieldsTCNT0, rrTCNT0>;
+
+using BitsOCR0A = setl::BitsRW<setl::SemanticType<setl::hash("OCR0A"), std::uint8_t>,
+  ccOCR0A_7,
+  ccOCR0A_6,
+  ccOCR0A_5,
+  ccOCR0A_4,
+  ccOCR0A_3,
+  ccOCR0A_2,
+  ccOCR0A_1,
+  ccOCR0A_0
+>;
+using FieldsOCR0A = setl::BitFields<BitsOCR0A>;
+using RegisterOCR0A = Register<FieldsOCR0A, rrOCR0A>;
+
+using BitsOCR0B = setl::BitsRW<setl::SemanticType<setl::hash("OCR0B"), std::uint8_t>,
+  ccOCR0B_7,
+  ccOCR0B_6,
+  ccOCR0B_5,
+  ccOCR0B_4,
+  ccOCR0B_3,
+  ccOCR0B_2,
+  ccOCR0B_1,
+  ccOCR0B_0
+>;
+using FieldsOCR0B = setl::BitFields<BitsOCR0B>;
+using RegisterOCR0B = Register<FieldsOCR0B, rrOCR0B>;
+
+// Timer/Counter0 Interrupt Mask Register.
+using BitsOCIE0B = setl::BitsRW<setl::SemanticType<setl::hash("OCIE0B"), bool>, ccOCIE0B>;
+using BitsOCIE0A = setl::BitsRW<setl::SemanticType<setl::hash("OCIE0A"), bool>, ccOCIE0A>;
+using BitsTOIE0 = setl::BitsRW<setl::SemanticType<setl::hash("TOIE0"), bool>, ccTOIE0>;
+using FieldsTIMSK0 = setl::BitFields<BitsOCIE0B, BitsOCIE0A, BitsTOIE0>;
+using RegisterTIMSK0 = Register<FieldsTIMSK0, rrTIMSK0>;
+
+// Timer/Counter0 Interrupt Flag Register.
+using BitsOCF0B = setl::BitsRW<setl::SemanticType<setl::hash("OCF0B"), bool>, ccOCF0B>;
+using BitsOCF0A = setl::BitsRW<setl::SemanticType<setl::hash("OCF0A"), bool>, ccOCF0A>;
+using BitsTOV0 = setl::BitsRW<setl::SemanticType<setl::hash("TOV0"), bool>, ccTOV0>;
+using FieldsTIFR0 = setl::BitFields<BitsOCF0B, BitsOCF0A, BitsTOV0>;
+using RegisterTIFR0 = Register<FieldsTIFR0, rrTIFR0>;
+
 // Define registers for timer/counter 2
 using BitsWGM2_10 = setl::BitsRW<EnumWGM2, NA, ccWGM21, ccWGM20>;
 using BitsWGM2_2 = setl::BitsRW<EnumWGM2, ccWGM22, NA, NA>;
@@ -631,6 +738,79 @@ using FieldsTCCR2AB = setl::BitFields<
 using rrTCCR2AB = rrTCCR2A::ForType<std::uint16_t>;
 using RegisterTCCR2AB = Register<FieldsTCCR2AB, rrTCCR2AB>;
 
+using BitsTCNT2 = setl::BitsRW<setl::SemanticType<setl::hash("TCNT2"), std::uint8_t>,
+  ccTCNT2_7,
+  ccTCNT2_6,
+  ccTCNT2_5,
+  ccTCNT2_4,
+  ccTCNT2_3,
+  ccTCNT2_2,
+  ccTCNT2_1,
+  ccTCNT2_0
+>;
+using FieldsTCNT2 = setl::BitFields<BitsTCNT2>;
+using RegisterTCNT2 = Register<FieldsTCNT2, rrTCNT2>;
+
+using BitsOCR2A = setl::BitsRW<setl::SemanticType<setl::hash("OCR2A"), std::uint8_t>,
+  ccOCR2_7,
+  ccOCR2_6,
+  ccOCR2_5,
+  ccOCR2_4,
+  ccOCR2_3,
+  ccOCR2_2,
+  ccOCR2_1,
+  ccOCR2_0
+>;
+using FieldsOCR2A = setl::BitFields<BitsOCR2A>;
+using RegisterOCR2A = Register<FieldsOCR2A, rrOCR2A>;
+
+using BitsOCR2B = setl::BitsRW<setl::SemanticType<setl::hash("OCR2B"), std::uint8_t>,
+  ccOCR2_7,
+  ccOCR2_6,
+  ccOCR2_5,
+  ccOCR2_4,
+  ccOCR2_3,
+  ccOCR2_2,
+  ccOCR2_1,
+  ccOCR2_0
+>;
+using FieldsOCR2B = setl::BitFields<BitsOCR2B>;
+using RegisterOCR2B = Register<FieldsOCR2B, rrOCR2B>;
+
+// Timer/Counter2 Interrupt Mask Register.
+using BitsOCIE2B = setl::BitsRW<setl::SemanticType<setl::hash("OCIE2B"), bool>, ccOCIE2B>;
+using BitsOCIE2A = setl::BitsRW<setl::SemanticType<setl::hash("OCIE2A"), bool>, ccOCIE2A>;
+using BitsTOIE2 = setl::BitsRW<setl::SemanticType<setl::hash("TOIE2"), bool>, ccTOIE2>;
+using FieldsTIMSK2 = setl::BitFields<BitsOCIE2B, BitsOCIE2A, BitsTOIE2>;
+using RegisterTIMSK2 = Register<FieldsTIMSK2, rrTIMSK2>;
+
+// Timer/Counter2 Interrupt Flag Register.
+using BitsOCF2B = setl::BitsRW<setl::SemanticType<setl::hash("OCF2B"), bool>, ccOCF2B>;
+using BitsOCF2A = setl::BitsRW<setl::SemanticType<setl::hash("OCF2A"), bool>, ccOCF2A>;
+using BitsTOV2 = setl::BitsRW<setl::SemanticType<setl::hash("TOV2"), bool>, ccTOV2>;
+using FieldsTIFR2 = setl::BitFields<BitsOCF2B, BitsOCF2A, BitsTOV2>;
+using RegisterTIFR2 = Register<FieldsTIFR2, rrTIFR2>;
+
+// Asynchronous Status Register for timer 2.
+using BitsEXCLK = setl::BitsRW<setl::SemanticType<setl::hash("EXCLK"), bool>, ccEXCLK>;
+using BitsAS2 = setl::BitsRW<setl::SemanticType<setl::hash("AS2"), bool>, ccAS2>;
+using BitsTCN2UB = setl::BitsRO<setl::SemanticType<setl::hash("TCN2UB"), bool>, ccTCN2UB>;
+using BitsOCR2AUB = setl::BitsRO<setl::SemanticType<setl::hash("OCR2BUA"), bool>, ccOCR2AUB>;
+using BitsOCR2BUB = setl::BitsRO<setl::SemanticType<setl::hash("OCR2BUB"), bool>, ccOCR2BUB>;
+using BitsTCR2AUB = setl::BitsRO<setl::SemanticType<setl::hash("TCR2AUB"), bool>, ccTCR2AUB>;
+using BitsTCR2BUB = setl::BitsRO<setl::SemanticType<setl::hash("TCR2BUB"), bool>, ccTCR2BUB>;
+using FieldsASSR = setl::BitFields<
+    BitsEXCLK, BitsAS2, BitsOCR2AUB, BitsOCR2BUB, BitsTCR2AUB, BitsTCR2BUB>;
+using RegisterASSR = Register<FieldsASSR, rrASSR>;
+
+// General Timer/Counter Control Register for timers 0 & 1.
+using BitsTSM = setl::BitsRW<setl::SemanticType<setl::hash("TSM"), bool>, ccTSM>;
+using BitsPSRASY = setl::BitsRW<setl::SemanticType<setl::hash("PSRASY"), bool>, ccPSRASY>;
+using BitsPSRSYNC = setl::BitsRW<setl::SemanticType<setl::hash("PSRSYNC"), bool>, ccPSRSYNC>;
+using FieldsGTCCR = setl::BitFields<BitsTSM, BitsPSRASY, BitsPSRSYNC>;
+using RegisterGTCCR = Register<FieldsGTCCR, rrGTCCR>;
+
+// Define registers for timer/counter 1
 using BitsWGM1_10 = setl::BitsRW<EnumWGM1, NA, NA, ccWGM11, ccWGM10>;
 using BitsWGM1_32 = setl::BitsRW<EnumWGM1, ccWGM13, ccWGM12, NA, NA>;
 // Define bitfields when treating TCCR1A + TCCR1B as a 16 bit value.
@@ -663,7 +843,83 @@ using BitsFOC1B = setl::BitsRW<setl::SemanticType<setl::hash("FOC1B"), bool>, cc
 using FieldsTCCR1C = setl::BitFields<BitsFOC1A, BitsFOC1B>;
 using RegisterTCCR1C = Register<FieldsTCCR1C, rrTCCR1C>;
 
-constexpr auto xx = RegisterTCCR1C::FormatType::contains<BitsCOM1A>;
+
+// Timer/Counter1 Interrupt Mask Register.
+using BitsOCIE1B = setl::BitsRW<setl::SemanticType<setl::hash("OCIE1B"), bool>, ccOCIE1B>;
+using BitsOCIE1A = setl::BitsRW<setl::SemanticType<setl::hash("OCIE1A"), bool>, ccOCIE1A>;
+using BitsTOIE1 = setl::BitsRW<setl::SemanticType<setl::hash("TOIE1"), bool>, ccTOIE1>;
+using FieldsTIMSK1 = setl::BitFields<BitsOCIE1B, BitsOCIE1A, BitsTOIE1>;
+using RegisterTIMSK1 = Register<FieldsTIMSK1, rrTIMSK1>;
+
+// Timer/Counter1 Interrupt Flag Register.
+using BitsOCF1B = setl::BitsRW<setl::SemanticType<setl::hash("OCF1B"), bool>, ccOCF1B>;
+using BitsOCF1A = setl::BitsRW<setl::SemanticType<setl::hash("OCF1A"), bool>, ccOCF1A>;
+using BitsTOV1 = setl::BitsRW<setl::SemanticType<setl::hash("TOV1"), bool>, ccTOV1>;
+using FieldsTIFR1 = setl::BitFields<BitsOCF1B, BitsOCF1A, BitsTOV1>;
+using RegisterTIFR1 = Register<FieldsTIFR1, rrTIFR1>;
+
+using BitsTCNT1 = setl::BitsRW<setl::SemanticType<setl::hash("TCNT1"), std::uint16_t>,
+  ccTCNT1H7 + 8,
+  ccTCNT1H6 + 8,
+  ccTCNT1H5 + 8,
+  ccTCNT1H4 + 8,
+  ccTCNT1H3 + 8,
+  ccTCNT1H2 + 8,
+  ccTCNT1H1 + 8,
+  ccTCNT1H0 + 8,
+  ccTCNT1L7,
+  ccTCNT1L6,
+  ccTCNT1L5,
+  ccTCNT1L4,
+  ccTCNT1L3,
+  ccTCNT1L2,
+  ccTCNT1L1,
+  ccTCNT1L0
+  >;
+using FieldsTCNT1 = setl::BitFields<BitsTCNT1>;
+using RegisterTCNT1 = Register<FieldsTCNT1, rrTCNT1>;
+
+using BitsOCR1A = setl::BitsRW<setl::SemanticType<setl::hash("OCR1A"), std::uint16_t>,
+  ccOCR1AH7 + 8,
+  ccOCR1AH6 + 8,
+  ccOCR1AH5 + 8,
+  ccOCR1AH4 + 8,
+  ccOCR1AH3 + 8,
+  ccOCR1AH2 + 8,
+  ccOCR1AH1 + 8,
+  ccOCR1AH0 + 8,
+  ccOCR1AL7,
+  ccOCR1AL6,
+  ccOCR1AL5,
+  ccOCR1AL4,
+  ccOCR1AL3,
+  ccOCR1AL2,
+  ccOCR1AL1,
+  ccOCR1AL0
+>;
+using FieldsOCR1A = setl::BitFields<BitsOCR1A>;
+using RegisterOCR1A = Register<FieldsOCR1A, rrOCR1A>;
+
+using BitsOCR1B = setl::BitsRW<setl::SemanticType<setl::hash("OCR1B"), std::uint16_t>,
+  ccOCR1BH7 + 8,
+  ccOCR1BH6 + 8,
+  ccOCR1BH5 + 8,
+  ccOCR1BH4 + 8,
+  ccOCR1BH3 + 8,
+  ccOCR1BH2 + 8,
+  ccOCR1BH1 + 8,
+  ccOCR1BH0 + 8,
+  ccOCR1BL7,
+  ccOCR1BL6,
+  ccOCR1BL5,
+  ccOCR1BL4,
+  ccOCR1BL3,
+  ccOCR1BL2,
+  ccOCR1BL1,
+  ccOCR1BL0
+>;
+using FieldsOCR1B = setl::BitFields<BitsOCR1B>;
+using RegisterOCR1B = Register<FieldsOCR1B, rrOCR1B>;
 
 // Defines the 16 bits for the ICR1 register. 
 using BitsICR1 = setl::BitsRW<setl::SemanticType<setl::hash("ICR1"), std::uint16_t>,
@@ -688,41 +944,125 @@ using BitsICR1 = setl::BitsRW<setl::SemanticType<setl::hash("ICR1"), std::uint16
 using FieldsICR1 = setl::BitFields<BitsICR1>;
 using RegisterIRC1 = Register<FieldsICR1, rrICR1>;
 
+template <typename B>
+struct TimerInputNoiseCanceller {
+  using Activate = ApplierValues<ApplierValue<B, true>>;
+  using Deactivate = ApplierValues<ApplierValue<B, false>>;
+  static constexpr bool has_noise_canceller = true;
+};
+
+template <>
+struct TimerInputNoiseCanceller<void> {
+  using Activate = ApplierValues<>;
+  using Deactivate = ApplierValues<>;
+  static constexpr bool has_noise_canceller = false;
+};
+
+template <typename w_BitsICR, typename w_BitsEdge, typename w_BitsNoiseCancel>
+struct TimerCapture {
+  using CaptureBits = w_BitsICR;
+  using Rising = ApplierValues<ApplierValue<w_BitsEdge, true>>;
+  using Falling = ApplierValues<ApplierValue<w_BitsEdge, false>>;
+  using NoiseCanceller = TimerInputNoiseCanceller<w_BitsNoiseCancel>;
+  static constexpr bool has_input_capture = true;
+  static constexpr bool has_edge_selection = true;
+};
+
+template <>
+struct TimerCapture<void, void, void> {
+  using CaptureBits = void;
+  using Rising = ApplierValues<>;
+  using Falling = ApplierValues<>;
+  using NoiseCanceller = TimerInputNoiseCanceller<void>;
+  static constexpr bool has_input_capture = false;
+  static constexpr bool has_edge_selection = false;
+};
+
+template <typename w_OCR, typename w_OCIE, typename w_OCF>
+struct OutputCompare {
+  using OCR = w_OCR;
+  using OCIE = w_OCIE;
+  using OCF = w_OCF;
+};
+
 template <
   typename w_BitsWGM_16,
   typename w_BitsCS,
-  typename w_BitsICNC,
-  typename w_BitsICES,
-  typename w_BitsICR,
   typename w_BitsFOCA,
   typename w_BitsFOCB,
-  typename...w_Registers
+  typename w_BitsTCNT,
+  typename w_OutputCompareA,
+  typename w_OutputCompareB,
+  typename w_TimerCapture,
+  typename w_RegistersTuple
 >
 struct TimerDefinition
 {
   using BitsWGM_16 = w_BitsWGM_16;
   using BitsCS = w_BitsCS;
-  using BitsICNC = w_BitsICNC;
-  using BitsICES = w_BitsICES;
-  using BitsICR = w_BitsICR;
   using BitsFOCA = w_BitsFOCA;
   using BitsFOCB = w_BitsFOCB;
-  using Registers = std::tuple<w_Registers...>;
-
+  using BitsTCNT = w_BitsTCNT;
+  using OutputCompareA = w_OutputCompareA;
+  using OutputCompareB = w_OutputCompareB;
+  using TimerCaptureType = w_TimerCapture;
+  using Registers = w_RegistersTuple;
 };
+
+using Timer0Def = TimerDefinition<
+  BitsWGM0_210,
+  BitsCS01_16,
+  BitsFOC0A,
+  BitsFOC0B,
+  BitsTCNT0,
+  OutputCompare<BitsOCR0A, BitsOCIE0A, BitsOCF0A>,
+  OutputCompare<BitsOCR0B, BitsOCIE0B, BitsOCF0B>,
+  TimerCapture<void, void, void>,
+  std::tuple<
+    RegisterTCCR0AB, 
+    RegisterTCNT0, 
+    RegisterOCR0A,
+    RegisterOCR0B, 
+    RegisterTIMSK0, 
+    RegisterTIFR0>
+>;
 
 using Timer1Def = TimerDefinition<
   BitsWGM1_3210,
   BitsCS11_16,
-  BitsICNC1_16,
-  BitsICES1_16,
-  BitsICR1,
   BitsFOC1A,
   BitsFOC1B,
+  BitsTCNT1,
+  OutputCompare<BitsOCR1A, BitsOCIE1A, BitsOCF1A>,
+  OutputCompare<BitsOCR1B, BitsOCIE1B, BitsOCF1B>,
+  TimerCapture<BitsICNC1_16, BitsICES1_16, BitsICR1>,
+  std::tuple<
+    RegisterTCCR1AB,
+    RegisterTCCR1C,  // Timer1 has FOC1A/B in this register.
+    RegisterIRC1,
+    RegisterTCNT1,
+    RegisterOCR1A,
+    RegisterOCR1B,
+    RegisterTIMSK1,
+    RegisterTIFR1>
+>;
 
-  RegisterTCCR1AB,
-  RegisterTCCR1C,
-  RegisterIRC1
+using Timer2Def = TimerDefinition<
+  BitsWGM2_210,
+  BitsCS21_16,
+  BitsFOC2A,
+  BitsFOC2B,
+  BitsTCNT2,
+  OutputCompare<BitsOCR2A, BitsOCIE2A, BitsOCF2A>,
+  OutputCompare<BitsOCR2B, BitsOCIE2B, BitsOCF2B>,
+  TimerCapture<void, void, void>,
+  std::tuple<
+    RegisterTCCR2AB, 
+    RegisterTCNT2,
+    RegisterOCR2A, 
+    RegisterOCR2B, 
+    RegisterTIMSK2, 
+    RegisterTIFR2>
 >;
 
 template <
@@ -753,6 +1093,10 @@ struct Timer16 {
     TccrAB::ReadModifyWrite(BitsCS11_16{ cs1_value }, BitsWGM1_3210{ EnumWGM1::fast_pwm_icr1 });
     Tirc::Write(BitsICR1{ top_count });
   }
+};
+
+struct Timer1 {
+
 };
 
 template <
@@ -1218,6 +1562,103 @@ static_assert(
     RootDependencies<ppUSART0>,
     std::tuple<ppPD0, ppPD1>>::value,
   "Failed to find correct root dependencies for USART0.");
+
+template <typename...Resources>
+struct ResourceFinder {
+
+};
+
+// Used for traversing resource graph to find dependencies.
+using McuResources = ResourceFinder <
+  ppPB0,
+  ppPB1,
+  ppPB2,
+  ppPB3,
+  ppPB4,
+  ppPB5,
+  ppPB6,
+  ppPB7,
+  ppPC0,
+  ppPC1,
+  ppPC2,
+  ppPC3,
+  ppPC4,
+  ppPC5,
+  ppPC6,
+  ppPD0,
+  ppPD1,
+  ppPD2,
+  ppPD3,
+  ppPD4,
+  ppPD5,
+  ppPD6,
+  ppPD7,
+  ppADC6,
+  ppADC7,
+  ppT0,
+  ppT1,
+  ppXCK,
+  ppADC0,
+  ppADC1,
+  ppADC2,
+  ppADC3,
+  ppADC4,
+  ppADC5,
+  ppCLKO,
+  ppICP1,
+  ppINT0,
+  ppINT1,
+  ppOC0A,
+  ppOC0B,
+  ppOC1A,
+  ppOC1B,
+  ppOC2A,
+  ppOC2B,
+  ppRESET,
+  ppTOSC1,
+  ppTOSC2,
+  ppPCINT0,
+  ppPCINT1,
+  ppPCINT2,
+  ppPCINT3,
+  ppPCINT4,
+  ppPCINT5,
+  ppPCINT6,
+  ppPCINT7,
+  ppPCINT8,
+  ppPCINT9,
+  ppPCINT10,
+  ppPCINT11,
+  ppPCINT12,
+  ppPCINT13,
+  ppPCINT14,
+  ppPCINT16,
+  ppPCINT17,
+  ppPCINT18,
+  ppPCINT19,
+  ppPCINT20,
+  ppPCINT21,
+  ppPCINT22,
+  ppPCINT23,
+  ppAIN0,
+  ppAIN1,
+  ppAIN,
+  ppSCL,
+  ppSDA,
+  ppI2C0,
+  ppSS,
+  ppSCK,
+  ppMISO,
+  ppMOSI,
+  ppSPI0,
+  ppRXD,
+  ppTXD,
+  ppUSART0,
+  ppXTAL1,
+  ppXTAL2,
+  ppXTAL
+>;
+
 
 }  // arch_atmega328p
 }  // namespace avr
