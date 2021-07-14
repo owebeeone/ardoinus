@@ -1155,7 +1155,7 @@ struct ApplierReader {
   using BitField = w_BitField;
 
   template <typename Register>
-  static typename BitField read() {
+  static BitField read() {
     BitField value;
     Register::Read(value);
     return value;
@@ -1265,6 +1265,79 @@ struct ApplierValuesForRegister<std::tuple<>, R, w_Base> {
   using ApplierT = w_Base;
 };
 
+enum class AVsApplierType {
+  partial_write,
+  full_mask,
+  null_op
+};
+
+// Default case for non zero and non all set bits mask.
+template<
+    typename w_Register, 
+    typename w_Base, 
+    typename w_register_type,
+    w_register_type w_new_bits,
+    w_register_type w_in_mask,
+    AVsApplierType w_applier_type>
+struct AVsApplier : w_Base {
+  using Register = w_Register;
+  using Base = w_Base;
+  using register_type = w_register_type;
+  static constexpr w_register_type new_bits = w_new_bits;
+  static constexpr w_register_type in_mask = w_in_mask;
+  static void apply() {
+    Base::apply();
+    // Uses the read/modify write API on the register.
+    Register::ioregister::set_mask(
+      static_cast<register_type>(new_bits), static_cast<register_type>(in_mask));
+  }
+};
+
+template<
+    typename w_Register, 
+    typename w_Base, 
+    typename w_register_type,
+    w_register_type w_new_bits,
+    w_register_type w_in_mask>
+struct AVsApplier<
+    w_Register, 
+    w_Base, 
+    w_register_type, 
+    w_new_bits, 
+    w_in_mask, 
+    AVsApplierType::full_mask> : w_Base {
+  using Register = w_Register;
+  using Base = w_Base;
+  using register_type = w_register_type;
+  static constexpr w_register_type new_bits = w_new_bits;
+  static constexpr w_register_type in_mask = w_in_mask;
+  static void apply() {
+    Base::apply();
+    Register::ioregister::set(static_cast<register_type>(new_bits));
+  }
+};
+
+template<
+    typename w_Register, 
+    typename w_Base, 
+    typename w_register_type,
+    w_register_type w_new_bits,
+    w_register_type w_in_mask>
+struct AVsApplier<
+    w_Register, 
+    w_Base, 
+    w_register_type, 
+    w_new_bits, 
+    w_in_mask, 
+    AVsApplierType::null_op> : w_Base {
+  using Register = w_Register;
+  using Base = w_Base;
+  using register_type = w_register_type;
+  static constexpr w_register_type new_bits = w_new_bits;
+  static constexpr w_register_type in_mask = w_in_mask;
+};
+
+
 template <typename AV, typename...AVs, typename R, typename w_Base>
 struct ApplierValuesForRegister<std::tuple<AV, AVs...>, R, w_Base> {
   using Base = w_Base;
@@ -1279,33 +1352,13 @@ struct ApplierValuesForRegister<std::tuple<AV, AVs...>, R, w_Base> {
   static constexpr unsigned_type in_mask = Evaluator::traits::in_mask;
   using register_type = typename Register::type;
 
-  // Default case for non zero and non all set bits mask.
-  template <register_type in_mask>
-  struct ThisApplier : Base {
-    static void apply() {
-      Base::apply();
-      // Uses the read/modify write API on the register.
-      Register::ioregister::set_mask(
-          static_cast<register_type>(new_bits), static_cast<register_type>(in_mask));
-    }
-  };
+  static constexpr AVsApplierType op = 
+    (in_mask == register_type{0}) ? AVsApplierType::null_op
+    : (in_mask == ~register_type{0}) ? AVsApplierType::full_mask
+    : AVsApplierType::partial_write;
 
-  // Special case for all bits being written.
-  template <>
-  struct ThisApplier <~register_type{0}> : Base {
-    static void apply() {
-      Base::apply();
-      Register::ioregister::set(static_cast<register_type>(new_bits));
-    }
-  };
 
-  template <>
-  struct ThisApplier <register_type{0}> : Base {
-    // Register does not participate in bit manipulations.
-    // There is no apply() function.
-  };
-
-  using ApplierT = ThisApplier<in_mask>;
+  using ApplierT = AVsApplier<Register, Base, register_type, new_bits, in_mask, op>;
 };
 
 // Appliers chain via inheritance and only those Appliers containing
