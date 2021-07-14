@@ -7,6 +7,7 @@
 #define SETL_BIT_FIELDS___H
 
 #include "setl_cat_tuples.h"
+#include "setl_system.h"
 #include "setlx_cstddef.h"
 #include "setlx_cstdint.h"
 #include "setlx_tuple.h"
@@ -599,6 +600,14 @@ struct BitTypesEvaluator {
   }
 };
 
+// Specialization allowing w_BitsTypes to be a tuple.
+template <bool allow_unreferenced,
+  typename w_FormatType,
+  typename...w_BitsTypes>
+  struct BitTypesEvaluator<allow_unreferenced, w_FormatType, std::tuple<w_BitsTypes...>>
+      : BitTypesEvaluator<allow_unreferenced, w_FormatType, w_BitsTypes...> {
+};
+
 /**
  * Assigns multiple bitfields from a single value.
  */
@@ -1102,6 +1111,8 @@ struct RegisterSelector<std::tuple<R, Rs...>> {
     RSHelper::ReadModifyWrite(bitsValues...);
   }
  public:
+  using Registers = std::tuple<R, Rs...>;
+
   /**
    * Perform a write operation with the given bit field values by first reading
    * the register (if any bits will survive the write) and then writing the new
@@ -1113,7 +1124,7 @@ struct RegisterSelector<std::tuple<R, Rs...>> {
     static_assert(
       nfp::BitsToRegistersChecker<
           false, std::tuple<BitsTypes...>, std::tuple<R, Rs...>>::value,
-      "Bitfield was not contained in any of the registers provided.");
+      "A bitfield was not contained in any of the registers provided.");
     ReadModifyWriteImpl(bitsValues...);
   }
 
@@ -1133,6 +1144,316 @@ struct RegisterSelector<std::tuple<R, Rs...>> {
     using RSHelper = nfp::RegisterSelectorHelper<
       std::tuple<R, Rs...>, std::tuple<BitsTypes...>, contained>;
     RSHelper::Read(bitsRefs...);
+  }
+};
+
+/**
+ * Provides a utility to read a bitfield from a register selection..
+ */
+template <typename w_BitField>
+struct ApplierReader {
+  using BitField = w_BitField;
+
+  template <typename Register>
+  static typename BitField read() {
+    BitField value;
+    Register::Read(value);
+    return value;
+  }
+};
+
+// Trap any attempts to read from a void bitfield.
+template <>
+struct ApplierReader<void> {
+  using BitField = void;
+
+  template <typename Register>
+  static void read() {
+  }
+};
+
+/**
+ * Defines a bitfield and a corrsponding value.
+ */
+template <typename w_BitField, typename w_BitField::type w_value>
+struct ApplierValue {
+  template <typename...w_Appliers>
+  friend struct Appliers;
+  template <typename v_BitField, typename v_BitField::type v_value, typename v_Register>
+  friend struct Applier;
+
+  using BitField = w_BitField;
+  static constexpr typename BitField::type value = w_value;
+
+ private:
+  template <typename Register>
+  static void apply() {
+    Register::ReadModifyWrite(BitField{ w_value });
+  }
+};
+
+// Tools for value applier.
+namespace nfp {
+
+// Convert a list of ApplierValue types to a list of bitfields.
+template <typename...AVs>
+struct ToBitFields;
+
+template <>
+struct ToBitFields<> {
+  using type = std::tuple<>;
+};
+
+template <typename AV, typename...AVs>
+struct ToBitFields<AV, AVs...> {
+  using Rest = ToBitFields<AVs...>;
+  using type = setl::cat_tuples_t<
+      std::tuple<typename AV::BitField>, typename Rest::type>;
+};
+
+// Collects all the ApplierValue types specific to register R.
+template <typename AVT, typename R>
+struct ApplierValuesRegHelper;
+
+template <typename R>
+struct ApplierValuesRegHelper<std::tuple<>, R> {
+  using AVsForRegister = std::tuple<>;
+};
+
+template <typename AV, typename...AVs, typename R>
+struct ApplierValuesRegHelper<std::tuple<AV, AVs...>, R> {
+  using Rest = ApplierValuesRegHelper<std::tuple<AVs...>, R>;
+  static constexpr bool contains = R::FormatType::template contains<typename AV::BitField>;
+  using AVsForRegister = std::conditional_t<
+      contains,
+      setl::cat_tuples_t<std::tuple<AV>, typename Rest::AVsForRegister>,
+      typename Rest::AVsForRegister>;
+};
+
+
+template <typename w_unsigned_type, typename w_FormatType, typename...AVs>
+struct ApplierValueEvaluator;
+
+template <typename w_unsigned_type, typename w_FormatType>
+struct ApplierValueEvaluator<w_unsigned_type, w_FormatType> {
+  using unsigned_type = w_unsigned_type;
+  static constexpr unsigned_type value = unsigned_type{0};
+};
+
+
+template <typename w_unsigned_type, typename w_FormatType, typename AV, typename...AVs>
+struct ApplierValueEvaluator<w_unsigned_type, w_FormatType, AV, AVs...> {
+  using unsigned_type = w_unsigned_type;
+  using FormatType = w_FormatType;
+  using Rest = ApplierValueEvaluator<unsigned_type, FormatType, AVs...>;
+  using Bitfields = typename ToBitFields<AV, AVs...>::type;
+  using Evaluator = BitTypesEvaluator<false, FormatType, Bitfields>;
+  using traits = typename Evaluator::traits;
+  using inv_applier = typename traits::appliers::inv_applier;
+
+  static constexpr unsigned_type this_value = inv_applier::convert(
+    static_cast<unsigned_type>(AV::value));
+
+  static constexpr unsigned_type value = this_value | Rest::value;
+};
+
+template <typename AVT, typename R, typename w_Base>
+struct ApplierValuesForRegister;
+
+template <typename R, typename w_Base>
+struct ApplierValuesForRegister<std::tuple<>, R, w_Base> {
+  using ApplierT = w_Base;
+};
+
+template <typename AV, typename...AVs, typename R, typename w_Base>
+struct ApplierValuesForRegister<std::tuple<AV, AVs...>, R, w_Base> {
+  using Base = w_Base;
+  using Bitfields = typename ToBitFields<AV, AVs...>::type;
+  using Register = R;
+  using FormatType = typename Register::FormatType;
+  using Evaluator = BitTypesEvaluator<false, FormatType, Bitfields>;
+  using unsigned_type = typename Evaluator::unsigned_type;
+  using ApplierEvaluator = ApplierValueEvaluator<
+      unsigned_type, FormatType, AV, AVs...>;
+  static constexpr unsigned_type new_bits = ApplierEvaluator::value;
+  static constexpr unsigned_type in_mask = Evaluator::traits::in_mask;
+  using register_type = typename Register::type;
+
+  // Default case for non zero and non all set bits mask.
+  template <register_type in_mask>
+  struct ThisApplier : Base {
+    static void apply() {
+      Base::apply();
+      // Uses the read/modify write API on the register.
+      Register::ioregister::set_mask(
+          static_cast<register_type>(new_bits), static_cast<register_type>(in_mask));
+    }
+  };
+
+  // Special case for all bits being written.
+  template <>
+  struct ThisApplier <~register_type{0}> : Base {
+    static void apply() {
+      Base::apply();
+      Register::ioregister::set(static_cast<register_type>(new_bits));
+    }
+  };
+
+  template <>
+  struct ThisApplier <register_type{0}> : Base {
+    // Register does not participate in bit manipulations.
+    // There is no apply() function.
+  };
+
+  using ApplierT = ThisApplier<in_mask>;
+};
+
+// Appliers chain via inheritance and only those Appliers containing
+// values to apply implement the apply() method. This means the compiler
+// only needs to generate apply() functions for registers that have
+// mutating values.
+struct BaseApplier {
+  // The applier that does nothing.
+  struct ApplierT {
+    static void apply() {
+    }
+  };
+};
+
+template <typename AVT, typename RT>
+struct ApplierValuesRegApplier;
+
+template <typename...AVs>
+struct ApplierValuesRegApplier<std::tuple<AVs...>, std::tuple<>> {
+
+  using ApplierT = BaseApplier::ApplierT;
+};
+
+
+template <typename...AVs, typename R, typename...Rs>
+struct ApplierValuesRegApplier<std::tuple<AVs...>, std::tuple<R, Rs...>> {
+  using RegAvs = ApplierValuesRegHelper<std::tuple<AVs...>, R>;
+  using RegAvsTuple = typename RegAvs::AVsForRegister;
+  //using Bitfields = typename ToBitFields<AVs...>::type;
+  //static_assert(
+  //  nfp::BitsToRegistersChecker<false, BitFields, std::tuple<R, Rs...>>::value,
+  //  "A bitfield was not contained in any of the registers provided.");
+
+  using Rest = ApplierValuesRegApplier<std::tuple<AVs...>, std::tuple<Rs...>>;
+  using BaseApplier = typename Rest::ApplierT;
+
+  using ApplierT = typename ApplierValuesForRegister<
+      RegAvsTuple, R, BaseApplier>::ApplierT;
+};
+
+}  // namespace nfp
+
+/**
+ * Appliers provides a template class that may be used to perform a number
+ * bitfield operations.
+ */
+template <typename...w_ApplierValues>
+struct ApplierValues {
+  using ApplierValueTypes = std::tuple<w_ApplierValues...>;
+
+  template <typename w_RegisterSelector>
+  static void apply() {
+    using Registers = typename w_RegisterSelector::Registers;
+    using AVApplier = nfp::ApplierValuesRegApplier<ApplierValueTypes, Registers>;
+    using BitFields = typename nfp::ToBitFields<w_ApplierValues...>::type;
+    static_assert(
+      nfp::BitsToRegistersChecker<false, BitFields, Registers>::value,
+      "A bitfield was not contained in any of the registers provided.");
+    AVApplier::ApplierT::apply();
+  }
+};
+
+/**
+ * Appliers provides a template class that may be used to perform a number
+ * bitfield operations.
+ */
+template <typename...w_Appliers>
+struct Appliers;
+
+/**
+ * Applied the given bit field in a ReadModifyWrite.
+ */
+template <typename w_BitField, typename w_BitField::type w_value, typename w_Register>
+struct Applier {
+  template <typename...w_Appliers>
+  friend struct Appliers;
+
+  using ApplierValueType = ApplierValue<w_BitField, w_value>;
+  using Register = w_Register;
+
+ private:
+  static void apply() {
+    ApplierValueType::template apply<Register>();
+  }
+};
+
+/**
+ * Applier taking a set of registers in a tuple. The register selected
+ * is the register that supports the given field.
+ */
+template <typename w_BitField, typename w_BitField::type w_value, typename...w_Registers>
+struct Applier<w_BitField, w_value, std::tuple<w_Registers...>> {
+  template <typename...w_Appliers>
+  friend struct Appliers;
+
+  using Finder = setl::FindRegisterForField<w_BitField, std::tuple<w_Registers...>>;
+  static_assert(Finder::value, "Given bitfield is not supported in the given registers.");
+  using Register = typename Finder::type;
+
+ private:
+  static void apply() {
+    Register::ReadModifyWrite(w_BitField{ w_value });
+  }
+};
+
+template <>
+struct Appliers<> {
+  template <typename...v_Appliers>
+  friend struct Appliers;
+
+  using types = std::tuple<>;
+  static void apply() {
+  }
+};
+
+template <typename w_Applier, typename...w_Appliers>
+struct Appliers<w_Applier, w_Appliers...> {
+  template <typename...v_Appliers>
+  friend struct Appliers;
+  friend struct ApplierRunner;
+
+  using types = std::tuple<w_Applier, w_Appliers...>;
+
+private:
+  static void apply() {
+    w_Applier::apply();
+    Appliers<w_Appliers...>::apply();
+  }
+};
+
+/**
+ * Provides "apply" frunctions that execute the given bit Appliers. One of the
+ * functions performs a synchronization (memory barrier) as may be needed on some
+ * microcontrollers.
+ */
+struct ApplierRunner {
+protected:
+  /// Applies the given "Appliers" and performs a sync barrier.
+  template <typename w_Appliers>
+  static void applySync() {
+    setl::System::MemoryBarrier barrier;
+    w_Appliers::apply();
+  }
+
+  /// Applies the given "Appliers".
+  template <typename w_Appliers>
+  static void applyNoSync() {
+    w_Appliers::apply();
   }
 };
 

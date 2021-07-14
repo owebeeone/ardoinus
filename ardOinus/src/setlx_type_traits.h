@@ -22,6 +22,9 @@ struct conditional<false, T, F> {
   using type = F;
 };
 
+template <bool D, class T, class F>
+using conditional_t = typename conditional<B, T, F>::type;
+
 template<class T, T w_value>
 struct integral_constant {
   static constexpr T value = w_value;
@@ -48,6 +51,9 @@ struct is_same : false_type {};
 
 template<typename T>
 struct is_same<T, T> : true_type {};
+
+template <class T, typename U>
+constexpr bool is_same_v = is_same<T, U>::value;
 
 // remove_const
 template <typename T>

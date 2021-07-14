@@ -266,6 +266,40 @@ inline void testRegSelector() {
   std::cout << "a1: " << int(a1.value) << ", b1: " << b1.value << "\n";
 }
 
+inline void testRegSelector2() {
+  using foo = typename setl::nfp::ToBitFields<
+    setl::ApplierValue<BitsCOM1A, EnumCOMn::disconnect>,
+    setl::ApplierValue<BitsICNC1, false>>::type;
+
+  using AVE = setl::ApplierValues<>;
+  AVE::apply<RegSelectorTCCR1>();
+
+  using AVNE = setl::ApplierValues<
+      setl::ApplierValue<BitsCOM1A, EnumCOMn::disconnect>,
+      setl::ApplierValue<BitsCOM1B, EnumCOMn::disconnect>,
+      setl::ApplierValue<BitsICNC1, false>>;
+
+  AVNE::apply<RegSelectorTCCR1>();
+  BitsCOM1A a0;
+  BitsCOM1B b0;
+  BitsICNC1 c0;
+  RegSelectorTCCR1::Read(a0, b0, c0);
+
+  using AVNE2 = setl::ApplierValues<
+    setl::ApplierValue<BitsCOM1A, EnumCOMn::set>,
+    setl::ApplierValue<BitsCOM1B, EnumCOMn::toggle>,
+    setl::ApplierValue<BitsICNC1, true>>;
+  AVNE2::apply<RegSelectorTCCR1>();
+
+  BitsCOM1A a;
+  BitsCOM1B b;
+  BitsICNC1 c;
+  RegSelectorTCCR1::Read(a, b, c);
+
+  std::cout << "a0: " << int(a0.value) << ", b0: " << int(b0.value) << ", c0: " << (c0.value) << "\n";
+  std::cout << "a: " << int(a.value) << ", b: " << int(b.value) << " , c: " << (c.value) << "\n";
+}
+
 TypeWGM1 getTypeWGM1() {
   BitsCOM1A com1a;
   BitsCOM1B com1b;
@@ -343,7 +377,7 @@ void dividerTests() {
   std::cout << "After RegisterTCCR1AB: " << std::bitset<16>(RegisterTCCR1AB::Read().value) << "\n";;
   std::cout << "After RegisterIRC1: " << (RegisterIRC1::Read().value) << "\n";;
 
-  std::cout << "cs1_divider_multiple = " << findDividerMultiple(TC1<56000, false, 16000000>::cs1_value) << "\n";
+  std::cout << "cs1_divider_multiple = " << findDividerMultiple(TC1<56000, false, 16000000>::cs_value) << "\n";
   std::cout << "top_count = " << TC1<56000, false, 16000000>::top_count << "\n";
 
   BitsCOM1A bc1a = RegisterTCCR1AB::Read();
@@ -394,6 +428,7 @@ inline void TestPort() {
 
 void runBitfieldsTest() {
   testRegSelector();
+  testRegSelector2();
   getTypeWGM1();
   rwTypeWGM1();
   dividerTests();

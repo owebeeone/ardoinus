@@ -41,6 +41,9 @@ struct cat_tuples<U, V, Ts...> {
     typename cat_tuples<U, typename cat_tuples<V, Ts...>::type>::type;
 };
 
+template <typename...Ts>
+using cat_tuples_t = typename cat_tuples<Ts...>::type;
+
 static_assert(
   std::is_same<
     std::tuple<int, char, long, unsigned>,
