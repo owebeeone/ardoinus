@@ -296,8 +296,18 @@ inline void testRegSelector2() {
   BitsICNC1 c;
   RegSelectorTCCR1::Read(a, b, c);
 
+  using AVNE3 = setl::ApplierValues<
+    setl::ApplierValue<BitsCOM1A, EnumCOMn::clear>>;
+  AVNE3::apply<RegSelectorTCCR1>();
+
+  BitsCOM1A a1;
+  BitsCOM1B b1;
+  BitsICNC1 c1;
+  RegSelectorTCCR1::Read(a1, b1, c1);
+
   std::cout << "a0: " << int(a0.value) << ", b0: " << int(b0.value) << ", c0: " << (c0.value) << "\n";
   std::cout << "a: " << int(a.value) << ", b: " << int(b.value) << " , c: " << (c.value) << "\n";
+  std::cout << "a1: " << int(a1.value) << ", b1: " << int(b1.value) << ", c1: " << (c1.value) << "\n";
 }
 
 TypeWGM1 getTypeWGM1() {

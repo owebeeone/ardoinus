@@ -863,6 +863,8 @@ using BitsICNC1_16 = setl::BitsRW<bool, ccICNC1 + 8>;
 using BitsICES1_16 = setl::BitsRW<bool, ccICES1 + 8>;
 
 using FieldsTCCR1A = setl::BitFields<BitsCOM1A, BitsCOM1B, BitsWGM1_10>;
+using RegisterTCCR1A = Register<FieldsTCCR1A, rrTCCR1A>;
+
 using FieldsTCCR1AB = setl::BitFields<
   BitsCOM1A, BitsCOM1B, BitsWGM1_3210, BitsCS11_16, BitsICNC1_16, BitsICES1_16>;
 

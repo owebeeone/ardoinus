@@ -1293,6 +1293,7 @@ struct AVsApplier : w_Base {
   }
 };
 
+// All bits being written, no point in doing a read.
 template<
     typename w_Register, 
     typename w_Base, 
@@ -1317,6 +1318,7 @@ struct AVsApplier<
   }
 };
 
+// Register is not being accessed hence no apply() function.
 template<
     typename w_Register, 
     typename w_Base, 
