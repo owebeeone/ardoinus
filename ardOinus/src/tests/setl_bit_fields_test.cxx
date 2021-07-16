@@ -440,11 +440,17 @@ namespace mcu = ardo::sys::avr::mcu;
 
 template <typename T>
 void printInfo(const char* name) {
+  //SerialA::println("name: ", name);
   using Cs = typename T::BitsCS;
+  using Wgm = typename T::BitsWGM_16;
   using Rs = typename T::Registers;
   Cs cs;
-  Rs::Read(cs);
-  std::cout << name << " cs: " << static_cast<unsigned>(cs.value) << "\n";
+  Wgm wgm;
+  Rs::Read(cs, wgm);
+  /*SerialA::println(
+    "cs: ", static_cast<unsigned>(cs.value), ardo::Mod<BIN>,
+    "wgm: ", static_cast<unsigned>(wgm.value), ardo::Mod<BIN>
+  );*/
 }
 
 void printall() {

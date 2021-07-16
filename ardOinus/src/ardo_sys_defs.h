@@ -164,6 +164,14 @@ public:
   static decltype(Serial)& get();
 };
 
+template <int w_modifier>
+struct ModType {
+  static constexpr int modifier = w_modifier;
+};
+
+template <int w_modifier>
+constexpr ModType<w_modifier> Mod;
+
 /**
  * Provides module parameter support for Serial initialization.
  */
@@ -189,10 +197,24 @@ public:
   /**
    * Prints a variable list of arguments.
    */
+  template <typename T, int w_mod, typename... Ts>
+  inline static void print(const T& arg, ModType<w_mod> mod, Ts... args) {
+    SerialIfType::get().print(arg, w_mod);
+    print(args...);
+  }
+
+  /**
+   * Prints a variable list of arguments.
+   */
   template <typename T, typename... Ts>
   inline static void print(const T& arg, Ts... args) {
     SerialIfType::get().print(arg);
     print(args...);
+  }
+
+  template <typename T, int w_mod>
+  inline static void println(const T& arg, ModType<w_mod> mod) {
+    SerialIfType::get().println(arg, w_mod);
   }
 
   template <typename T>
@@ -207,6 +229,16 @@ public:
   template <typename T, typename... Ts>
   inline static void println(const T& arg, Ts... args) {
     SerialIfType::get().print(arg);
+    println(args...);
+  }
+
+  /**
+   * Prints a variable list of arguments and prints a newline after 
+   * the last argument is printed.
+   */
+  template <typename T, int w_mod, typename... Ts>
+  inline static void println(const T& arg, ModType<w_mod> mod, Ts... args) {
+    SerialIfType::get().print(arg, w_mod);
     println(args...);
   }
 };

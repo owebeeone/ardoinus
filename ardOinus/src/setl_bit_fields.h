@@ -475,9 +475,9 @@ struct TypesOfBits<> {
 
 template <typename T, typename...Ts>
 struct TypesOfBits<T, Ts...> {
-  using type = typename cat_tuples<
+  using type = cat_tuples_t<
       std::tuple<typename T::type>, 
-      typename TypesOfBits<Ts...>::type>::type;
+      typename TypesOfBits<Ts...>::type>;
 };
 
 template <typename w_UnsignedType, typename w_BitsType>
@@ -549,7 +549,7 @@ struct BitTypesTraitsHelper<
 template <typename w_FormatType, typename...w_BitsTypes>
 struct BitTypesTraits {
   using bits_types = typename TypesOfBits<w_BitsTypes...>::type;
-  using all_types = typename cat_tuples<std::tuple<typename w_FormatType::type>, bits_types>::type;
+  using all_types = cat_tuples_t<std::tuple<typename w_FormatType::type>, bits_types>;
   using unsigned_type = typename UnsignedType<all_types>::type;
 
   using traits = BitTypesTraitsHelper<unsigned_type, w_FormatType, w_BitsTypes...>;
@@ -730,7 +730,7 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
     using unsigned_type = typename UnsignedType<
-      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     AssignSparse<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }
