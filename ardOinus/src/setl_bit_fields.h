@@ -131,6 +131,10 @@ struct Max<N, Ns...> {
         Max<Ns...>::value > N ? Max<Ns...>::value : N;
 };
 
+static_assert(Max<1, 2>::value == 2, "Max calculation is wrong.");
+static_assert(Max<2, 1>::value == 2, "Max calculation is wrong.");
+static_assert(Max<1, 1>::value == 1, "Max calculation is wrong.");
+
 /**
  * Finds the reverse index of a value in a list or NA if not found.
  */
@@ -640,7 +644,7 @@ struct Assigner<w_Proxy> {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy>::type;
     using unsigned_type = typename UnsignedType<
-      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     Assign<w_FormatType>(static_cast<unsigned_type>(value.value));
     return *this;
   }
@@ -649,10 +653,10 @@ struct Assigner<w_Proxy> {
    * AssignSparse will assign only the fields associated with the format/register
    * provided.
    */
-  template <typename w_FormatType, typename T>
-  void AssignSparse(const T& value) const {
+  template <typename w_FormatType, typename w_unsigned_type>
+  void AssignSparse(const w_unsigned_type& value) const {
     if (w_FormatType::template contains<ProxyType>) {
-      using appliers = BitTypeAppliers<T, ProxyType>;
+      using appliers = BitTypeAppliers<w_unsigned_type, ProxyType>;
       proxy->value = static_cast<typename ProxyType::type>(appliers::applier::convert(value));
     }
   }
@@ -660,9 +664,10 @@ struct Assigner<w_Proxy> {
   template <typename w_FormatType>
   const Assigner& AssignSparse(const BitValue<w_FormatType>& value) const {
     using FormatTypeType = typename w_FormatType::type;
-    using TypesOfBitsType = typename TypesOfBits<w_Proxy>::type;
+    using TypesOfBitsType = typename TypesOfBits<ProxyType>::type;
+
     using unsigned_type = typename UnsignedType<
-      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     AssignSparse<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }
@@ -701,7 +706,7 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
     using unsigned_type = typename UnsignedType<
-      cat_tuples<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     Assign<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }

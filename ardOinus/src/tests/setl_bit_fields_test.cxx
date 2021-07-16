@@ -435,8 +435,27 @@ inline void TestPort() {
   BidirectionalGpioPort<ppPC6>::set(false);
 }
 
+namespace {
+namespace mcu = ardo::sys::avr::mcu;
+
+template <typename T>
+void printInfo(const char* name) {
+  using Cs = typename T::BitsCS;
+  using Rs = typename T::Registers;
+  Cs cs;
+  Rs::Read(cs);
+  std::cout << name << " cs: " << static_cast<unsigned>(cs.value) << "\n";
+}
+
+void printall() {
+  printInfo<mcu::Timer0Def>("Timer 0");
+  printInfo<mcu::Timer1Def>("Timer 1");
+  printInfo<mcu::Timer2Def>("Timer 2");
+}
+}
 
 void runBitfieldsTest() {
+  printall();
   testRegSelector();
   testRegSelector2();
   getTypeWGM1();
