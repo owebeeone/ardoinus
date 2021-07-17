@@ -8,6 +8,7 @@
 
 #include "setl_cat_tuples.h"
 #include "setl_system.h"
+#include "setl_integers.h"
 #include "setlx_cstddef.h"
 #include "setlx_cstdint.h"
 #include "setlx_tuple.h"
@@ -260,12 +261,12 @@ struct GroupMaskShifts {
 
 template <typename...T>
 struct UnsignedType {
-  using type = typename nfp::UnsignedTypes::FindSize<Max<sizeof(T)...>::value>::type;
+  using type = typename setl::UnsignedTypes::FindSize<Max<sizeof(T)...>::value>::type;
 };
 
 template <typename...T>
 struct UnsignedType<std::tuple<T...>> {
-  using type = typename  nfp::UnsignedTypes::FindSize<Max<sizeof(T)...>::value>::type;
+  using type = typename  setl::UnsignedTypes::FindSize<Max<sizeof(T)...>::value>::type;
 };
 
 /**
