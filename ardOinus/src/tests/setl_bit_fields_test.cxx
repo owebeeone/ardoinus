@@ -375,20 +375,13 @@ std::uint32_t localClockTimerTop(
     clock_divider, selected_frequency, timer_clock_frequency, phase_correct_mode);
 }
 
-inline void setupTimer() {
-  ardo::sys::avr::mcu::TC1<56000, false, 16000000>::setFastPwm();
-}
-
 void dividerTests() {
   using namespace ardo::sys::avr::mcu;
-  std::cout << "Before RegisterTCCR1AB: " << std::bitset<16>(RegisterTCCR1AB::Read().value) << "\n";;
-  std::cout << "Before RegisterIRC1: " << (RegisterIRC1::Read().value) << "\n";;
-  TestBitFields::setupTimer();
-  std::cout << "After RegisterTCCR1AB: " << std::bitset<16>(RegisterTCCR1AB::Read().value) << "\n";;
-  std::cout << "After RegisterIRC1: " << (RegisterIRC1::Read().value) << "\n";;
-
-  std::cout << "cs1_divider_multiple = " << findDividerMultiple(TC1<56000, false, 16000000>::cs_value) << "\n";
-  std::cout << "top_count = " << TC1<56000, false, 16000000>::top_count << "\n";
+  std::cout << "Before RegisterTCCR1AB: " << std::bitset<16>(RegisterTCCR1AB::Read().value) << "\n";
+  std::cout << "Before RegisterIRC1: " << (RegisterIRC1::Read().value) << "\n";
+  
+  std::cout << "After RegisterTCCR1AB: " << std::bitset<16>(RegisterTCCR1AB::Read().value) << "\n";
+  std::cout << "After RegisterIRC1: " << (RegisterIRC1::Read().value) << "\n";
 
   BitsCOM1A bc1a = RegisterTCCR1AB::Read();
 }
