@@ -424,7 +424,7 @@ public:
   template <unsigned index>
   using Param = typename ParamByIndex<index, P...>::param;
 
-  const unsigned size = Scanner <
+  const unsigned size = Scanner<
       setl::Operator<setl::ConstIntegerAdaptor<unsigned, 1>::template Constant, 
         setl::AddEval<unsigned>>,
       void>::value;
@@ -529,6 +529,42 @@ public:
   using type = 
     typename rest::template eval_arg1<new_contained, ModuleClosureVaTemplate>::type;
 };
+
+// Extract dependent modules from parameters.
+template <typename T>
+struct GetDepsFromParams;
+
+template <>
+struct GetDepsFromParams<Parameters<>> {
+  using Deps = DependentModules<>;
+};
+
+struct EmptyDeps {
+  using Deps = DependentModules<>;
+};
+
+template <typename T, typename...Ts>
+struct GetDepsFromParams<Parameters<T, Ts...>> {
+  using DepsRest = typename GetDepsFromParams<Parameters<Ts...>>::Deps;
+
+  template <typename V>
+  static std::true_type hasDeps(const typename V::Deps*);
+
+  template <typename V>
+  static std::false_type hasDeps(...);
+
+  template <typename V>
+  using DepsOf = typename std::conditional_t<
+    decltype(hasDeps<V>(nullptr))::value,
+    T,
+    EmptyDeps>::Deps;
+
+  using Deps = typename DepsRest::template catr_type_arg<DepsOf<T>>;
+};
+
+template <typename Params>
+using DepsFromParams = typename GetDepsFromParams<Params>::Deps;
+
 } // namespace nfp
 
 template <typename...w_Ms>
@@ -546,7 +582,8 @@ public:
   // Dependent modules will automatically be added to the application modules
   // if not already in the application modules. Modules added here will not 
   // conflict with other modules adding modules.
-  using Deps = w_Deps;
+  using ImplicitDeps = w_Deps;
+  using Deps = typename ImplicitDeps::template cat_type_arg<nfp::DepsFromParams<w_Params>>;
   using Params = w_Params;
 
   static void paramsSetup() {
@@ -620,7 +657,6 @@ struct SelfModuleParamsConflictTest<Param1, Param2, Params...> {
 
   static_assert(!value, "Application has resource conflict within same module.");
 };
-
 }  // namespace nfp
 
 // Resource conflict test for modules. Test all embedded params against each other.
