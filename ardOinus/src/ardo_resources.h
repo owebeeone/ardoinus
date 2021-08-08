@@ -56,7 +56,7 @@ class HardwareTimer {};
 // For detecting when use of a resource <T, Id> has a conflicting use elsewhere
 // in the same application.
 // A typical use case is a timer channel shared among a number of GPIO PWM pins.
-// The channel may have a frequency applied to it. If use uses of the channel
+// The channel may have a frequency applied to it. If uses of the channel
 // demand the same frequency, then there is no conflict, however, if the parameters
 // do differ, the application will not behave as expected.
 template <typename T, int Id, typename UseParams>
