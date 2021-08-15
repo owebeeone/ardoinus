@@ -34,15 +34,18 @@ struct has_type<T, std::tuple<>> {
   static constexpr bool value = false;
 };
 
-template <typename T, typename U, typename... Ts>
+template <typename T, typename U, typename...Ts>
 struct has_type<T, std::tuple<U, Ts...>> {
   static constexpr bool value = has_type<T, std::tuple<Ts...>>::value;
 };
 
-template <typename T, typename... Ts>
+template <typename T, typename...Ts>
 struct has_type<T, std::tuple<T, Ts...>> {
   static constexpr bool value = true;
 };
+
+template <typename T, typename w_Tuple>
+constexpr bool has_type_v = has_type<T, w_Tuple>::value;
 
 /**
  * Represents a unit of bit manipulations, i.e. a single "mask" and "shift" operation.

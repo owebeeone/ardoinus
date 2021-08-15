@@ -15,6 +15,32 @@
 namespace ardo {
 namespace sys {
 namespace avr {
+
+/**
+ * The types of resources provided.
+ */
+enum class ResourceType : unsigned {
+  none,
+  digital_gpio,
+  analog_in,
+  analog_comparator_in,
+  analog_comparator,
+  pulse_width_modulation,
+  counter_input,
+  counter_capture,
+  spi_bus,
+  i2c_bus,
+  uart_w,
+  uart_r,
+  uart_rw,
+  uart_external_clock,
+  interrupt_input,
+  timed_event,
+  clock_out,
+  reset_input,
+  xtal
+};
+
 namespace arch_atmega328p {
 
 
@@ -84,12 +110,13 @@ struct RootDependencyHelper<std::tuple<P...>> {
  * defines such a relationship. All the dependent resources must also
  * be derived from Dependency.
  */
-template <typename T, typename P=std::tuple<T>>
+template <typename T, ResourceType w_resource_type, typename P=std::tuple<T>>
 struct Dependency;
 
-template <typename T, typename...Ps>
-struct Dependency<T, std::tuple<Ps...>> {
-  using self = T;
+template <typename T, ResourceType w_resource_type, typename...Ps>
+struct Dependency<T, w_resource_type, std::tuple<Ps...>> {
+  using Resource = T;
+  static constexpr ResourceType resource_type = w_resource_type;
   using dependencies = std::tuple<Ps...>;
 };
 
@@ -99,6 +126,37 @@ struct Dependency<T, std::tuple<Ps...>> {
 template <typename T>
 using RootDependencies = typename nfp::RootDependencyHelper<
   typename T::dependencies>::root_deps;
+
+namespace nfp {
+
+template <typename T, ResourceType w_resource_type, typename w_resources>
+struct ResourceFinderHelper {};
+
+template <typename T, ResourceType w_resource_type>
+struct ResourceFinderHelper<T, w_resource_type, std::tuple<>> {
+  using Resource = void;
+};
+
+template <typename T, ResourceType w_resource_type, typename R, typename...Rs>
+struct ResourceFinderHelper<T, w_resource_type, std::tuple<R, Rs...>> {
+  using Rest = ResourceFinderHelper<T, w_resource_type, std::tuple<Rs...>>;
+
+  using Resource = typename std::conditional_t<
+      R::resource_type == w_resource_type
+      && setl::has_type_v<T, typename R::dependencies>, R, Rest>::Resource;
+};
+
+}  // namespace nfp
+
+template <typename...w_Resources>
+struct ResourceFinder {
+  using Resources = std::tuple<w_Resources...>;
+
+  // Find the resouce related to the root resources.
+  template <typename T, ResourceType w_resource_type>
+  using Resource = typename nfp::ResourceFinderHelper<
+      T, w_resource_type, Resources>::Resource;
+};
 
 
 // Add only atmega328p specific resources here.
@@ -1463,13 +1521,14 @@ struct Timer2 : Timer<Timer2Def> {
 };
 
 template <typename w_OCR, typename w_Gpio, typename w_Timer, OcrEnum w_ocr>
-struct OCRPin : Dependency<w_OCR, std::tuple<w_Gpio>> {
+struct OCRPin : Dependency<w_OCR, ResourceType::pulse_width_modulation, std::tuple<w_Gpio>> {
   using TimerType = w_Timer;
   using Gpio = w_Gpio;
   static constexpr OcrEnum ocr = w_ocr;
   using OutputCompareType = typename TimerType:: template OcrType<ocr>;
 
 };
+
 
 
 /**
@@ -1554,7 +1613,7 @@ template <
   typename w_GpioPort,
   typename w_GpioPortDefinition>
 struct GpioPort : 
-    Dependency<w_GpioPort, std::tuple<w_GpioPort>>,
+    Dependency<w_GpioPort, ResourceType::digital_gpio, std::tuple<w_GpioPort>>,
     setl::ApplierRunner,
     w_GpioPortDefinition {
   using DerivedPort = w_GpioPort;
@@ -1750,196 +1809,198 @@ struct TimerCompare {
 
 };
 
-struct ppADC6 : Dependency<ppADC6, std::tuple<ppADC6>> {
+struct ppADC6 : Dependency<ppADC6, ResourceType::analog_in, std::tuple<ppADC6>> {
+  static constexpr bool Package32pinOnly = true;
 };
 
-struct ppADC7 : Dependency<ppADC7, std::tuple<ppADC7>> {
+struct ppADC7 : Dependency<ppADC7, ResourceType::analog_in, std::tuple<ppADC7>> {
+  static constexpr bool Package32pinOnly = true;
 };
 
-struct ppT0 : Dependency<ppT0, std::tuple<ppPD4>> {
+struct ppT0 : Dependency<ppT0, ResourceType::counter_input, std::tuple<ppPD4>> {
 };
 
-struct ppT1 : Dependency<ppT1, std::tuple<ppPD5>> {
+struct ppT1 : Dependency<ppT1, ResourceType::counter_input, std::tuple<ppPD5>> {
 };
 
-struct ppXCK : Dependency<ppXCK, std::tuple<ppPD4>> {
+struct ppXCK : Dependency<ppXCK, ResourceType::uart_external_clock, std::tuple<ppPD4>> {
 };
 
-struct ppADC0 : Dependency<ppADC0, std::tuple<ppPC0>> {
+struct ppADC0 : Dependency<ppADC0, ResourceType::analog_in, std::tuple<ppPC0>> {
 };
 
-struct ppADC1 : Dependency<ppADC1, std::tuple<ppPC1>> {
+struct ppADC1 : Dependency<ppADC1, ResourceType::analog_in, std::tuple<ppPC1>> {
 };
 
-struct ppADC2 : Dependency<ppADC2, std::tuple<ppPC2>> {
+struct ppADC2 : Dependency<ppADC2, ResourceType::analog_in, std::tuple<ppPC2>> {
 };
 
-struct ppADC3 : Dependency<ppADC3, std::tuple<ppPC3>> {
+struct ppADC3 : Dependency<ppADC3, ResourceType::analog_in, std::tuple<ppPC3>> {
 };
 
-struct ppADC4 : Dependency<ppADC4, std::tuple<ppPC4>> {
+struct ppADC4 : Dependency<ppADC4, ResourceType::analog_in, std::tuple<ppPC4>> {
 };
 
-struct ppADC5 : Dependency<ppADC5, std::tuple<ppPC5>> {
+struct ppADC5 : Dependency<ppADC5, ResourceType::analog_in, std::tuple<ppPC5>> {
 };
 
-struct ppCLKO : Dependency<ppCLKO, std::tuple<ppPB0>> {
+struct ppCLKO : Dependency<ppCLKO, ResourceType::clock_out, std::tuple<ppPB0>> {
 };
 
-struct ppICP1 : Dependency<ppICP1, std::tuple<ppPB0>> {
+struct ppICP1 : Dependency<ppICP1, ResourceType::counter_capture, std::tuple<ppPB0>> {
 };
 
-struct ppINT0 : Dependency<ppINT0, std::tuple<ppPD2>> {
+struct ppINT0 : Dependency<ppINT0, ResourceType::interrupt_input, std::tuple<ppPD2>> {
 };
 
-struct ppINT1 : Dependency<ppINT1, std::tuple<ppPD3>> {
+struct ppINT1 : Dependency<ppINT1, ResourceType::interrupt_input, std::tuple<ppPD3>> {
 };
 
-struct ppOC0A : Dependency<ppOC0A, std::tuple<ppPD6>> {
+struct ppOC0A : Dependency<ppOC0A, ResourceType::pulse_width_modulation, std::tuple<ppPD6>> {
 };
 
-struct ppOC0B : Dependency<ppOC0B, std::tuple<ppPD5>> {
+struct ppOC0B : Dependency<ppOC0B, ResourceType::pulse_width_modulation, std::tuple<ppPD5>> {
 };
 
-struct ppOC1A : Dependency<ppOC1A, std::tuple<ppPB1>> {
+struct ppOC1A : Dependency<ppOC1A, ResourceType::pulse_width_modulation, std::tuple<ppPB1>> {
 };
 
-struct ppOC1B : Dependency<ppOC1B, std::tuple<ppPB2>> {
+struct ppOC1B : Dependency<ppOC1B, ResourceType::pulse_width_modulation, std::tuple<ppPB2>> {
 };
 
-struct ppOC2A : Dependency<ppOC2A, std::tuple<ppPB3>> {
+struct ppOC2A : Dependency<ppOC2A, ResourceType::pulse_width_modulation, std::tuple<ppPB3>> {
 };
 
-struct ppOC2B : Dependency<ppOC2B, std::tuple<ppPD3>> {
+struct ppOC2B : Dependency<ppOC2B, ResourceType::pulse_width_modulation, std::tuple<ppPD3>> {
 };
 
-struct ppRESET : Dependency<ppRESET, std::tuple<ppPC6>> {
+struct ppRESET : Dependency<ppRESET, ResourceType::reset_input, std::tuple<ppPC6>> {
 };
 
-struct ppTOSC1 : Dependency<ppTOSC1, std::tuple<ppPB6>> {
+struct ppTOSC1 : Dependency<ppTOSC1, ResourceType::counter_input, std::tuple<ppPB6>> {
 };
 
-struct ppTOSC2 : Dependency<ppTOSC2, std::tuple<ppPB7>> {
+struct ppTOSC2 : Dependency<ppTOSC2, ResourceType::counter_input, std::tuple<ppPB7>> {
 };
 
-struct ppPCINT0 : Dependency<ppPCINT0, std::tuple<ppPB0>> {
+struct ppPCINT0 : Dependency<ppPCINT0, ResourceType::interrupt_input, std::tuple<ppPB0>> {
 };
 
-struct ppPCINT1 : Dependency<ppPCINT1, std::tuple<ppPB1>> {
+struct ppPCINT1 : Dependency<ppPCINT1, ResourceType::interrupt_input, std::tuple<ppPB1>> {
 };
 
-struct ppPCINT2 : Dependency<ppPCINT2, std::tuple<ppPB2>> {
+struct ppPCINT2 : Dependency<ppPCINT2, ResourceType::interrupt_input, std::tuple<ppPB2>> {
 };
 
-struct ppPCINT3 : Dependency<ppPCINT3, std::tuple<ppPB3>> {
+struct ppPCINT3 : Dependency<ppPCINT3, ResourceType::interrupt_input, std::tuple<ppPB3>> {
 };
 
-struct ppPCINT4 : Dependency<ppPCINT4, std::tuple<ppPB4>> {
+struct ppPCINT4 : Dependency<ppPCINT4, ResourceType::interrupt_input, std::tuple<ppPB4>> {
 };
 
-struct ppPCINT5 : Dependency<ppPCINT5, std::tuple<ppPB5>> {
+struct ppPCINT5 : Dependency<ppPCINT5, ResourceType::interrupt_input, std::tuple<ppPB5>> {
 };
 
-struct ppPCINT6 : Dependency<ppPCINT6, std::tuple<ppPB6>> {
+struct ppPCINT6 : Dependency<ppPCINT6, ResourceType::interrupt_input, std::tuple<ppPB6>> {
 };
 
-struct ppPCINT7 : Dependency<ppPCINT7, std::tuple<ppPB7>> {
+struct ppPCINT7 : Dependency<ppPCINT7, ResourceType::interrupt_input, std::tuple<ppPB7>> {
 };
 
-struct ppPCINT8 : Dependency<ppPCINT8, std::tuple<ppPC0>> {
+struct ppPCINT8 : Dependency<ppPCINT8, ResourceType::interrupt_input, std::tuple<ppPC0>> {
 };
 
-struct ppPCINT9 : Dependency<ppPCINT9, std::tuple<ppPC1>> {
+struct ppPCINT9 : Dependency<ppPCINT9, ResourceType::interrupt_input, std::tuple<ppPC1>> {
 };
 
-struct ppPCINT10 : Dependency<ppPCINT10, std::tuple<ppPC2>> {
+struct ppPCINT10 : Dependency<ppPCINT10, ResourceType::interrupt_input, std::tuple<ppPC2>> {
 };
 
-struct ppPCINT11 : Dependency<ppPCINT11, std::tuple<ppPC3>> {
+struct ppPCINT11 : Dependency<ppPCINT11, ResourceType::interrupt_input, std::tuple<ppPC3>> {
 };
 
-struct ppPCINT12 : Dependency<ppPCINT12, std::tuple<ppPC4>> {
+struct ppPCINT12 : Dependency<ppPCINT12, ResourceType::interrupt_input, std::tuple<ppPC4>> {
 };
 
-struct ppPCINT13 : Dependency<ppPCINT13, std::tuple<ppPC5>> {
+struct ppPCINT13 : Dependency<ppPCINT13, ResourceType::interrupt_input, std::tuple<ppPC5>> {
 };
 
-struct ppPCINT14 : Dependency<ppPCINT14, std::tuple<ppPC6>> {
+struct ppPCINT14 : Dependency<ppPCINT14, ResourceType::interrupt_input, std::tuple<ppPC6>> {
 };
 
-struct ppPCINT16 : Dependency<ppPCINT16, std::tuple<ppPD0>> {
+struct ppPCINT16 : Dependency<ppPCINT16, ResourceType::interrupt_input, std::tuple<ppPD0>> {
 };
 
-struct ppPCINT17 : Dependency<ppPCINT17, std::tuple<ppPD1>> {
+struct ppPCINT17 : Dependency<ppPCINT17, ResourceType::interrupt_input, std::tuple<ppPD1>> {
 };
 
-struct ppPCINT18 : Dependency<ppPCINT18, std::tuple<ppPD2>> {
+struct ppPCINT18 : Dependency<ppPCINT18, ResourceType::interrupt_input, std::tuple<ppPD2>> {
 };
 
-struct ppPCINT19 : Dependency<ppPCINT19, std::tuple<ppPD3>> {
+struct ppPCINT19 : Dependency<ppPCINT19, ResourceType::interrupt_input, std::tuple<ppPD3>> {
 };
 
-struct ppPCINT20 : Dependency<ppPCINT20, std::tuple<ppPD4>> {
+struct ppPCINT20 : Dependency<ppPCINT20, ResourceType::interrupt_input, std::tuple<ppPD4>> {
 };
 
-struct ppPCINT21 : Dependency<ppPCINT21, std::tuple<ppPD5>> {
+struct ppPCINT21 : Dependency<ppPCINT21, ResourceType::interrupt_input, std::tuple<ppPD5>> {
 };
 
-struct ppPCINT22 : Dependency<ppPCINT22, std::tuple<ppPD6>> {
+struct ppPCINT22 : Dependency<ppPCINT22, ResourceType::interrupt_input, std::tuple<ppPD6>> {
 };
 
-struct ppPCINT23 : Dependency<ppPCINT23, std::tuple<ppPD7>> {
+struct ppPCINT23 : Dependency<ppPCINT23, ResourceType::interrupt_input, std::tuple<ppPD7>> {
 };
 
-struct ppAIN0 : Dependency<ppAIN0, std::tuple<ppPD6>> {
+struct ppAIN0 : Dependency<ppAIN0, ResourceType::analog_comparator_in, std::tuple<ppPD6>> {
 };
 
-struct ppAIN1 : Dependency<ppAIN1, std::tuple<ppPD7>> {
+struct ppAIN1 : Dependency<ppAIN1, ResourceType::analog_comparator_in, std::tuple<ppPD7>> {
 };
 
-struct ppAIN : Dependency<ppAIN, std::tuple<ppAIN0, ppAIN1>> {
+struct ppAIN : Dependency<ppAIN, ResourceType::analog_comparator, std::tuple<ppAIN0, ppAIN1>> {
 };
 
-struct ppSCL : Dependency<ppSCL, std::tuple<ppPC5>> {
+struct ppSCL : Dependency<ppSCL, ResourceType::none, std::tuple<ppPC5>> {
 };
 
-struct ppSDA : Dependency<ppSDA, std::tuple<ppPC4>> {
+struct ppSDA : Dependency<ppSDA, ResourceType::none, std::tuple<ppPC4>> {
 };
 
-struct ppI2C0 : Dependency<ppI2C0, std::tuple<ppSCL, ppSDA>> {
+struct ppI2C0 : Dependency<ppI2C0, ResourceType::i2c_bus, std::tuple<ppSCL, ppSDA>> {
 };
 
-struct ppSS : Dependency<ppSS, std::tuple<ppPB2>> {
+struct ppSS : Dependency<ppSS, ResourceType::none, std::tuple<ppPB2>> {
 };
 
-struct ppSCK : Dependency<ppSCK, std::tuple<ppPB5>> {
+struct ppSCK : Dependency<ppSCK, ResourceType::none, std::tuple<ppPB5>> {
 };
 
-struct ppMISO : Dependency<ppMISO, std::tuple<ppPB4>> {
+struct ppMISO : Dependency<ppMISO, ResourceType::none, std::tuple<ppPB4>> {
 };
 
-struct ppMOSI : Dependency<ppMOSI, std::tuple<ppPB3>> {
+struct ppMOSI : Dependency<ppMOSI, ResourceType::none, std::tuple<ppPB3>> {
 };
 
-struct ppSPI0 : Dependency<ppSPI0, std::tuple<ppMISO, ppMOSI, ppSCK, ppSS>> {
+struct ppSPI0 : Dependency<ppSPI0, ResourceType::spi_bus, std::tuple<ppMISO, ppMOSI, ppSCK, ppSS>> {
 };
 
-struct ppRXD : Dependency<ppRXD, std::tuple<ppPD0>> {
+struct ppRXD : Dependency<ppRXD, ResourceType::uart_r, std::tuple<ppPD0>> {
 };
 
-struct ppTXD : Dependency<ppTXD, std::tuple<ppPD1>> {
+struct ppTXD : Dependency<ppTXD, ResourceType::uart_w, std::tuple<ppPD1>> {
 };
 
-struct ppUSART0 : Dependency<ppUSART0, std::tuple<ppRXD, ppTXD>> {
+struct ppUSART0 : Dependency<ppUSART0, ResourceType::uart_rw, std::tuple<ppRXD, ppTXD>> {
 };
 
-struct ppXTAL1 : Dependency<ppXTAL1, std::tuple<ppPB6>> {
+struct ppXTAL1 : Dependency<ppXTAL1, ResourceType::none, std::tuple<ppPB6>> {
 };
 
-struct ppXTAL2 : Dependency<ppXTAL2, std::tuple<ppPB7>> {
+struct ppXTAL2 : Dependency<ppXTAL2, ResourceType::none, std::tuple<ppPB7>> {
 };
 
-struct ppXTAL : Dependency<ppXTAL, std::tuple<ppXTAL1, ppXTAL2>> {
+struct ppXTAL : Dependency<ppXTAL, ResourceType::xtal, std::tuple<ppXTAL1, ppXTAL2>> {
 };
 
 static_assert(
@@ -1948,13 +2009,8 @@ static_assert(
     std::tuple<ppPD0, ppPD1>>::value,
   "Failed to find correct root dependencies for USART0.");
 
-template <typename...Resources>
-struct ResourceFinder {
-
-};
-
 // Used for traversing resource graph to find dependencies.
-using McuResources = ResourceFinder <
+using McuResources = ResourceFinder<
   ppPB0,
   ppPB1,
   ppPB2,
@@ -2044,6 +2100,80 @@ using McuResources = ResourceFinder <
   ppXTAL
 >;
 
+constexpr bool xx = setl::has_type_v<ppPD3, ppOC2B::dependencies>;
+
+using x = McuResources::Resource<ppPB1, ResourceType::pulse_width_modulation>;
+
+static_assert(true, "");
+
+/**
+ * Maps an arduino pin no to a port type.
+ */
+template <typename P, std::uint16_t w_pin_no>
+struct ArduinoPortMap {
+  using PinType = P;
+  static constexpr std::uint16_t pin_no = w_pin_no;
+};
+
+/**
+ * Holds a collection of pin mapings.
+ */
+template <typename w_DigitalMap>
+struct ArduinoDeviceMapping {
+  using DigitalMap = w_DigitalMap;  // A tuple of all the ArduinoPortMaps
+};
+
+// "digital" pin map for Arduino Nano (with 32 pin package).
+using ArduinoNanoPinmap = ArduinoDeviceMapping<
+  std::tuple<
+    ArduinoPortMap<ppPD0, 0>,
+    ArduinoPortMap<ppPD1, 1>,
+    ArduinoPortMap<ppPD2, 2>,
+    ArduinoPortMap<ppPD3, 3>,
+    ArduinoPortMap<ppPD4, 4>,
+    ArduinoPortMap<ppPD5, 5>,
+    ArduinoPortMap<ppPD6, 6>,
+    ArduinoPortMap<ppPD7, 7>,
+    ArduinoPortMap<ppPB0, 8>,
+    ArduinoPortMap<ppPB1, 9>,
+    ArduinoPortMap<ppPB2, 10>,
+    ArduinoPortMap<ppPB3, 11>,
+    ArduinoPortMap<ppPB4, 12>,
+    ArduinoPortMap<ppPB5, 13>,
+    ArduinoPortMap<ppPC0, 14>,
+    ArduinoPortMap<ppPC1, 15>,
+    ArduinoPortMap<ppPC2, 16>,
+    ArduinoPortMap<ppPC3, 17>,
+    ArduinoPortMap<ppPC4, 18>,
+    ArduinoPortMap<ppPC5, 19>,
+    ArduinoPortMap<ppADC6, 20>,
+    ArduinoPortMap<ppADC7, 21>>
+>;
+
+// "digital" pin map for Arduino Uno (with 28 pin package).
+using ArduinoUnoPinmap = ArduinoDeviceMapping <
+  std::tuple <
+    ArduinoPortMap<ppPD0, 0>,
+    ArduinoPortMap<ppPD1, 1>,
+    ArduinoPortMap<ppPD2, 2>,
+    ArduinoPortMap<ppPD3, 3>,
+    ArduinoPortMap<ppPD4, 4>,
+    ArduinoPortMap<ppPD5, 5>,
+    ArduinoPortMap<ppPD6, 6>,
+    ArduinoPortMap<ppPD7, 7>,
+    ArduinoPortMap<ppPB0, 8>,
+    ArduinoPortMap<ppPB1, 9>,
+    ArduinoPortMap<ppPB2, 10>,
+    ArduinoPortMap<ppPB3, 11>,
+    ArduinoPortMap<ppPB4, 12>,
+    ArduinoPortMap<ppPB5, 13>,
+    ArduinoPortMap<ppPC0, 14>,
+    ArduinoPortMap<ppPC1, 15>,
+    ArduinoPortMap<ppPC2, 16>,
+    ArduinoPortMap<ppPC3, 17>,
+    ArduinoPortMap<ppPC4, 18>,
+    ArduinoPortMap<ppPC5, 19>>
+>;
 
 }  // arch_atmega328p
 }  // namespace avr
