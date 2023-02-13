@@ -7,6 +7,15 @@
 //#define HAS_STD_LIB
 #ifdef HAS_STD_LIB
 #include <type_traits>
+
+// Only add this for pre C++17 compilers.
+#if __cplusplus < 201703L
+namespace std {
+template <bool B, class T, class F>
+using conditional_t = typename conditional<B, T, F>::type;
+}
+#endif // __cplusplus < 201703L
+
 #else
 
 namespace std {
