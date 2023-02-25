@@ -1154,6 +1154,14 @@ struct RegisterSelector<std::tuple<R, Rs...>> {
       std::tuple<R, Rs...>, std::tuple<BitsTypes...>, contained>;
     RSHelper::Read(bitsRefs...);
   }
+
+  template <typename BitsType>
+  static typename BitsType::type Read() {
+    // Make sure all bit types can be read.
+    BitsType bits_value;
+    Read(bits_value);
+    return bits_value.value;
+  }
 };
 
 /**

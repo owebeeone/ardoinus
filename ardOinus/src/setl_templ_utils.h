@@ -3,6 +3,7 @@
 #define SETL_TEMPL_UTILS____H
 
 #include "setlx_type_traits.h"
+#include "setl_optional.h"
 
 namespace setl {
 
@@ -270,6 +271,70 @@ using Union = typename UnionEvaluator<Targs1, Targs2>::type;
  */
 template <typename Targs1, typename Targs2>
 using UnionR = typename UnionEvaluator<Targs1, Targs2>::typer;
+
+/**
+ * A value tuple.
+ */
+template <typename T, T...w_values>
+struct ValueTuple {
+
+  /**
+   * Concatenates a values with this value tuple.
+   */
+  template <T...w_values1>
+  using cat_values = ValueTuple<T, w_values..., w_values1...>;
+};
+
+static_assert(
+  std::is_same<
+    ValueTuple<int, 1, 2, 3>::cat_values<4, 5, 6>::cat_values<7, 8, 9>,
+    ValueTuple<int, 1, 2, 3, 4, 5, 6, 7, 8, 9>>::value,
+  "ValueTuple::cat");
+
+/**
+ * Concatenates two value tuples.
+ */
+template <typename T1, typename T2>
+struct ValueTupleCat_T;
+
+template <typename T, T...w_values1, T...w_values2>
+struct ValueTupleCat_T<ValueTuple<T, w_values1...>, ValueTuple<T, w_values2...>> {
+  using type = ValueTuple<T, w_values1..., w_values2...>;
+};
+
+template <typename T1, typename T2>
+using ValueTupleCat = typename ValueTupleCat_T<T1, T2>::type;
+
+static_assert(
+  std::is_same<
+    ValueTupleCat<ValueTuple<int, 1, 2, 3>, ValueTuple<int, 4, 5, 6>>,
+    ValueTuple<int, 1, 2, 3, 4, 5, 6>
+  >::value,
+  "ValueTupleCat");
+
+template <typename T, typename w_ValueTuple, template <T selector> typename w_GetFuncType>
+struct ValueTupleGetter;
+
+template <typename T, T w_value, template <T selector> typename w_GetFuncType>
+struct ValueTupleGetter<T, ValueTuple<T, w_value>, w_GetFuncType> {
+  static constexpr auto get(const T& selector) 
+      -> std::remove_cv_t<decltype(setl::make_optional(w_GetFuncType<w_value>::get()))> {
+    return selector == w_value
+      ? setl::make_optional(w_GetFuncType<w_value>::get())
+      : decltype(setl::make_optional(w_GetFuncType<w_value>::get())){};
+  }
+};
+
+template <typename T, T w_value, T...w_values, template <T selector> typename w_GetFuncType>
+struct ValueTupleGetter<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType> {
+  static constexpr auto get(const T& selector)
+    -> std::remove_cv_t<decltype(setl::make_optional(w_GetFuncType<w_value>::get()))> {
+    return selector == w_value
+      ? setl::make_optional(w_GetFuncType<w_value>::get())
+      : ValueTupleGetter<T, ValueTuple<T, w_values...>, w_GetFuncType>::get(selector);
+  }
+};
+
 
 }  // namespace
 

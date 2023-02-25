@@ -6,10 +6,12 @@
 #ifndef ardo_supplemental_atmega328p_defs__h
 #define ardo_supplemental_atmega328p_defs__h
 
+#include "setl_optional.h"
 #include "setl_cat_tuples.h"
 #include "setl_int_scaler.h"
 #include "setl_system.h"
 #include "setlx_cstdint.h"
+#include "setlx_type_traits.h"
 #include "ardo_supplemental_atmega328p.h"
 
 namespace ardo {
@@ -262,10 +264,10 @@ enum class TimerPwmMode : unsigned {
   phase_freq_correct
 };
 
-template <TimerPwmMode timer_pwm_mode>
-constexpr bool TimerPwmModePhaseCorrect = 
-    timer_pwm_mode == TimerPwmMode::phase_correct 
-    || timer_pwm_mode == TimerPwmMode::phase_freq_correct;
+constexpr bool TimerPwmModePhaseCorrect(TimerPwmMode timer_pwm_mode) {
+  return timer_pwm_mode == TimerPwmMode::phase_correct
+      || timer_pwm_mode == TimerPwmMode::phase_freq_correct;
+}
 
 /**
  * The timer top count used.
@@ -285,15 +287,128 @@ template <typename w_EnumT,
           TimerMode w_timer_mode,
           TimerPwmMode w_timer_pwm_mode,
           TimerTop w_timer_top,
-          std::uint32_t w_built_in_divider=NA>
+          std::uint32_t w_built_in_top=NA>
 struct WaveformGeneratorMode {
   using EnumT = w_EnumT;
   static constexpr EnumT wgm_value = w_wgm_value;
   static constexpr TimerMode timer_mode = w_timer_mode;
   static constexpr TimerPwmMode timer_pwm_mode = w_timer_pwm_mode;
   static constexpr TimerTop timer_top = w_timer_top;
-  static constexpr std::uint32_t built_in_divider = w_built_in_divider;
+  static constexpr std::uint32_t built_in_top = w_built_in_top;
 };
+
+/**
+ * Provides enum metadata for Waveform Generator Mode parameters.
+ */
+enum class WaveformGeneratorModeParam : unsigned {
+  wgm_value,
+  timer_mode,
+  timer_pwm_mode,
+  timer_top,
+  built_in_top
+};
+
+/**
+ * Provides getter templates for WaveformGeneratorMode enum metadata.
+ */
+struct WaveformGeneratorModeGetters {
+  template <
+          WaveformGeneratorModeParam w_param,
+          typename T>
+  struct Getter {};
+
+  /** Getter for the WGMx value for the mode provided. */
+  template <
+        typename w_EnumT,
+        w_EnumT w_wgm_value,
+        TimerMode w_timer_mode,
+        TimerPwmMode w_timer_pwm_mode,
+        TimerTop w_timer_top,
+        std::uint32_t w_built_in_divider>
+  struct Getter<
+    WaveformGeneratorModeParam::wgm_value,
+    WaveformGeneratorMode<w_EnumT, w_wgm_value, w_timer_mode, w_timer_pwm_mode, w_timer_top, w_built_in_divider>> {
+    static constexpr w_EnumT value = w_wgm_value;
+  };
+
+  /** Getter for the timer mode for the mode provided. */  
+  template <
+        typename w_EnumT,
+        w_EnumT w_wgm_value,
+        TimerMode w_timer_mode,
+        TimerPwmMode w_timer_pwm_mode,
+        TimerTop w_timer_top,
+        std::uint32_t w_built_in_divider>
+  struct Getter<
+    WaveformGeneratorModeParam::timer_mode,
+    WaveformGeneratorMode<w_EnumT, w_wgm_value, w_timer_mode, w_timer_pwm_mode, w_timer_top, w_built_in_divider>> {
+    static constexpr TimerMode value = w_timer_mode;
+  };
+  
+  /** Getter for the timer PWM mode for the mode provided. */
+  template <
+        typename w_EnumT,
+        w_EnumT w_wgm_value,
+        TimerMode w_timer_mode,
+        TimerPwmMode w_timer_pwm_mode,
+        TimerTop w_timer_top,
+        std::uint32_t w_built_in_divider>
+  struct Getter<
+    WaveformGeneratorModeParam::timer_pwm_mode,
+    WaveformGeneratorMode<w_EnumT, w_wgm_value, w_timer_mode, w_timer_pwm_mode, w_timer_top, w_built_in_divider>> {
+    static constexpr TimerPwmMode value = w_timer_pwm_mode;
+  };
+
+  /** Getter for the timer top for the mode provided. */      
+  template <
+        typename w_EnumT,
+        w_EnumT w_wgm_value,
+        TimerMode w_timer_mode,
+        TimerPwmMode w_timer_pwm_mode,
+        TimerTop w_timer_top,
+        std::uint32_t w_built_in_divider>
+  struct Getter<
+    WaveformGeneratorModeParam::timer_top,
+    WaveformGeneratorMode<w_EnumT, w_wgm_value, w_timer_mode, w_timer_pwm_mode, w_timer_top, w_built_in_divider>> {
+    static constexpr TimerTop value = w_timer_top;
+  };
+
+  /** Getter for the timer top for the mode provided. */
+  template <
+    typename w_EnumT,
+    w_EnumT w_wgm_value,
+    TimerMode w_timer_mode,
+    TimerPwmMode w_timer_pwm_mode,
+    TimerTop w_timer_top,
+    std::uint32_t w_built_in_divider>
+  struct Getter<
+    WaveformGeneratorModeParam::built_in_top,
+    WaveformGeneratorMode<w_EnumT, w_wgm_value, w_timer_mode, w_timer_pwm_mode, w_timer_top, w_built_in_divider>> {
+    static constexpr std::uint32_t value = w_built_in_divider;
+  };
+};
+
+template <
+      WaveformGeneratorModeParam w_param,
+      typename T>
+constexpr auto WaveformGeneratorModeGet = WaveformGeneratorModeGetters::Getter<w_param, T>::value;
+
+/**
+ * Getter for WaveformGeneratorMode metadata.
+ */
+// template <
+//       WaveformGeneratorModeParam w_param,
+//       typename w_EnumT,
+//       w_EnumT w_wgm_value,
+//       TimerMode w_timer_mode,
+//       TimerPwmMode w_timer_pwm_mode,
+//       TimerTop w_timer_top,
+//       std::uint32_t w_built_in_divider>
+// constexpr auto WaveformGeneratorModeGet =
+//     WaveformGeneratorModeGetters::Getter<
+//       w_param, 
+//       WaveformGeneratorMode<w_EnumT, w_wgm_value, w_timer_mode, w_timer_pwm_mode, w_timer_top, w_built_in_divider>
+//     >::value;
 
 /**
  * Waveform generator modes container. Provides searh facilities to select
@@ -314,10 +429,10 @@ struct WaveformGeneratorModesFinder<std::tuple<>> {
 template <typename T, typename...Ts>
 struct WaveformGeneratorModesFinder<std::tuple<T, Ts...>> {
   using Rest = WaveformGeneratorModesFinder<std::tuple<Ts...>>;
-  template <std::uint32_t w_built_in_divider>
+  template <std::uint32_t w_built_in_top>
   using type = std::conditional_t<
-      T::built_in_divider == w_built_in_divider, T, 
-      typename Rest::template type<w_built_in_divider>>;
+      T::built_in_top == w_built_in_top, T, 
+      typename Rest::template type<w_built_in_top>>;
 };
 
 // Specialization for the empty list. 
@@ -328,6 +443,11 @@ struct WaveformGeneratorModes<> {
 
   template <TimerMode timer_mode, TimerPwmMode timer_pwm_mode, TimerTop timer_top>
   using type = std::tuple<>;
+  
+  template <WaveformGeneratorModeParam w_param, typename EnumT, typename Result>
+  static constexpr void getParamFor(EnumT wgm_value, Result& result) {
+    // Result is not modified, it is already initialized as empty.
+  }
 };
 
 template <typename T, typename...Ts>
@@ -358,25 +478,54 @@ struct WaveformGeneratorModes<T, Ts...> {
     typename WaveformGeneratorModes::
         template type<timer_mode, timer_pwm_mode, TimerTop::built_in>>::
     template type<w_built_in_divider>;
+
+  template <WaveformGeneratorModeParam w_param, typename EnumT, typename Result>
+  static constexpr void getParamFor(EnumT wgm_value, Result& result) {
+    if (wgm_value == Mode::wgm_value) {
+      result = WaveformGeneratorModeGetters::Getter<w_param, Mode>::value;
+    } else {
+      Rest::template getParamFor<w_param>(wgm_value, result);
+    }
+  }
+
+  
+  template <WaveformGeneratorModeParam w_param>
+  using ParamType = std::remove_cv_t<decltype(
+      WaveformGeneratorModeGetters::Getter<w_param, Mode>::value)>;
+  
+  template <WaveformGeneratorModeParam w_param>
+  using ParamReturnType = setl::Optional<ParamType<w_param>>;
+
+  /**
+   * Returns the value of the parameter w_param for the mode associated with wgm_value.
+   * This will work at run time.
+   */
+  template <WaveformGeneratorModeParam w_param, typename EnumT>
+  static constexpr ParamReturnType<w_param> getParamFor(EnumT wgm_value) {
+    ParamReturnType<w_param> result;
+    getParamFor<w_param>(wgm_value, result);
+    return result;
+  }
+
 };
 
 /**
  * Finds the mapping associated with cs_value. Will have a compile error if not found.
  */
-//template <EnumCS1 cs_value, typename...Ts>
-//struct DividerMappingsFindCs1;
-//
-//template <EnumCS1 cs_value, std::uint32_t w_divider, typename...Ts>
-//struct DividerMappingsFindCs1<
+// template <EnumCS1 cs_value, typename...Ts>
+// struct DividerMappingsFindCs1;
+
+// template <EnumCS1 cs_value, std::uint32_t w_divider, typename...Ts>
+// struct DividerMappingsFindCs1<
 //  cs_value, DividerMappings<DividerMapping<cs_value, w_divider>, Ts...>> {
 //  using Mapping = DividerMapping<cs_value, w_divider>;
-//};
-//
-//template <EnumCS1 cs_value, EnumCS1 cs_value_w, std::uint32_t w_divider, typename...Ts>
-//struct DividerMappingsFindCs1<
+// };
+
+// template <EnumCS1 cs_value, EnumCS1 cs_value_w, std::uint32_t w_divider, typename...Ts>
+// struct DividerMappingsFindCs1<
 //  cs_value, DividerMappings<DividerMapping<cs_value_w, w_divider>, Ts...>> {
 //  using Mapping = typename DividerMappingsFindCs1<Ts...>::Mapping;
-//};
+// };
 
 
 /**
@@ -417,13 +566,38 @@ constexpr EnumT getClockDivider(
       phase_correct_mode));
 }
 
+/**
+ * Computes the clock frequency for the timers given the 
+ * top count, clock divider, and timer clock frequency including
+ * the phase correct mode.
+ * 
+ * The return type can be a floating point type since sub 1Hz frequencies
+ * are possible. Specify the return type with the R template parameter
+ * or pass a top_count as a floating point type to allow for sub 1Hz 
+ * frequencies. 
+ */
+template <typename R, typename EnumT, typename T>
+constexpr R getTimerFrequency(
+  T top_count,
+  EnumT clock_divider_enum,
+  std::uint32_t timer_clock_frequency,
+  bool phase_correct_mode) {
+    
+  using Traits = TccrEnumTraits<EnumT>;
+  using FreqMapping = typename Traits::FreqMapping;
+  return timer_clock_frequency
+    / (R{phase_correct_mode ? 2ul : 1ul}
+      * top_count
+      * FreqMapping::findDividerMultiple(clock_divider_enum));
+
+}
 
 /**
  * Returns the multiple for a divider setting.
  */
 template <typename EnumT>
-constexpr decltype(
-    TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(TccrEnumTraits<EnumT>::start_range))
+constexpr std::remove_cv_t<decltype(
+    TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(TccrEnumTraits<EnumT>::start_range))>
   findDividerMultiple(EnumT value) {
   return TccrEnumTraits<EnumT>::FreqMapping::findDividerMultiple(value);
 }
@@ -565,6 +739,14 @@ static_assert(
 static_assert(
   getClockTimerTop(EnumCS1::no_clk, 1, 16000000, true) == 8000000ul,
   "getClockTimerTop computation failed for invalid divider.");
+
+static_assert(
+  getTimerFrequency<std::uint32_t>(80ul, EnumCS1::clk1, 16000000, true) == 100000ul,
+  "getTimerFrequency computation failed for divider.");
+
+static_assert(
+  getTimerFrequency<float>(15625, EnumCS1::clk1024, 16000000, true) == 0.5f,
+  "getTimerFrequency computation failed for divider.");
 
 /**
  * Controls for timer output compare register modes.
@@ -731,6 +913,48 @@ using Wgm1TopCountMapping = WaveformGeneratorModes<
 static_assert(Wgm1TopCountMapping::built_in_type<
   TimerMode::pwm, TimerPwmMode::fast, setl::mersenne(10)>::wgm_value == EnumWGM1::fast_pwm_10bit,
   "Should evaluate to EnumWGM1::fast_pwm_10bit");
+
+// Check that getter works.
+static_assert(
+  WaveformGeneratorModeGet<
+    WaveformGeneratorModeParam::wgm_value,
+    WaveformGeneratorMode<
+      EnumWGM1, EnumWGM1::fast_pwm_icr, TimerMode::pwm, TimerPwmMode::fast, 
+      TimerTop::icr>
+    > == EnumWGM1::fast_pwm_icr, "Should evaluate to EnumWGM1::fast_pwm_icr");
+
+static_assert(
+  WaveformGeneratorModeGet<
+    WaveformGeneratorModeParam::timer_mode,
+    WaveformGeneratorMode<
+      EnumWGM1, EnumWGM1::fast_pwm_icr, TimerMode::pwm, TimerPwmMode::fast, 
+      TimerTop::icr>
+    > == TimerMode::pwm, "Should evaluate to TimerMode::pwm");
+
+static_assert(
+  WaveformGeneratorModeGet<
+    WaveformGeneratorModeParam::timer_pwm_mode,
+    WaveformGeneratorMode<
+      EnumWGM1, EnumWGM1::fast_pwm_icr, TimerMode::pwm, TimerPwmMode::fast, 
+      TimerTop::icr>
+    > == TimerPwmMode::fast, "Should evaluate to TimerPwmMode::fast");
+
+static_assert(
+  WaveformGeneratorModeGet<
+    WaveformGeneratorModeParam::timer_top,
+    WaveformGeneratorMode<
+      EnumWGM1, EnumWGM1::fast_pwm_icr, TimerMode::pwm, TimerPwmMode::fast, 
+      TimerTop::icr>
+    > == TimerTop::icr, "Should evaluate to TimerTop::icr");
+
+static_assert(
+  WaveformGeneratorModeGet<
+    WaveformGeneratorModeParam::built_in_top,
+    WaveformGeneratorMode<
+      EnumWGM1, EnumWGM1::fast_pwm_10bit, TimerMode::pwm, TimerPwmMode::fast,
+      TimerTop::built_in, setl::mersenne(10)>
+    > == setl::mersenne(10), "Should evaluate to setl::mersenne(10)");
+
 
 template <>
 struct WgmEnumTraits<EnumWGM1> {
@@ -1344,22 +1568,36 @@ struct TimerInputNoiseCanceller<void> {
   static constexpr bool has_noise_canceller = false;
 };
 
-template <typename w_BitsICR, typename w_BitsEdge, typename w_BitsNoiseCancel>
+/**
+ * Configuration information for timer capture. The ICR register is used to
+ * capture the timer value when an input capture event occurs or sets the top
+ * value for the timer. The noise canceler is used to filter out noise on the
+ * input capture pin. The edge selection is used to select the edge of the input
+ * capture pin that will trigger the capture event.
+ * 
+ * The ICR register is only available on some timers.
+ */
+template <typename w_BitsICR, typename w_BitsICNC, typename w_BitsEdge>
 struct TimerCapture {
+  static constexpr bool has_capture_register = true;
   using CaptureBits = w_BitsICR;
+  using NoiseCanceler = w_BitsICNC;
   using Rising = setl::ApplierValues<setl::ApplierValue<w_BitsEdge, true>>;
   using Falling = setl::ApplierValues<setl::ApplierValue<w_BitsEdge, false>>;
-  using NoiseCanceller = TimerInputNoiseCanceller<w_BitsNoiseCancel>;
+  using NoiseCanceller = TimerInputNoiseCanceller<NoiseCanceler>;
+  using TopCountProvided = setl::ValueTuple<TimerTop, TimerTop::icr>;
   static constexpr bool has_input_capture = true;
   static constexpr bool has_edge_selection = true;
 };
 
 template <>
 struct TimerCapture<void, void, void> {
+  static constexpr bool has_capture_register = false;
   using CaptureBits = void;
   using Rising = setl::ApplierValues<>;
   using Falling = setl::ApplierValues<>;
   using NoiseCanceller = TimerInputNoiseCanceller<void>;
+  using TopCountProvided = setl::ValueTuple<TimerTop>;  // Empty tuple.
   static constexpr bool has_input_capture = false;
   static constexpr bool has_edge_selection = false;
 };
@@ -1377,6 +1615,66 @@ struct OutputCompare {
   using COM8 = w_COM8;
 };
 
+/**
+ * Specializations for providing the configured timer top value dynamically.
+ */
+
+template <typename w_TimerDef, TimerTop timertop>
+struct TopGetter;
+
+/** Specialization for fetching from the ICR register. */
+template <typename w_TimerDef>
+struct TopGetter<w_TimerDef, TimerTop::icr> {
+  using Registers = typename w_TimerDef::Registers;
+  using TimerCaptureType = typename w_TimerDef::TimerCaptureType;
+  using BitsICR = typename TimerCaptureType::CaptureBits;
+  using ICRType = typename BitsICR::type;
+  static ICRType get() {
+    return Registers::template Read<BitsICR>();
+  }
+};
+
+/** Specialization for fetching from the OCRA register. */
+template <typename w_TimerDef>
+struct TopGetter<w_TimerDef, TimerTop::ocra> {
+  using Registers = typename w_TimerDef::Registers;
+  using OutputCompareA = typename w_TimerDef::OutputCompareA::OCR;
+  using OCRAType = typename OutputCompareA::type;
+  static OCRAType get() {
+    return Registers::template Read<OutputCompareA>();
+  }
+};
+
+/** Specialization for returning the hard wired timer-top. */
+template <typename w_TimerDef>
+struct TopGetter<w_TimerDef, TimerTop::built_in> {
+  using Registers = typename w_TimerDef::Registers;
+  using BitsWGM_16 = typename w_TimerDef::BitsWGM_16;
+  using BitsWGM_16_type = typename BitsWGM_16::type;
+
+  static std::uint32_t get() {
+    return WgmEnumTraits<BitsWGM_16_type>::Modes::
+      template getParamFor<WaveformGeneratorModeParam::built_in_top>(
+        Registers::template Read<BitsWGM_16>()).get();
+  }
+};
+
+/**
+ * Defines all the resources for a single AVR timer. This can be used for both
+ * 8-bit and 16-bit timers.
+ * @Params:
+ *  w_BitsWGM_16: The WGM bits in the TCCRnA and TCCRnB registers.
+ *  w_BitsCS: The CS bits in the TCCRnB register.
+ *  w_BitsFOCA: The FOCnA bit in the TCCRnA register.
+ *  w_BitsFOCB: The FOCnB bit in the TCCRnA register.
+ *  w_BitsTCNT: The TCNTn register.
+ *  w_OutputCompareA: An OutputCompare type containing properties for OCRA functions.
+ *  w_OutputCompareB: An OutputCompare type containing properties for OCRB functions.
+ *  w_TimerCapture: A TimerCapture type containing properties for ICR functions.
+ *  w_RegistersTuple: A RegisterSelector wil all the registers used by the timer.
+ *  w_GpioA: The GPIO pin used for OCRA.
+ *  w_GpioB: The GPIO pin used for OCRB.
+ */
 template <
   typename w_BitsWGM_16,
   typename w_BitsCS,
@@ -1388,7 +1686,8 @@ template <
   typename w_TimerCapture,
   typename w_RegistersTuple,
   typename w_GpioA,
-  typename w_GpioB
+  typename w_GpioB,
+  typename w_TimerTopTuple = setl::ValueTuple<TimerTop, TimerTop::built_in, TimerTop::ocra>
 >
 struct TimerDefinition
 {
@@ -1403,6 +1702,16 @@ struct TimerDefinition
   using Registers = setl::RegisterSelector<w_RegistersTuple>;
   using GpioA = w_GpioA;
   using GpioB = w_GpioB;
+  using TimerTopTuple = setl::ValueTupleCat<
+      w_TimerTopTuple, typename TimerCaptureType::TopCountProvided>;
+
+  template <TimerTop w_timer_top>
+  using TimerDefTopGetter = TopGetter<TimerDefinition, w_timer_top>;
+
+  /** Returns the timer top value for the given timer top enum. */
+  static setl::Optional<std::uint32_t> get_timer_top(TimerTop timer_top) {
+    return setl::ValueTupleGetter<TimerTop, TimerTopTuple, TimerDefTopGetter>::get(timer_top);
+  }
 };
 
 using Timer0Def = TimerDefinition<
@@ -1434,7 +1743,7 @@ using Timer1Def = TimerDefinition<
   BitsTCNT1,
   OutputCompare<BitsOCR1A, BitsOCIE1A, BitsOCF1A, BitsCOM1A, BitsCOM1A8>,
   OutputCompare<BitsOCR1B, BitsOCIE1B, BitsOCF1B, BitsCOM1B, BitsCOM1B8>,
-  TimerCapture<BitsICNC1_16, BitsICES1_16, BitsICR1>,
+  TimerCapture<BitsICR1, BitsICNC1_16, BitsICES1_16>,
   std::tuple<
     RegisterTCCR1A,
     RegisterTCCR1AB,
@@ -1471,41 +1780,41 @@ using Timer2Def = TimerDefinition<
 >;
 
 
-template <
-  typename w_TimerDef,
-  std::uint32_t w_setup_frequency,
-  bool w_phase_correct_mode,
-  std::uint32_t w_base_frequency  // Usually CPU clock frequency.
->
-struct Timer16 {
-  using TimerDef = w_TimerDef;
-  using Registers = typename TimerDef::Registers;
-  using BitsWGM_16 = typename TimerDef::BitsWGM_16;
-  using EnumWGM = typename BitsWGM_16::type;
-  using BitsCS = typename TimerDef::BitsCS;
-  using BitsTCNT = typename TimerDef::BitsTCNT;
-  using EnumCS = typename BitsCS::type;
-  static constexpr std::uint32_t setup_frequency = w_setup_frequency;
-  static constexpr std::uint32_t base_frequency = w_base_frequency;
-  static constexpr bool phase_correct_mode = w_phase_correct_mode;
-  static constexpr std::uint32_t top_resolution = sizeof(typename BitsTCNT::type) * 8;
-  static constexpr EnumCS cs_value = getClockDivider<EnumCS>(
-    setup_frequency, base_frequency, top_resolution, phase_correct_mode);
-  static constexpr auto top_count = getClockTimerTop(
-    cs_value, setup_frequency, base_frequency, phase_correct_mode);
+// template <
+//   typename w_TimerDef,
+//   std::uint32_t w_setup_frequency,
+//   bool w_phase_correct_mode,
+//   std::uint32_t w_base_frequency  // Usually CPU clock frequency.
+// >
+// struct Timer16 {
+//   using TimerDef = w_TimerDef;
+//   using Registers = typename TimerDef::Registers;
+//   using BitsWGM_16 = typename TimerDef::BitsWGM_16;
+//   using EnumWGM = typename BitsWGM_16::type;
+//   using BitsCS = typename TimerDef::BitsCS;
+//   using BitsTCNT = typename TimerDef::BitsTCNT;
+//   using EnumCS = typename BitsCS::type;
+//   static constexpr std::uint32_t setup_frequency = w_setup_frequency;
+//   static constexpr std::uint32_t base_frequency = w_base_frequency;
+//   static constexpr bool phase_correct_mode = w_phase_correct_mode;
+//   static constexpr std::uint32_t top_resolution = sizeof(typename BitsTCNT::type) * 8;
+//   static constexpr EnumCS cs_value = getClockDivider<EnumCS>(
+//     setup_frequency, base_frequency, top_resolution, phase_correct_mode);
+//   static constexpr auto top_count = getClockTimerTop(
+//     cs_value, setup_frequency, base_frequency, phase_correct_mode);
 
-  static_assert(cs_value != TccrEnumTraits<EnumCS>::null_value,
-       "Impossible frequency settings for timer.");
-  static_assert(top_count >= 2u, "Frequency too high. Invalid settings for timer.");
+//   static_assert(cs_value != TccrEnumTraits<EnumCS>::null_value,
+//        "Impossible frequency settings for timer.");
+//   static_assert(top_count >= 2u, "Frequency too high. Invalid settings for timer.");
 
-  /**
-   *
-   */
-  static void setFastPwm() {
-    Registers::ReadModifyWrite(BitsCS{ cs_value }, BitsWGM_16{ EnumWGM::fast_pwm_icr });
-    Registers::ReadModifyWrite(BitsICR1{ top_count });
-  }
-};
+//   /**
+//    *
+//    */
+//   static void setFastPwm() {
+//     Registers::ReadModifyWrite(BitsCS{ cs_value }, BitsWGM_16{ EnumWGM::fast_pwm_icr });
+//     Registers::ReadModifyWrite(BitsICR1{ top_count });
+//   }
+// };
 
 template <typename T>
 struct PickSingleItem;
@@ -1554,7 +1863,7 @@ struct TimerPwmConfigutation {
 
   static constexpr std::uint32_t setup_frequency = w_setup_frequency;
   static constexpr std::uint32_t base_frequency = w_base_frequency;
-  static constexpr bool phase_correct_mode = TimerPwmModePhaseCorrect<w_timer_pwm_mode>;
+  static constexpr bool phase_correct_mode = TimerPwmModePhaseCorrect(w_timer_pwm_mode);
   static constexpr std::uint32_t top_resolution = sizeof(typename BitsTCNT::type) * 8;
   static constexpr EnumCS cs_value = getClockDivider<EnumCS>(
     setup_frequency, base_frequency, top_resolution, phase_correct_mode);
@@ -1568,6 +1877,57 @@ struct TimerPwmConfigutation {
   using TimerSetupApplier = setl::ApplierValues<
     setl::ApplierValue<BitsCS, cs_value>,
     setl::ApplierValue<BitsWGM_16, Mode::wgm_value>>;
+
+  /**
+   * Set the base frequency for the timer dynamically. Returns the top_count
+   * (maximum value) for the compare registers.
+   */
+  template <typename T>
+  static std::uint32_t setFrequency(T frequency) {
+    EnumCS cs_value = getClockDivider<EnumCS>(
+        frequency, base_frequency, top_resolution, phase_correct_mode);
+    auto top_count = getClockTimerTop(
+        cs_value, frequency, base_frequency, phase_correct_mode);
+
+    Registers::ReadModifyWrite(
+      BitsCS{cs_value}, 
+      BitsWGM_16{Mode::wgm_value});
+    return top_count;
+  }
+
+  template <typename T>
+  static T xx(const setl::Optional<T>& x) {
+    return x.get();
+  }
+
+  /**
+   * Get the current frequency of the timer.
+   * If no parameters are provided, the current timer settings are used to
+   * compute the frequency.
+   */
+  template <typename T>
+  static T getFrequency(
+      setl::Optional<std::uint32_t> p_top_count = {}, 
+      std::uint32_t p_base_frequency = base_frequency) {
+    BitsCS cs_value_bits;
+    BitsWGM_16 wgm_value_bits;
+    Registers::Read(cs_value_bits, wgm_value_bits);
+    auto timer_mode_optional = WgmEnumTraits<EnumWGM>::Modes::
+        template getParamFor<WaveformGeneratorModeParam::timer_pwm_mode>(
+            wgm_value_bits.value);
+    if (!timer_mode_optional.has_value()) {
+      return -1;
+    }
+
+    auto l_top_count = p_top_count.has_value() 
+        ? p_top_count.get() 
+        : TimerDef::get_timer_top(WgmEnumTraits<EnumWGM1>::Modes::
+          template getParamFor<WaveformGeneratorModeParam::timer_top>(
+            wgm_value_bits.value).get()).get();
+    auto is_phase_correct_mode = TimerPwmModePhaseCorrect(timer_mode_optional.get());
+    return getTimerFrequency<T>(
+      p_top_count, cs_value_bits.value, p_base_frequency, is_phase_correct_mode);
+  }
 
 };
 
@@ -1598,10 +1958,11 @@ struct TimerPwmBuiltinTopConfigutation {
   static constexpr std::uint32_t setup_frequency = w_max_frequency;
   static constexpr std::uint32_t base_frequency = w_base_frequency;
   static constexpr TimerPwmMode timer_pwm_mode = w_timer_pwm_mode;
-  static constexpr bool phase_correct_mode = TimerPwmModePhaseCorrect<w_timer_pwm_mode>;
+  static constexpr bool phase_correct_mode = TimerPwmModePhaseCorrect(w_timer_pwm_mode);
   static constexpr std::uint32_t top_resolution = w_bits_resolution;
   static constexpr EnumCS cs_value = getClockDivider<EnumCS>(
     setup_frequency, base_frequency, top_resolution, phase_correct_mode);
+  static constexpr std::uint32_t actual_divider = w_base_frequency;
   static constexpr auto top_count = setl::mersenne(top_resolution);
   // Find the WGM bits for these settings.
   static constexpr EnumWGM wgm_value = WgmEnumTraits<EnumWGM>::Modes::
@@ -1652,12 +2013,20 @@ struct TimerConfiguration<
         TimerMode::pwm,
         w_timer_pwm_mode, 
         TimerTop::icr>> {
+
+  using TimerDef = w_TimerDef;
+  using TimerCaptureType = typename TimerDef::TimerCaptureType;
+  using ICRBits = typename TimerCaptureType::CaptureBits;
+
+  static_assert(TimerCaptureType::has_capture_register, 
+      "Timer does not have capture register / top register.");
+
   using Config = TimerPwmConfigutation<
     w_TimerDef, w_setup_frequency, w_base_frequency, w_timer_pwm_mode, TimerTop::icr>;
   using Registers = typename Config::Registers;
 
   using TopApplier = setl::ApplierValues<
-      setl::ApplierValue<BitsICR1, Config::top_count>>;
+      setl::ApplierValue<ICRBits, Config::top_count>>;
 
   /**
    * Setup the timer for these settings.
@@ -1665,6 +2034,22 @@ struct TimerConfiguration<
   static void setupTimer() {
     Config::TimerSetupApplier::template apply<Registers>();
     TopApplier::template apply<Registers>();
+  }
+
+  template <typename T>
+  static std::uint32_t setFrequency(T frequency) {
+    const auto top_count = Config::setFrequency(frequency);
+    
+    Registers::ReadModifyWrite(ICRBits{top_count});
+    return top_count;
+  }
+  
+  /**
+   * Get the current frequency of the timer.
+   */
+  template <typename T>
+  static T getFrequency() {
+    return Config::template getFrequency<T>();
   }
 };
 
@@ -1759,7 +2144,7 @@ struct Timer {
       TimerDef, 
       w_setup_frequency, 
       w_base_frequency,
-      TimerSettings<TimerMode::pwm, w_timer_pwm_mode, w_timer_top>>;
+      TimerSettings<w_timer_mode, w_timer_pwm_mode, w_timer_top>>;
 
   /**
    * Settings for approximate frequency using built in top values.
@@ -1793,6 +2178,24 @@ struct Timer1 : Timer<Timer1Def> {
   using BuiltInTopConf = BuiltInTop<
     50000, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
 
+  static std::uint32_t xx() {
+
+    auto qq = Timer1Def::TimerDefTopGetter<TimerTop::built_in>::get();
+
+
+    setl::Optional<EnumWGM1> ww;
+
+    setl::Optional<TimerTop> dd = 
+    WgmEnumTraits<EnumWGM1>::Modes::
+      template getParamFor<WaveformGeneratorModeParam::timer_top>(
+        EnumWGM1::fast_pwm_10bit);
+
+    auto tt = Timer1Def::get_timer_top(dd.get());
+
+    return (std::uint32_t) Timer1Def::get_timer_top(WgmEnumTraits<EnumWGM1>::Modes::
+              template getParamFor<WaveformGeneratorModeParam::timer_top>(
+                EnumWGM1::pwm_phase_freq_correct_icr).get()).get();
+  }  
 };
 
 struct Timer2 : Timer<Timer2Def> {
