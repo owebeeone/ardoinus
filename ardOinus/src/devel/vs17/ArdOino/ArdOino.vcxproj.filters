@@ -1924,6 +1924,9 @@
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_sys_avr_mcu_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\ardo_sys_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\setl_system.cpp">

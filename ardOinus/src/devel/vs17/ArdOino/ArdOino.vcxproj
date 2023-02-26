@@ -141,6 +141,7 @@
     <ClInclude Include="..\..\..\ardOinus.h" />
     <ClInclude Include="..\..\..\ardo_eeprom.h" />
     <ClInclude Include="..\..\..\ardo_sequencer.h" />
+    <ClInclude Include="..\..\..\ardo_sys_defs.h" />
     <ClInclude Include="..\..\..\ardo_time_poller.h" />
     <ClInclude Include="..\..\..\assert_that.h" />
     <ClInclude Include="..\..\..\circular_buffer.h" />

@@ -312,29 +312,75 @@ static_assert(
   >::value,
   "ValueTupleCat");
 
-template <typename T, typename w_ValueTuple, template <T selector> typename w_GetFuncType>
+template <typename T, typename w_ValueTuple, template <T w_selector> typename w_GetFuncType, typename w_ResultType>
+struct ValueTupleGetterTyped;
+
+template <typename T, T w_value, template <T selector> typename w_GetFuncType, typename w_ResultType>
+struct ValueTupleGetterTyped<T, ValueTuple<T, w_value>, w_GetFuncType, w_ResultType> {
+  template <typename ...P>
+  static constexpr w_ResultType get(const T& selector, const P&...params) {
+    return selector == w_value
+      ? w_ResultType{w_GetFuncType<w_value>::get(params...)}
+      : w_ResultType{};
+  }
+};
+
+template <typename T, T w_value, T...w_values, template <T w_selector> typename w_GetFuncType, typename w_ResultType>
+struct ValueTupleGetterTyped<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType, w_ResultType> {
+  template <typename ...P>
+  static constexpr w_ResultType get(const T& selector, const P&...params) {
+    return selector == w_value
+      ? w_ResultType{w_GetFuncType<w_value>::get(params...)}
+      : ValueTupleGetterTyped<T, ValueTuple<T, w_values...>, w_GetFuncType, w_ResultType>::get(selector, params...);
+  }
+};
+
+template <typename T, typename w_ValueTuple, template <T w_selector> typename w_GetFuncType, typename ...P>
+struct ValueTupleGetterTypeFinder;
+
+template <typename T, T w_value, template <T w_selector> typename w_GetFuncType, typename ...P>
+struct ValueTupleGetterTypeFinder<T, ValueTuple<T, w_value>, w_GetFuncType, P...> {
+
+  static auto func_for_type(P...params) -> std::remove_cvref_t<decltype(w_GetFuncType<w_value>::get(params...))>;
+
+};
+
+template <typename T, T w_value, T...w_values, template <T w_selector> typename w_GetFuncType, typename ...P>
+struct ValueTupleGetterTypeFinder<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType, P...> {
+  using Others = ValueTupleGetterTypeFinder<T, ValueTuple<T, w_values...>, w_GetFuncType, P...>;
+
+  template <typename T1, typename T2>
+  struct PickLarger {
+    using type = std::conditional_t<(sizeof(T1) > sizeof(T2)), T1, T2>;
+    //static_assert(std::is_assignable<type, T1>::value && std::is_assignable<type, T2>::value,
+    //  "w_GetFuncType template results in incompatible types.");
+  };
+
+  static auto func_for_type(P...params) -> 
+      typename PickLarger<std::remove_cvref_t<decltype(w_GetFuncType<w_value>::get(params...))>,
+                          std::remove_cvref_t<decltype(Others::func_for_type(params...))>>::type;
+};
+
+
+template <typename T, typename w_ValueTuple, template <T w_selector> typename w_GetFuncType>
 struct ValueTupleGetter;
 
-template <typename T, T w_value, template <T selector> typename w_GetFuncType>
-struct ValueTupleGetter<T, ValueTuple<T, w_value>, w_GetFuncType> {
-  static constexpr auto get(const T& selector) 
-      -> std::remove_cv_t<decltype(setl::make_optional(w_GetFuncType<w_value>::get()))> {
-    return selector == w_value
-      ? setl::make_optional(w_GetFuncType<w_value>::get())
-      : decltype(setl::make_optional(w_GetFuncType<w_value>::get())){};
-  }
-};
-
-template <typename T, T w_value, T...w_values, template <T selector> typename w_GetFuncType>
+template <typename T, T w_value, T...w_values, template <T w_selector> typename w_GetFuncType>
 struct ValueTupleGetter<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType> {
-  static constexpr auto get(const T& selector)
-    -> std::remove_cv_t<decltype(setl::make_optional(w_GetFuncType<w_value>::get()))> {
-    return selector == w_value
-      ? setl::make_optional(w_GetFuncType<w_value>::get())
-      : ValueTupleGetter<T, ValueTuple<T, w_values...>, w_GetFuncType>::get(selector);
+
+  template <typename ...P>
+  using TypeFinder = ValueTupleGetterTypeFinder<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType, P...>;
+
+  template <typename ...P>
+  static constexpr auto get(const T& selector, const P&...params)
+    -> setl::Optional<std::remove_cvref_t<decltype(TypeFinder<P...>::func_for_type(params...))>> {
+    using Type = std::remove_cvref_t<decltype(TypeFinder<P...>::func_for_type(params...))> ;
+    using ResultType = setl::Optional<Type>;
+
+    return ValueTupleGetterTyped<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType, ResultType>
+          ::get(selector, params...);
   }
 };
-
 
 }  // namespace
 

@@ -75,6 +75,10 @@ struct remove_const<const T> {
   using type = T; 
 };
 
+static_assert(
+  is_same<int, remove_const<const int>::type>::value,
+  "remove_const is broken.");
+
 // remove_volatile
 template <typename T>
 struct remove_volatile { 
@@ -95,10 +99,53 @@ struct remove_cv {
 template <typename T>
 using remove_cv_t = typename remove_cv<T>::type;
 
+static_assert(
+  is_same<int, remove_cv_t<volatile const int>>::value,
+  "remove_cv_t is broken.");
+
 // This needs compiler support so we just make it true.
 template< class T >
 struct is_trivially_copyable : true_type {
 };
+
+template <typename T>
+struct remove_reference {
+  using type = T;
+};
+
+template <typename T>
+struct remove_reference<T&> {
+  using type = T;
+};
+
+template <typename T>
+struct remove_reference<T&&> {
+  using type = T;
+};
+
+template <typename T>
+using remove_reference_t = typename remove_reference<T>::type;
+
+static_assert(
+  is_same<int, remove_reference_t<int&>>::value,
+  "remove_reference_t is broken.");
+
+template <typename T>
+struct remove_cvref {
+  using type = typename remove_cv<typename remove_reference<T>::type>::type;
+};
+
+template <typename T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+static_assert(
+  is_same<int, remove_cvref<const int&>::type>::value,
+  "remove_cvref_t is broken.");
+
+template <typename T>
+typename std::remove_reference_t<T>&& move(T&& arg) noexcept {
+  return static_cast<std::remove_reference_t<T>&&>(arg);
+}
 
 } // namespace
 

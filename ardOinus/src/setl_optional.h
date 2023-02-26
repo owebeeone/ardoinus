@@ -2,36 +2,9 @@
 #ifndef SETL_OPTIONAL____H
 #define SETL_OPTIONAL____H
 
-// Include std::move
+#include "setlx_type_traits.h"
+
 namespace setl {
-
-template <typename T>
-struct remove_reference {
-    using type = T;
-};
-
-template <typename T>
-struct remove_reference<T&> {
-    using type = T;
-};
-
-template <typename T>
-struct remove_reference<T&&> {
-    using type = T;
-};
-
-template <typename T>
-using remove_reference_t = typename remove_reference<T>::type;
-
-
-/**
- * Like std::move function.
- */
-template <typename T>
-remove_reference_t<T>&& move(T&& arg) noexcept {
-    using ReturnType = remove_reference_t<T>&&;
-    return static_cast<ReturnType>(arg);
-}
 
 /**
  * Template class providing a simple optional value.
@@ -46,11 +19,11 @@ class Optional {
 
   Optional(const T& value) : value(value), is_present(true) {}
 
-  Optional(T&& value) : value(move(value)), is_present(true) {}
+  Optional(T&& value) : value(std::move(value)), is_present(true) {}
 
   Optional(const Optional& other) : value(other.value), is_present(other.is_present) {}
 
-  Optional(Optional&& other) : value(move(other.value)), is_present(other.is_present) {}
+  Optional(Optional&& other) : value(std::move(other.value)), is_present(other.is_present) {}
 
   Optional& operator=(const Optional& other) {
     value = other.value;
@@ -65,14 +38,12 @@ class Optional {
   }
 
   Optional& operator=(Optional&& other) {
-    value = move(other.value);
+    value = std::move(other.value);
     is_present = other.is_present;
     return *this;
   }
 
   bool has_value() const { return is_present; }
-
-  operator bool() const { return is_present; }
 
   const T& get() const {
     return value;
