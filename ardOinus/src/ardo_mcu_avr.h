@@ -2,6 +2,7 @@
 #ifndef ARDO_MCU_AVR__H
 #define ARDO_MCU_AVR__H
 
+#include "setlx_tuple.h"
 #include "setl_bit_fields.h"
 
 namespace ardo {
@@ -15,6 +16,7 @@ struct RegisterSelector {
 };
 
 #ifdef AVR_MOCK_IOREGISTERS
+// Alloes for mocking the IO registers, useful for unit testing.
 
 constexpr unsigned debug_mode = AVR_MOCK_IOREGISTERS;
 

@@ -1,22 +1,16 @@
-// Note: This must only be included through ardOinus.h.
 
-// System specific attributes are provded here.
-// If using the Arduio API, set macro ARDO_USE_ARDUINO_COREIF to 1.
-
-#ifndef ARDOINUS___H
-#error "This must only be included by ardOinus.h"
-#endif // ARDOINUS___H
-
-#ifdef ARDOINUS___H_DONE
-#error "This must only be included by ardOinus.h"
-#endif
+#ifndef ARDO_SYS_DEFS_H
+#define ARDO_SYS_DEFS_H
 
 #include "setl_time.h"
 #include "setl_utils.h"
 #include "setl_templ_utils.h"
+#include "setl_tuple_helpers.h"
 
 #include "setlx_cstdint.h"
+#include "setlx_tuple.h"
 #include "setlx_type_traits.h"
+#include "ardo_resources.h"
 
 #ifdef _MSC_VER 
 
@@ -24,18 +18,58 @@
 #define __AVR_ATmega328P__ 1
 #define __AVR_DEVICE_NAME__ atmega328p
 #define AVR_MOCK_IOREGISTERS 1
+#define ARDUINO_AVR_NANO 1
 
 #endif // _MSC_VER
+
+namespace ardo {
+namespace sys {
+
+enum class TimerAvailabilityMode {
+  all_available,  // Running with scissors mode. Use of some timers may break.
+  safe_to_use 
+};
+
+enum class BoardType {
+  arduino_uno,
+  arduino_nano,
+  espressif_esp32,
+};
+
+/**
+ * Specializations of this template are used to define the set of available
+ * timers for a given MCU.
+ */
+template <typename w_Signature, TimerAvailabilityMode w_mode>
+struct AvailableTimers {
+  using Timers = std::tuple<>;
+};
+
+
+template <typename w_Signature, BoardType w_board>
+struct IOMapping {
+  using mapping = std::tuple<>;
+};
+
+}  // namespace sys
+}  // namespace ardo
 
 
 #ifdef __AVR
 
 #include "ardo_mcu_avr.h"
 
+namespace ardo {
+namespace sys {
+  using DefaultSignature = avr::DefaultSignature;
+} // namespace sys
+}  // namespace ardo
+
 #endif
 
 // Defines for Arduino Nano
 #if defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_UNO)
+
 
 #include "sys/ardo_sys_atmega328.h"
 
@@ -78,7 +112,7 @@ namespace ardo {
 #ifdef ARDO_USE_ARDUINO_COREIF
 
 /**
- * An implementation of CoreIF veneer over some of the Android API.
+ * An implementation of CoreIF veneer over some of the Arduino API.
  */
 class CoreIF {
 public:
@@ -312,3 +346,5 @@ public:
 #endif // ARDO_USE_ARDUINO_COREIF
 
 } // namespace ardo
+
+#endif // ARDO_SYS_DEFS_H

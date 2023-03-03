@@ -17,6 +17,8 @@ namespace sys {
 namespace avr {
 namespace arch_atmega328 {
 
+struct Signature {}; // Signature for this MCU.
+
 constexpr ptrdiff_t cc__SFR_OFFSET = 0x20;
 
 template <typename T, ptrdiff_t w_addr>

@@ -1963,7 +1963,7 @@ struct TimerPwmConfigutation {
 
     auto l_top_count = p_top_count.has_value() 
         ? p_top_count.get() 
-        : TimerDef::get_timer_top(WgmEnumTraits<EnumWGM1>::Modes::
+        : TimerDef::get_timer_top(WgmEnumTraits<EnumWGM>::Modes::
           template getParamFor<WaveformGeneratorModeParam::timer_top>(
             wgm_value_bits.value).get()).get();
     auto is_phase_correct_mode = TimerPwmModePhaseCorrect(timer_mode_optional.get());
@@ -2212,7 +2212,7 @@ struct Timer0 : Timer<Timer0Def> {
 struct Timer1 : Timer<Timer1Def> {
 
   using PwmFrequencyAccurate = FrequencyAccurate<
-    11000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::ocra>;
+    11000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::icr>;
 
   using BuiltInTopConf = BuiltInTop<
     50000, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
@@ -2256,39 +2256,41 @@ struct Timer1 : Timer<Timer1Def> {
 
 struct Timer2 : Timer<Timer2Def> {
   using PwmFrequencyAccurate = FrequencyAccurate<
-    20000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::built_in>;
+    20000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::ocra>;
 
   using BuiltInTopConf = BuiltInTop<
     11000, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
 };
 
-template <typename w_OCR, typename w_Gpio, typename w_Timer, OcrEnum w_ocr>
-struct OCRPin : Dependency<w_OCR, ResourceType::pulse_width_modulation, std::tuple<w_Gpio>> {
-  using TimerType = w_Timer;
-  using Gpio = w_Gpio;
-  static constexpr OcrEnum ocr = w_ocr;
-  using OutputCompareType = typename TimerType:: template OcrType<ocr>;
+// template <typename w_OCR, typename w_Gpio, typename w_Timer, OcrEnum w_ocr>
+// struct OCRPin : Dependency<w_OCR, ResourceType::pulse_width_modulation, std::tuple<w_Gpio>> {
+//   using TimerType = w_Timer;
+//   using Gpio = w_Gpio;
+//   static constexpr OcrEnum ocr = w_ocr;
+//   using OutputCompareType = typename TimerType:: template OcrType<ocr>;
 
-};
+// };
 
 
 
-template <typename w_ComBits, typename w_RegisterTccnA>
-struct TimerCompareDefinition {
-  using ComBits = w_ComBits;
-  using RegisterTccnA = w_RegisterTccnA;
+// template <typename w_ComBits, typename w_RegisterTccnA>
+// struct TimerCompareDefinition {
+//   using ComBits = w_ComBits;
+//   using RegisterTccnA = w_RegisterTccnA;
 
-};
+// };
 
-template <typename w_Self, typename w_Gpio, typename w_Defn>
-struct TimerCompare {
-  using Self = w_Self;
-  using Gpio = w_Gpio;
-  using Definition = w_Defn;
-  using ComBits = typename Definition::ComBits;
-  using RegisterTccnA = typename Definition::RegisterTccnA;
+// template <typename w_Self, typename w_Gpio, typename w_Defn>
+// struct TimerCompare {
+//   using Self = w_Self;
+//   using Gpio = w_Gpio;
+//   using Definition = w_Defn;
+//   using ComBits = typename Definition::ComBits;
+//   using RegisterTccnA = typename Definition::RegisterTccnA;
 
-};
+// };
+
+using AvailableTimers = std::tuple<Timer0, Timer1, Timer2>;
 
 struct ppADC6 : Dependency<ppADC6, ResourceType::analog_in, std::tuple<ppADC6>> {
   static constexpr bool Package32pinOnly = true;
@@ -2658,6 +2660,42 @@ using ArduinoUnoPinmap = ArduinoDeviceMapping <
 
 }  // arch_atmega328p
 }  // namespace avr
+
+
+// These specializations must be defined in the namespace ardo::sys.
+
+/**
+ * Defines the available timers for the atmega328p.
+ */
+template <>
+struct AvailableTimers<
+    avr::arch_atmega328p::Signature,
+    TimerAvailabilityMode::all_available> {
+  using Timers = std::tuple<
+      avr::arch_atmega328p::Timer0, 
+      avr::arch_atmega328p::Timer1, 
+      avr::arch_atmega328p::Timer2>;
+};
+
+template <>
+struct AvailableTimers<
+    avr::arch_atmega328p::Signature,
+    TimerAvailabilityMode::safe_to_use> {
+  using Timers = std::tuple<
+      avr::arch_atmega328p::Timer1, 
+      avr::arch_atmega328p::Timer2>;
+};
+
+template <>
+struct IOMapping<avr::arch_atmega328p::Signature, BoardType::arduino_uno> {
+  using Mapping = avr::arch_atmega328p::ArduinoUnoPinmap;
+};
+
+template <>
+struct IOMapping<avr::arch_atmega328p::Signature, BoardType::arduino_nano> {
+  using Mapping = avr::arch_atmega328p::ArduinoNanoPinmap;
+};
+
 }  // namespace sys
 }  // namespace ardo
 

@@ -2137,16 +2137,22 @@
 #endif
 
 
-#if defined(ARDO_MCU_ARCH_NAME)
 namespace ardo {
 namespace sys {
 namespace avr {
 
+#if defined(ARDO_MCU_ARCH_NAME)
+// The selected compile time MCU architecture namespace aliased as "mcu".
 namespace mcu = ARDO_MCU_ARCH_NAMESPACE(ARDO_MCU_ARCH_NAME);
+using DefaultSignature = mcu::Signature;
+#else
+// No MCU architecture selected, use a dummy signature type which
+// should result in no resorces being provided for the default MCU type.
+struct DefaultSignature {};
+#endif
 
 }  // namespace avr
 }  // namespace sys
 }  // namespace ardo
-#endif
 
 #endif  // ardo_mcu_avr_defs__h

@@ -49,6 +49,11 @@ struct tuple_element<0, std::tuple<T, Ts...>> {
   using type = T;
 };
 
+
+static_assert(std::is_same<std::tuple_element<0, std::tuple<int, bool, char>>::type, int>::value, "std::tuple_element failed");
+static_assert(std::is_same<std::tuple_element<1, std::tuple<int, bool, char>>::type, bool>::value, "std::tuple_element failed");
+static_assert(std::is_same<std::tuple_element<2, std::tuple<int, bool, char>>::type, char>::value, "std::tuple_element failed");
+
 }  // namespace std
 
 #endif  // else HAS_STD_LIB
