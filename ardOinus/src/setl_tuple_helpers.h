@@ -3,6 +3,7 @@
 #define SETLX_TUPLE_HELPERS_H 1
 
 #include "setlx_tuple.h"
+#include "setlx_type_traits.h"
 
 namespace setl {
 
@@ -14,6 +15,11 @@ namespace setl {
  */
 template <typename...T>
 struct tuple_concat;
+
+template <>
+struct tuple_concat<> {
+  using type = std::tuple<>;
+};
 
 template <typename... w_types1>
 struct tuple_concat<std::tuple<w_types1...>> {
@@ -36,12 +42,18 @@ using tuple_concat_t = typename tuple_concat<T...>::type;
 static_assert(
     std::is_same_v<
         tuple_concat_t<std::tuple<int, char>, std::tuple<short>>,
-        std::tuple<int, char, short>>, "tuple_concat_t<a,b> failed");
+        std::tuple<int, char, short>>,
+    "tuple_concat_t<a,b> failed");
 
 static_assert(
     std::is_same_v<
         tuple_concat_t<std::tuple<int, char>, std::tuple<short>, std::tuple<float>>,
-        std::tuple<int, char, short, float>>, "tuple_concat_t<a,b,c> failed");
+        std::tuple<int, char, short, float>>, 
+    "tuple_concat_t<a,b,c> failed");
+
+static_assert(
+  std::is_same_v<std::tuple<>, tuple_concat_t<>>,
+  "tuple_concat_t<> failed.");
 
 /**
  * Extend a tuple with more types.
@@ -202,7 +214,7 @@ static_assert(
             std::tuple<int, short, char>>::type,
         std::tuple<int, short>>, "intersection_helper failed");
 
-}
+} // namespace nfp
 
 /**
  * Create an intersection of tuples.
@@ -262,6 +274,76 @@ static_assert(
         std::tuple<char, short>>, "tuple_remove_t failed");
 
 /**
+ * Remove an entry from a tuple if it is found.
+ * 
+ * Results in a tuple with the first occurrence of T removed. If T is not found, the tuple is
+ * unchanged and the not_found_tuple contains a tuple containing T. The static member is_found
+ * is std::true_type if T was found and std::false_type otherwise.
+ */
+
+template <typename T, typename w_tuple>
+struct tuple_remove_entry;
+
+template <typename T>
+struct tuple_remove_entry<T, std::tuple<>> {
+    using type = std::tuple<>;
+    using not_found_tuple = std::tuple<T>;
+    using is_found = std::false_type;
+};
+
+template <typename T, typename... w_types1>
+struct tuple_remove_entry<T, std::tuple<T, w_types1...>> {
+    using type = std::tuple<w_types1...>;
+    using not_found_tuple = std::tuple<>;
+    using is_found = std::true_type;
+};
+
+template <typename T, typename O, typename... w_types1>
+struct tuple_remove_entry<T, std::tuple<O, w_types1...>> {
+    using rest = tuple_remove_entry<T, std::tuple<w_types1...>>;
+    using type = tuple_concat_t<std::tuple<O>, typename rest::type>;
+    using not_found_tuple = typename rest::not_found_tuple;
+    using is_found = typename rest::is_found;
+};
+
+template <typename T, typename w_tuple>
+using tuple_remove_entry_t = typename tuple_remove_entry<T, w_tuple>::type;
+
+template <typename T, typename w_tuple>
+using tuple_remove_entry_not_found_t = typename tuple_remove_entry<T, w_tuple>::not_found_tuple;
+
+template <typename T, typename w_tuple>
+constexpr auto tuple_remove_entry_is_found_v = tuple_remove_entry<T, w_tuple>::is_found::value;
+
+static_assert(
+    std::is_same_v<
+        tuple_remove_entry_t<int, std::tuple<int, char, short, int>>,
+        std::tuple<char, short, int>>, "tuple_remove_entry_t failed");
+
+static_assert(
+    std::is_same_v<
+        tuple_remove_entry_not_found_t<int, std::tuple<int, char, short, int>>,
+        std::tuple<>>, "tuple_remove_entry_not_found_t failed");
+
+static_assert(
+        tuple_remove_entry_is_found_v<int, std::tuple<int, char, short, int>>,
+        "tuple_remove_entry_not_found_t failed");
+
+static_assert(
+    std::is_same_v<
+        tuple_remove_entry_t<float, std::tuple<int, char, short, int>>,
+        std::tuple<int, char, short, int>>, "tuple_remove_entry_t failed");
+
+static_assert(
+    std::is_same_v<
+        tuple_remove_entry_not_found_t<float, std::tuple<int, char, short, int>>,
+        std::tuple<float>>, "tuple_remove_entry_not_found_t failed");
+
+static_assert(
+        !tuple_remove_entry_is_found_v<float, std::tuple<int, char, short, int>>,
+        "tuple_remove_entry_not_found_t failed");
+
+/**
  * Create a difference of tuples.
  * 
  * Tuple difference results in a tuple that contains all the types in the first tuple
@@ -314,6 +396,82 @@ static_assert(
             std::tuple<float>>,
         std::tuple<char>>, "tuple_difference_t failed");
 
+/**
+ * Returns true is the type T has one of the given base classes.
+ */
+
+template <typename T, typename w_tuple_of_bases>
+constexpr bool tuple_has_base_v = false;
+
+template <typename T>
+constexpr bool tuple_has_base_v<T, std::tuple<>> = false;
+
+template <typename D, typename B, typename...w_base_types>
+constexpr bool tuple_has_base_v<D, std::tuple<B, w_base_types...>> = 
+    std::is_base_of_v<B, D> || tuple_has_base_v<D, std::tuple<w_base_types...>>;
+
+static_assert(
+    tuple_has_base_v<int, std::tuple<>> == false, "tuple_has_base_v failed");
+
+namespace nfp_testonly {
+struct a {};
+struct b : a {};
+static_assert(
+    !tuple_has_base_v<a, std::tuple<b, b>>, "tuple_has_base_v failed");
+static_assert(
+    tuple_has_base_v<b, std::tuple<a, a>>, "tuple_has_base_v failed");
+} // namespace nfp_testonly
+
+/**
+ * Selects all the types from the first tuple that are a base of one of the 
+ * types in the second tuple.
+ */
+
+template <typename w_tuple, typename w_base_tuple>
+struct tuple_select_by_base;
+
+template <typename...w_base_types>
+struct tuple_select_by_base<std::tuple<>, std::tuple<w_base_types...>> {
+    using type = std::tuple<>;
+};
+
+template <typename D, typename...w_derived, typename...w_base>
+struct tuple_select_by_base<std::tuple<D, w_derived...>, std::tuple<w_base...>> {
+  public:
+    using rest = typename tuple_select_by_base<
+        std::tuple<w_derived...>, 
+        std::tuple<w_base...>>::type;
+  public:
+    using type = std::conditional_t<
+        tuple_has_base_v<D, std::tuple<w_base...>>,
+        tuple_concat_t<std::tuple<D>, rest>,
+        rest>;
+};
+
+template <typename w_tuple, typename w_base_tuple>
+using tuple_select_by_base_t = typename tuple_select_by_base<w_tuple, w_base_tuple>::type;
+
+namespace nfp_testonly2 {
+struct a {};
+struct b {};
+struct c : a {};
+struct d : b {};
+struct e {};
+
+static_assert(
+    std::is_same_v<
+        tuple_select_by_base_t<
+            std::tuple<c, d, e>, 
+            std::tuple<a>>,
+        std::tuple<c>>, "tuple_select_by_base_t failed");
+
+static_assert(
+    std::is_same_v<
+        tuple_select_by_base_t<
+            std::tuple<c, d, e>, 
+            std::tuple<b, e>>,
+        std::tuple<d, e>>, "tuple_select_by_base_t failed");
+} // namespace nfp_testonly2
 
 } // namespace setl
 

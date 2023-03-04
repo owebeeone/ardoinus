@@ -7,7 +7,7 @@
 #define ardo_supplemental_atmega328p_defs__h
 
 #include "setl_optional.h"
-#include "setl_cat_tuples.h"
+#include "setl_tuple_helpers.h"
 #include "setl_int_scaler.h"
 #include "setl_system.h"
 #include "setlx_cstdint.h"
@@ -90,7 +90,7 @@ template <typename T, typename...Ts>
 struct RootDependencyFinder<T, Ts...> {
   using t_deps = typename RootDependencyOf<T>::result;
   using ts_deps = typename RootDependencyFinder<Ts...>::root_deps;
-  using root_deps = typename setl::cat_tuples<t_deps, ts_deps>::type;
+  using root_deps = typename setl::tuple_concat<t_deps, ts_deps>::type;
 };
 
 template <typename T>
@@ -466,7 +466,7 @@ struct WaveformGeneratorModes<T, Ts...> {
  public:
 
   template <TimerMode timer_mode, TimerPwmMode timer_pwm_mode, TimerTop timer_top>
-  using type = setl::cat_tuples_t<
+  using type = setl::tuple_concat_t<
     typename Helper<timer_mode, timer_pwm_mode, timer_top>::type,
     typename Rest::template type<timer_mode, timer_pwm_mode, timer_top>>;
 

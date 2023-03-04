@@ -6,7 +6,7 @@
 #ifndef SETL_BIT_FIELDS___H
 #define SETL_BIT_FIELDS___H
 
-#include "setl_cat_tuples.h"
+#include "setl_tuple_helpers.h"
 #include "setl_system.h"
 #include "setl_integers.h"
 #include "setlx_cstddef.h"
@@ -479,7 +479,7 @@ struct TypesOfBits<> {
 
 template <typename T, typename...Ts>
 struct TypesOfBits<T, Ts...> {
-  using type = cat_tuples_t<
+  using type = tuple_concat_t<
       std::tuple<typename T::type>, 
       typename TypesOfBits<Ts...>::type>;
 };
@@ -553,7 +553,7 @@ struct BitTypesTraitsHelper<
 template <typename w_FormatType, typename...w_BitsTypes>
 struct BitTypesTraits {
   using bits_types = typename TypesOfBits<w_BitsTypes...>::type;
-  using all_types = cat_tuples_t<std::tuple<typename w_FormatType::type>, bits_types>;
+  using all_types = tuple_concat_t<std::tuple<typename w_FormatType::type>, bits_types>;
   using unsigned_type = typename UnsignedType<all_types>::type;
 
   using traits = BitTypesTraitsHelper<unsigned_type, w_FormatType, w_BitsTypes...>;
@@ -648,7 +648,7 @@ struct Assigner<w_Proxy> {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy>::type;
     using unsigned_type = typename UnsignedType<
-      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      tuple_concat_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     Assign<w_FormatType>(static_cast<unsigned_type>(value.value));
     return *this;
   }
@@ -671,7 +671,7 @@ struct Assigner<w_Proxy> {
     using TypesOfBitsType = typename TypesOfBits<ProxyType>::type;
 
     using unsigned_type = typename UnsignedType<
-      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      tuple_concat_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     AssignSparse<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }
@@ -710,7 +710,7 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
     using unsigned_type = typename UnsignedType<
-      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      tuple_concat_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     Assign<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }
@@ -734,7 +734,7 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
     using unsigned_type = typename UnsignedType<
-      cat_tuples_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      tuple_concat_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
     AssignSparse<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }
@@ -1224,7 +1224,7 @@ struct ToBitFields<> {
 template <typename AV, typename...AVs>
 struct ToBitFields<AV, AVs...> {
   using Rest = ToBitFields<AVs...>;
-  using type = setl::cat_tuples_t<
+  using type = setl::tuple_concat_t<
       std::tuple<typename AV::BitField>, typename Rest::type>;
 };
 
@@ -1243,7 +1243,7 @@ struct ApplierValuesRegHelper<std::tuple<AV, AVs...>, R> {
   static constexpr bool contains = R::FormatType::template contains<typename AV::BitField>;
   using AVsForRegister = std::conditional_t<
       contains,
-      setl::cat_tuples_t<std::tuple<AV>, typename Rest::AVsForRegister>,
+      setl::tuple_concat_t<std::tuple<AV>, typename Rest::AVsForRegister>,
       typename Rest::AVsForRegister>;
 };
 

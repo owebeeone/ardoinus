@@ -294,23 +294,56 @@ static_assert(
 /**
  * Concatenates two value tuples.
  */
-template <typename T1, typename T2>
+template <typename...T>
 struct ValueTupleCat_T;
+
+template <typename T, T...w_values1>
+struct ValueTupleCat_T<ValueTuple<T, w_values1...>> {
+  using type = ValueTuple<T, w_values1...>;
+};
 
 template <typename T, T...w_values1, T...w_values2>
 struct ValueTupleCat_T<ValueTuple<T, w_values1...>, ValueTuple<T, w_values2...>> {
   using type = ValueTuple<T, w_values1..., w_values2...>;
 };
 
-template <typename T1, typename T2>
-using ValueTupleCat = typename ValueTupleCat_T<T1, T2>::type;
+template <typename T, T...w_values1, T...w_values2, typename...W>
+struct ValueTupleCat_T<ValueTuple<T, w_values1...>, ValueTuple<T, w_values2...>, W...> {
+  using type = typename ValueTupleCat_T<ValueTuple<T, w_values1..., w_values2...>, W...>::type;
+};
+
+template <typename...T>
+using ValueTupleCat = typename ValueTupleCat_T<T...>::type;
 
 static_assert(
-  std::is_same<
+  std::is_same_v<
+    ValueTupleCat<ValueTuple<int, 1, 2, 3>>,
+    ValueTuple<int, 1, 2, 3>
+  >,
+  "ValueTupleCat<ValueTuple<int, 1, 2, 3>> failed");
+  
+static_assert(
+  std::is_same_v<
     ValueTupleCat<ValueTuple<int, 1, 2, 3>, ValueTuple<int, 4, 5, 6>>,
     ValueTuple<int, 1, 2, 3, 4, 5, 6>
-  >::value,
-  "ValueTupleCat");
+  >,
+  "ValueTupleCat<ValueTuple<int, 1, 2, 3>, ValueTuple<int, 4, 5, 6>>");
+
+static_assert(
+  std::is_same_v<
+    ValueTupleCat<ValueTuple<int, 1, 2, 3>, ValueTuple<int, 4, 5, 6>, ValueTuple<int, 7, 8, 9>>,
+    ValueTuple<int, 1, 2, 3, 4, 5, 6, 7, 8, 9>
+  >,
+  "ValueTupleCat<ValueTuple<int, 1, 2, 3>, ValueTuple<int, 4, 5, 6>, ValueTuple<int, 7, 8, 9>>");
+
+/**
+ * A value tuple getter.
+ * 
+ * This is a template class that is used to get a value from a tuple of value types
+ * based on a selector value and a getter function.
+ * 
+ * This is intended to be a run-time evaluated value.
+ */
 
 template <typename T, typename w_ValueTuple, template <T w_selector> typename w_GetFuncType, typename w_ResultType>
 struct ValueTupleGetterTyped;

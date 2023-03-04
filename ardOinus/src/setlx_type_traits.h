@@ -147,6 +147,21 @@ typename std::remove_reference_t<T>&& move(T&& arg) noexcept {
   return static_cast<std::remove_reference_t<T>&&>(arg);
 }
 
+template<typename Base, typename Derived>
+struct is_base_of {
+    private:
+        static constexpr bool check(const Base*) { return true; }
+        static constexpr bool check(...) { return false; }
+    public:
+        static constexpr bool value = check(static_cast<const Derived*>(nullptr));
+};
+
+template<typename Base, typename Derived>
+constexpr auto is_base_of_v = is_base_of<Base, Derived>::value;
+
+//static_assert(is_base_of_v<int, int>::value, "is_base_of is broken.");
+
+
 } // namespace
 
 #endif

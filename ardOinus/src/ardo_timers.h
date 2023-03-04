@@ -5,11 +5,46 @@
 #define ARDO_TIMERS__H
 
 #include "ardo_sys_defs.h"
+
+#include "setl_templ_utils.h"
+
 #include "setlx_cstdint.h"
 #include "setlx_tuple.h"
 
 namespace ardo {
 namespace timers {
+
+/**
+ * Timer parameters.
+ */
+enum class ParameterClass {
+    pwm_pin, // Pin number for timer PWM output.
+    frequency,
+    frequency_variable,
+    resolution,
+    avr_fast,
+    avr_phase_correct,
+    avr_top_count_mode,
+};
+
+/**
+ * Timer parameter base class.
+ */
+template <ParameterClass w_parameter_class>
+struct Parameter {
+    static constexpr ParameterClass parameter_class = w_parameter_class;
+};
+
+/**
+ * List of parameter classes. Also generates a tuple of the base parameter types
+ * associated with each parameter class.
+ */
+template <ParameterClass...P>
+struct ParameterClasses {
+    using ParameterTuple = setl::ValueTuple<ParameterClass, P...>;
+
+    using BaseTypes = std::tuple<Parameter<P>...>;
+};
 
 /** Timer parameters. */
 template <typename...T>
@@ -18,27 +53,39 @@ struct TimerConfig {
 };
 
 /** Specify standard timer paramerters. */
-template <std::uint32_t w_frequency_hz, 
+
+template <
+    ParameterClass parameter_class,
+    std::uint32_t w_frequency_hz, 
     std::uint32_t w_frequency_divider_hz = 1, 
     typename w_frequency_type = float>
-struct Frequency {
+struct FrequencyBase : Parameter<parameter_class> {
     using frequency_type = w_frequency_type;
     static constexpr std::uint32_t frequency_hz = w_frequency_hz;
     static constexpr std::uint32_t frequency_divider_hz = w_frequency_divider_hz;
     static constexpr bool is_variable = false;
 };
 
+/** Specify a timer frequency. */
+template <std::uint32_t w_frequency_hz, 
+    std::uint32_t w_frequency_divider_hz = 1, 
+    typename w_frequency_type = float>
+struct Frequency : FrequencyBase<
+    ParameterClass::frequency, w_frequency_hz, w_frequency_divider_hz, w_frequency_type> {};
+
+
 /** Specify a variable frequency timer with an API to change frequency. */
 template <std::uint32_t w_frequency_hz, 
     std::uint32_t w_frequency_divider_hz = 1, 
     typename w_frequency_type = float>
-struct VariableFrequency : Frequency<w_frequency_hz, w_frequency_divider_hz, w_frequency_type> {
-    static constexpr bool is_variable = true;
-};
+struct VariableFrequency : FrequencyBase<
+    ParameterClass::frequency_variable, w_frequency_hz, w_frequency_divider_hz, w_frequency_type> {};
+
 
 /** Timer resolution specifier */
 template <std::uint32_t w_resolution>
-struct Resolution {
+struct Resolution : Parameter<ParameterClass::resolution> {
+    static constexpr ParameterClass parameter_class = ParameterClass::resolution;
     static constexpr std::uint32_t resolution = w_resolution;
 };
 
@@ -48,17 +95,26 @@ struct Resolution {
 // static constexpr frequency_type = Frequency<w_frequency_hz, w_frequency_divider_hz, w_frequency_type>::frequency = frequency_hz / frequency_divider_hz;
 
 template <std::uint32_t pin_number>
-struct PwmPin {
+struct PwmPin : Parameter<ParameterClass::pwm_pin> {
+    static constexpr ParameterClass parameter_class = ParameterClass::pwm_pin;
     static constexpr std::uint32_t number = pin_number;
 };
 
 namespace avr {
 /** Specify AVR timer paramerters. */
 
-/** Specify AVR timer phase correct mode. */
-struct PhaseCorrectMode {};
-struct FastMode {};
+/** AVR phase correct mode. */
+struct PhaseCorrectMode : Parameter<ParameterClass::avr_phase_correct> {};
 
+/** AVR fast mode. */
+struct FastMode : Parameter<ParameterClass::avr_fast> {};
+
+/** AVR top count mode. The resolution for an AVR timer is determined by the top count
+ * value. The top count can be a built-in value, the ICR register (on timers with an ICR)
+ * or the OCRA register. Using the OCRA register will limit the number of PWM outputs to 1
+ * so using the ICR register or a built-in value top count is recommended if more than 1
+ * PWM output is required.
+ */
 enum class TopCountMode {
     ocra,
     icr,
@@ -66,13 +122,39 @@ enum class TopCountMode {
 };
 
 template <TopCountMode w_mode>
-struct TopCount {
+struct TopCount : Parameter<ParameterClass::avr_top_count_mode> {
     static constexpr TopCountMode mode = w_mode;
 };
 
-
+// List of parameter classes allowed for AVR timers.
+using AllowedAVRParameters = ParameterClasses<
+    ParameterClass::pwm_pin,
+    ParameterClass::frequency,
+    ParameterClass::frequency_variable,
+    ParameterClass::resolution,
+    ParameterClass::avr_fast,
+    ParameterClass::avr_phase_correct,
+    ParameterClass::avr_top_count_mode>;
 
 }  // namespace avr
+
+
+
+template <template <ParameterClass pc> typename Base, ParameterClass...P>
+struct ToTupleFromParameterClasses {
+    using type = std::tuple<Base<P>...>;
+};
+
+template <typename w_AllowedParameters, typename w_TimerConfig>
+struct TimerConfigFilter {
+    using AllowedParameters = w_AllowedParameters;
+    using InputConfig = w_TimerConfig;
+
+    using Config = setl::tuple_select_by_base_t<
+        typename InputConfig::Parameters,
+        typename AllowedParameters::BaseTypes>;
+
+};
 
 namespace nfp {
 // Not path of the public API.
