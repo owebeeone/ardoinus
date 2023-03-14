@@ -1825,43 +1825,9 @@ using Timer2Def = TimerDefinition<
   ppPD3   // OC2B
 >;
 
-
-// template <
-//   typename w_TimerDef,
-//   std::uint32_t w_setup_frequency,
-//   bool w_phase_correct_mode,
-//   std::uint32_t w_base_frequency  // Usually CPU clock frequency.
-// >
-// struct Timer16 {
-//   using TimerDef = w_TimerDef;
-//   using Registers = typename TimerDef::Registers;
-//   using BitsWGM_16 = typename TimerDef::BitsWGM_16;
-//   using EnumWGM = typename BitsWGM_16::type;
-//   using BitsCS = typename TimerDef::BitsCS;
-//   using BitsTCNT = typename TimerDef::BitsTCNT;
-//   using EnumCS = typename BitsCS::type;
-//   static constexpr std::uint32_t setup_frequency = w_setup_frequency;
-//   static constexpr std::uint32_t base_frequency = w_base_frequency;
-//   static constexpr bool phase_correct_mode = w_phase_correct_mode;
-//   static constexpr std::uint32_t top_resolution = sizeof(typename BitsTCNT::type) * 8;
-//   static constexpr EnumCS cs_value = getClockDivider<EnumCS>(
-//     setup_frequency, base_frequency, top_resolution, phase_correct_mode);
-//   static constexpr auto top_count = getClockTimerTop(
-//     cs_value, setup_frequency, base_frequency, phase_correct_mode);
-
-//   static_assert(cs_value != TccrEnumTraits<EnumCS>::null_value,
-//        "Impossible frequency settings for timer.");
-//   static_assert(top_count >= 2u, "Frequency too high. Invalid settings for timer.");
-
-//   /**
-//    *
-//    */
-//   static void setFastPwm() {
-//     Registers::ReadModifyWrite(BitsCS{ cs_value }, BitsWGM_16{ EnumWGM::fast_pwm_icr });
-//     Registers::ReadModifyWrite(BitsICR1{ top_count });
-//   }
-// };
-
+/**
+ * Grabs a type from a single item tuple.
+ */
 template <typename T>
 struct PickSingleItem;
 
@@ -2618,12 +2584,6 @@ using McuResources = ResourceFinder<
   ppXTAL2,
   ppXTAL
 >;
-
-constexpr bool xx = setl::has_type_v<ppPD3, ppOC2B::dependencies>;
-
-using x = McuResources::Resource<ppPB1, ResourceType::pulse_width_modulation>;
-
-static_assert(true, "");
 
 /**
  * Maps an arduino pin no to a port type.
