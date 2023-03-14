@@ -2,6 +2,10 @@
 #ifndef SYS__ARDO_SYS_MOCK___H
 #define SYS__ARDO_SYS_MOCK___H
 
+#include <iostream>
+#include <iomanip>
+#include <cstring>
+#include "setlx_array.h"
 #include "ardo_resources.h"
 #include "setl_templ_utils.h"
 
@@ -17,26 +21,115 @@
 #define HIGH 1
 #define LED_BUILTIN 1
 
-void pinMode(int pin, std::uint8_t mode);
-void digitalWrite(int pin, std::uint8_t mode);
-int digitalRead(int pin);
-unsigned long millis();
-unsigned long micros();
-void analogWrite(int pin, int value);
+#ifdef BIN  // Remove prior BIN defined (Yuck!)
+#undef BIN
+#endif
+#define BIN 2
+#define OCT 8
+#define DEC 10
+#define HEX 16
+
+inline void pinMode(int pin, std::uint8_t mode) {}
+inline void digitalWrite(int pin, std::uint8_t mode) {}
+inline int digitalRead(int pin) { return 0; }
+inline unsigned long millis() { return 0; }
+inline unsigned long micros() { return 0; }
+inline void analogWrite(int pin, int value) {}
 
 #define ARDO_DEV_MOCK_SERIAL
+
+
+template <typename T, bool is_float=std::is_floating_point<T>::value>
+struct PrintBinary {
+  static void print(const T& v) {
+    std::cout << std::setbase(10) << v;
+  }
+};
+
+
+template <typename T>
+struct PrintBinary<T, false> {
+  static void print(const T& v) {
+
+    if (v) {
+      std::array<char, sizeof(v) * 8 + 2> bytes;
+      T outval{ v };
+      T bit{ 1 };
+      auto iter{ bytes.end() - 1 };
+      *iter-- = '\0';
+      while (outval && bit && iter != bytes.begin()) {
+        *iter = outval & bit ? '1' : '0';
+        iter--;
+        outval &= ~bit;
+        bit <<= 1;
+      }
+
+      std::cout << &*(iter + 1);
+    } else {
+      std::cout << "0";
+    }
+
+    std::cout << " - 0x" << std::setbase(16) << v;
+  }
+};
+
+
+template <typename T>
+void write_modified(const T& v, int mod) {
+  switch (mod) {
+  case BIN:
+    PrintBinary<T>::print(v);
+    break;
+  case OCT:
+    std::cout << std::setbase(8) << v;
+    break;
+  default:
+  case DEC:
+    std::cout << std::setbase(10) << v;
+    break;
+  case HEX:
+    std::cout << std::setbase(16) << v;
+    break;
+  }
+}
 
 
 class SerialType {
 public:
   void begin(unsigned long) {}
   template <typename T>
-  void print(const T&) {}
+  void print(const T& v) {
+    write_modified(v, DEC);
+  }
   template <typename T>
-  void println(const T&) {}
-  void print(const char*) {}
-  void println(const char*) {}
-  void println() {}
+  void print(const T& v, int mod) {
+    write_modified(v, mod);
+  }
+  template <typename T>
+  void println(const T& v) {
+    write_modified(v, DEC);
+    println();
+  }
+  template <typename T>
+  void println(const T& v, int mod) {
+    write_modified(v, mod);
+    println();
+  }
+  void print(const char* s) {
+    std::cout << s;
+  }
+  void print(const char* s, int mod) {
+    std::cout << s;
+  }
+  void println(const char* s) {
+    std::cout << s << std::endl;
+  }
+  void println(const char* s, int mod) {
+    std::cout << s << std::endl;
+  }
+  void println() {
+    std::cout << std::endl;
+  }
 
   // TODO need many more.
 
@@ -76,21 +169,21 @@ using Serial2Resources2 = setl::TypeArgs<GPIOResource<104>, GPIOResource<105>>;
 
 #define ARDO_USE_ARDUINO_HARDWARE_PWM 1
 
-/**
- * ArdOinus needs this basic set of parameters, some of which are
- * utilized by some architectures and not others. The goal is to enable
- * source code compatability across different architectures.
- */
-template <std::int8_t w_bits, std::int32_t w_frequency, std::int8_t w_channel>
-class HwPwmParameters {
-public:
-  static constexpr std::int8_t bits = w_bits;
-  static constexpr std::int32_t frequency = w_frequency;
-  static constexpr std::int8_t channel = w_channel;
-  using value_type = std::uint16_t;
-};
-
-using DefaultHwPwmParameters = HwPwmParameters<8, -1, 0>;
+///**
+// * ArdOinus needs this basic set of parameters, some of which are
+// * utilized by some architectures and not others. The goal is to enable
+// * source code compatability across different architectures.
+// */
+//template <std::int8_t w_bits, std::int32_t w_frequency, std::int8_t w_channel>
+//class HwPwmParameters {
+//public:
+//  static constexpr std::int8_t bits = w_bits;
+//  static constexpr std::int32_t frequency = w_frequency;
+//  static constexpr std::int8_t channel = w_channel;
+//  using value_type = std::uint16_t;
+//};
+//
+//using DefaultHwPwmParameters = HwPwmParameters<8, -1, 0>;
 
 /**
  * Define the resources for GPIO pins for the given set of parameters. The

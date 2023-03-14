@@ -13,6 +13,15 @@
 namespace std {
 template <bool B, class T, class F>
 using conditional_t = typename conditional<B, T, F>::type;
+
+template <typename T>
+struct remove_cvref {
+  using type = typename remove_cv<typename remove_reference<T>::type>::type;
+};
+
+template <typename T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
 }
 #endif // __cplusplus < 201703L
 
@@ -143,7 +152,7 @@ static_assert(
   "remove_cvref_t is broken.");
 
 template <typename T>
-typename std::remove_reference_t<T>&& move(T&& arg) noexcept {
+std::remove_reference_t<T>&& move(T&& arg) noexcept {
   return static_cast<std::remove_reference_t<T>&&>(arg);
 }
 
@@ -161,6 +170,47 @@ constexpr auto is_base_of_v = is_base_of<Base, Derived>::value;
 
 //static_assert(is_base_of_v<int, int>::value, "is_base_of is broken.");
 
+namespace nfp {
+
+template <typename...T>
+struct nfp_tuple {};
+
+/**
+ * Returns true_type if T is contained in w_tuple1, false_type otherwise.
+ */
+template <typename T, typename w_tuple1>
+struct tuple_contained_in;
+
+template <typename T>
+struct tuple_contained_in<T, nfp_tuple<>> : std::false_type {};
+
+template <typename T, typename...w_types1>
+struct tuple_contained_in<T, nfp_tuple<T, w_types1...>>
+ : std::true_type {};
+
+template <typename T, typename O, typename...w_types1>
+struct tuple_contained_in<T, nfp_tuple<O, w_types1...>>
+ : tuple_contained_in<T, nfp_tuple<w_types1...>> {};
+
+template <typename T, typename w_tuple1>
+constexpr auto tuple_contained_in_v = tuple_contained_in<T, w_tuple1>::value;
+
+static_assert(tuple_contained_in_v<int, nfp_tuple<int, char, short>>,
+              "tuple_contained_in_v failed");
+              
+static_assert(!tuple_contained_in_v<float, nfp_tuple<int, char, short>>,
+              "tuple_contained_in_v failed");
+
+}  // namespace nfp
+
+
+template <typename T>
+inline constexpr bool is_floating_point_v = 
+    nfp::tuple_contained_in_v<
+      remove_cvref_t<T>, nfp::nfp_tuple<float, double, long double>>;
+
+template <typename T>
+struct is_floating_point : integral_constant<bool, is_floating_point_v<T>> {};
 
 } // namespace
 

@@ -15,35 +15,35 @@ class Optional {
  public:
   using type = T;
 
-  Optional() : value(), is_present(false) {}
+  Optional() : value(), has_value(false) {}
 
-  Optional(const T& value) : value(value), is_present(true) {}
+  Optional(const T& value) : value(value), has_value(true) {}
 
-  Optional(T&& value) : value(std::move(value)), is_present(true) {}
+  Optional(T&& value) : value(std::move(value)), has_value(true) {}
 
-  Optional(const Optional& other) : value(other.value), is_present(other.is_present) {}
+  Optional(const Optional& other) : value(other.value), has_value(other.has_value) {}
 
-  Optional(Optional&& other) : value(std::move(other.value)), is_present(other.is_present) {}
+  Optional(Optional&& other) : value(std::move(other.value)), has_value(other.has_value) {}
 
   Optional& operator=(const Optional& other) {
     value = other.value;
-    is_present = other.is_present;
+    has_value = other.has_value;
     return *this;
   }
 
   Optional& operator=(const T& rhs_value) {
     value = rhs_value;
-    is_present = true;
+    has_value = true;
     return *this;
   }
 
   Optional& operator=(Optional&& other) {
     value = std::move(other.value);
-    is_present = other.is_present;
+    has_value = other.has_value;
     return *this;
   }
 
-  bool has_value() const { return is_present; }
+  bool is_present() const { return has_value; }
 
   const T& get() const {
     return value;
@@ -51,7 +51,7 @@ class Optional {
 
   template <typename V>
   Optional<T>& if_then(const V& func) const {
-    if (is_present) {
+    if (has_value) {
       func(value);
     }
     return *this;
@@ -59,15 +59,15 @@ class Optional {
 
   template <typename V>
   Optional<T>& otherwise(const V& func) const {
-    if (is_present) {
+    if (has_value) {
       func();
     }
     return *this;
   }
 
  private:
-  T value{};
-  boolean is_present;
+   T value{};
+  bool has_value{};
 };
 
 

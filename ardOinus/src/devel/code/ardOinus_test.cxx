@@ -7,7 +7,7 @@
 #endif
 
 
-
+#include "tests/ardo_avr_timers_test.h"
 #include "tests/ardOinus_test.h"
 
 #include "tests/setl_templ_utils_test.h"
@@ -33,7 +33,7 @@
 
 int main(int, char **)
 {
-  std::cout << "Hello world!\n";
+  std::cout << "Testing started!\n";
 
   std::cout << "successfull tests = " << setl_test::runAllTests() << "\n";
 

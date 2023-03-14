@@ -98,7 +98,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -128,7 +128,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -142,6 +142,7 @@
     <ClInclude Include="..\..\..\ardo_eeprom.h" />
     <ClInclude Include="..\..\..\ardo_sequencer.h" />
     <ClInclude Include="..\..\..\ardo_sys_defs.h" />
+    <ClInclude Include="..\..\..\ardo_timers.h" />
     <ClInclude Include="..\..\..\ardo_time_poller.h" />
     <ClInclude Include="..\..\..\assert_that.h" />
     <ClInclude Include="..\..\..\circular_buffer.h" />
@@ -153,6 +154,7 @@
     <ClInclude Include="..\..\..\setlx_cstdint.h" />
     <ClInclude Include="..\..\..\setlx_cstdlib.h" />
     <ClInclude Include="..\..\..\setlx_limits.h" />
+    <ClInclude Include="..\..\..\setlx_tuple.h" />
     <ClInclude Include="..\..\..\setlx_type_traits.h" />
     <ClInclude Include="..\..\..\setl_cyclic_int.h" />
     <ClInclude Include="..\..\..\setl_interactive_scaling.h" />
@@ -161,7 +163,9 @@
     <ClInclude Include="..\..\..\setl_test_framework.h" />
     <ClInclude Include="..\..\..\setl_time.h" />
     <ClInclude Include="..\..\..\setl_time_unit.h" />
+    <ClInclude Include="..\..\..\setl_tuple_helpers.h" />
     <ClInclude Include="..\..\..\setl_utils.h" />
+    <ClInclude Include="..\..\..\sys\ardo_sys_mock.h" />
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb320.h" />
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb320_dev.h" />
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb355.h" />
@@ -768,6 +772,7 @@
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_m3000_dev.h" />
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_sys_avr_mcu_defs.h" />
     <ClInclude Include="..\..\..\tests\ardOinus_test.h" />
+    <ClInclude Include="..\..\..\tests\ardo_avr_timers_test.h" />
     <ClInclude Include="..\..\..\tests\circular_buffer_test.h" />
     <ClInclude Include="..\..\..\tests\pwe_serial_test.h" />
     <ClInclude Include="..\..\..\tests\setl_cyclic_int_test.h" />
@@ -779,10 +784,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\setl_system.cpp" />
+    <ClCompile Include="..\..\..\tests\adro_avr_mock_registers.cxx" />
     <ClCompile Include="..\..\code\ardOinus_test.cxx" />
     <ClCompile Include="..\..\code\blink_test.cxx" />
     <ClCompile Include="..\..\code\emulate_arduino.cxx" />
-    <ClCompile Include="..\..\code\gammil_repeater.cxx" />
     <ClCompile Include="..\..\code\pwe_test_module.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

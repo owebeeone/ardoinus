@@ -1927,6 +1927,21 @@
     <ClInclude Include="..\..\..\ardo_sys_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\setl_tuple_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\ardo_timers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\tests\ardo_avr_timers_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\setlx_tuple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\sys\ardo_sys_mock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\setl_system.cpp">
@@ -1944,7 +1959,7 @@
     <ClCompile Include="..\..\code\pwe_test_module.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\gammil_repeater.cxx">
+    <ClCompile Include="..\..\..\tests\adro_avr_mock_registers.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

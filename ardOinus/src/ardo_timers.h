@@ -16,13 +16,27 @@ namespace timers {
 
 /**
  * Timer parameters.
+ * 
+ * A TimerConfig is a tuple of parameters where each parameter is a subclass of
+ * the Parameter template designating its "ParameterClass".
+ * 
+ * No all parameters are used by all MCUs. The MCU will define its set of 
+ * available parameters and the all other parameters in the TimerConfig will be
+ * ignored. This allows for extensible timer configurations that can be used
+ * across multiple MCUs allowing for a single (non conditionally compiled) source
+ * code to work for multiple MCUs architectures.
+ * 
+ */
+
+/**
+ * Timer parameters.
  */
 enum class ParameterClass {
-    pwm_pin, // Pin number for timer PWM output.
     frequency,
     frequency_variable,
     resolution,
     avr_fast,
+    avr_pwm_pin,        // Pin number for timer PWM output.
     avr_phase_correct,
     avr_top_count_mode,
 };
@@ -95,8 +109,8 @@ struct Resolution : Parameter<ParameterClass::resolution> {
 // static constexpr frequency_type = Frequency<w_frequency_hz, w_frequency_divider_hz, w_frequency_type>::frequency = frequency_hz / frequency_divider_hz;
 
 template <std::uint32_t pin_number>
-struct PwmPin : Parameter<ParameterClass::pwm_pin> {
-    static constexpr ParameterClass parameter_class = ParameterClass::pwm_pin;
+struct PwmPin : Parameter<ParameterClass::avr_pwm_pin> {
+    static constexpr ParameterClass parameter_class = ParameterClass::avr_pwm_pin;
     static constexpr std::uint32_t number = pin_number;
 };
 
@@ -128,7 +142,7 @@ struct TopCount : Parameter<ParameterClass::avr_top_count_mode> {
 
 // List of parameter classes allowed for AVR timers.
 using AllowedAVRParameters = ParameterClasses<
-    ParameterClass::pwm_pin,
+    ParameterClass::avr_pwm_pin,
     ParameterClass::frequency,
     ParameterClass::frequency_variable,
     ParameterClass::resolution,
@@ -156,8 +170,20 @@ struct TimerConfigFilter {
 
 };
 
+// Test that TimerConfigFilter filters only to the available parameter types.
+static_assert(
+    std::is_same_v<
+        TimerConfigFilter<
+            ParameterClasses<ParameterClass::avr_pwm_pin, ParameterClass::frequency>,
+            TimerConfig<
+                Frequency<1000>,
+                avr::PhaseCorrectMode,
+                avr::TopCount<avr::TopCountMode::icr>>>::Config,
+        std::tuple<Frequency<1000>>>,
+        "TimerConfigFilter failed to filter out invalid parameters.");
+
 namespace nfp {
-// Not path of the public API.
+// Not part of the public API.
 
 template <typename...w_Configs>
 struct SelectionResolver {
@@ -176,8 +202,8 @@ struct BaseTimerSelector {
     using configs = std::tuple<w_Configs...>;
 
     template <typename...w_SelectedConfigs>
-    using Select = typename nfp::SelectionResolver<w_Configs...>::template Select<w_SelectedConfigs...>;
-
+    using Select = typename nfp::SelectionResolver<w_Configs...>::
+        template Select<w_SelectedConfigs...>;
 };
 
 using DefaultAvailableTimers = ardo::sys::AvailableTimers<

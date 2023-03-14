@@ -55,6 +55,33 @@ static_assert(
   std::is_same_v<std::tuple<>, tuple_concat_t<>>,
   "tuple_concat_t<> failed.");
 
+
+/**
+  * Returns true_type if T is contained in w_tuple1, false_type otherwise.
+  */
+template <typename T, typename w_tuple1>
+struct tuple_contained_in;
+
+template <typename T>
+struct tuple_contained_in<T, std::tuple<>> : std::false_type {};
+
+template <typename T, typename...w_types1>
+struct tuple_contained_in<T, std::tuple<T, w_types1...>>
+  : std::true_type {};
+
+template <typename T, typename O, typename...w_types1>
+struct tuple_contained_in<T, std::tuple<O, w_types1...>>
+  : tuple_contained_in<T, std::tuple<w_types1...>> {};
+
+template <typename T, typename w_tuple1>
+constexpr auto tuple_contained_in_v = tuple_contained_in<T, w_tuple1>::value;
+
+static_assert(tuple_contained_in_v<int, std::tuple<int, char, short>>,
+  "tuple_contained_in_v failed");
+
+static_assert(!tuple_contained_in_v<float, std::tuple<int, char, short>>,
+  "tuple_contained_in_v failed");
+
 /**
  * Extend a tuple with more types.
  * 
@@ -76,32 +103,6 @@ static_assert(
     std::is_same_v<
         tuple_extend_t<std::tuple<int, char>, short>,
         std::tuple<int, char, short>>, "tuple_extend_t failed");
-
-/**
- * Returns true_type if T is contained in w_tuple1, false_type otherwise.
- */
-template <typename T, typename w_tuple1>
-struct tuple_contained_in;
-
-template <typename T>
-struct tuple_contained_in<T, std::tuple<>> : std::false_type {};
-
-template <typename T, typename...w_types1>
-struct tuple_contained_in<T, std::tuple<T, w_types1...>>
- : std::true_type {};
-
-template <typename T, typename O, typename...w_types1>
-struct tuple_contained_in<T, std::tuple<O, w_types1...>>
- : tuple_contained_in<T, std::tuple<w_types1...>> {};
-
-template <typename T, typename w_tuple1>
-constexpr auto tuple_contained_in_v = tuple_contained_in<T, w_tuple1>::value;
-
-static_assert(tuple_contained_in_v<int, std::tuple<int, char, short>>,
-              "tuple_contained_in_v failed");
-              
-static_assert(!tuple_contained_in_v<float, std::tuple<int, char, short>>,
-              "tuple_contained_in_v failed");
 
 /**
  * Normalize a tuple by removing duplicates.

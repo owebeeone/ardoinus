@@ -22,6 +22,14 @@
 
 #endif // _MSC_VER
 
+// Pull in mock arduino interface for buidling on other platforms.
+#if defined(ARDO_USE_MOCK_ARDUINO) || !defined(INPUT_PULLUP)
+
+#include "sys/ardo_sys_mock.h"
+
+#endif
+
+
 namespace ardo {
 namespace sys {
 
@@ -83,10 +91,6 @@ namespace sys {
 #elif defined(ARDUINO_ESP32_DEV)
 
 #include "sys/ardo_sys_esp32.h"
-
-#elif defined(ARDO_USE_MOCK_ARDUINO) || !defined(INPUT_PULLUP)
-
-#include "sys/ardo_sys_mock.h"
 
 #else
 

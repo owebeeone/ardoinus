@@ -585,10 +585,9 @@ constexpr R getTimerFrequency(
   using Traits = TccrEnumTraits<EnumT>;
   using FreqMapping = typename Traits::FreqMapping;
   return timer_clock_frequency
-    / (R{phase_correct_mode ? 2ul : 1ul}
+    / ((phase_correct_mode ? R{2} : R{1})
       * top_count
       * FreqMapping::findDividerMultiple(clock_divider_enum));
-
 }
 
 /**
@@ -1957,11 +1956,11 @@ struct TimerPwmConfigutation {
     auto timer_mode_optional = WgmEnumTraits<EnumWGM>::Modes::
         template getParamFor<WaveformGeneratorModeParam::timer_pwm_mode>(
             wgm_value_bits.value);
-    if (!timer_mode_optional.has_value()) {
+    if (!timer_mode_optional.is_present()) {
       return -1;
     }
 
-    auto l_top_count = p_top_count.has_value() 
+    auto l_top_count = p_top_count.is_present() 
         ? p_top_count.get() 
         : TimerDef::get_timer_top(WgmEnumTraits<EnumWGM>::Modes::
           template getParamFor<WaveformGeneratorModeParam::timer_top>(
@@ -2018,6 +2017,51 @@ struct TimerPwmBuiltinTopConfigutation {
 
   using PwmEnableA = setl::ApplierValues<
     setl::ApplierValue<BitsWGM_16, wgm_value>>;
+
+  /**
+ * Set the base frequency for the timer dynamically. Returns the top_count
+ * (maximum value) for the compare registers.
+ */
+  template <typename T>
+  static std::uint32_t setFrequency(T frequency) {
+    EnumCS cs_value = getClockDivider<EnumCS>(
+      frequency, base_frequency, top_resolution, phase_correct_mode);
+
+    Registers::ReadModifyWrite(
+      BitsCS{ cs_value },
+      BitsWGM_16{ wgm_value });
+
+    return top_count;
+  }
+
+  /**
+   * Get the current frequency of the timer.
+   * If no parameters are provided, the current timer settings are used to
+   * compute the frequency.
+   */
+  template <typename T>
+  static T getFrequency(
+    setl::Optional<std::uint32_t> p_top_count = {},
+    std::uint32_t p_base_frequency = base_frequency) {
+    BitsCS cs_value_bits;
+    BitsWGM_16 wgm_value_bits;
+    Registers::Read(cs_value_bits, wgm_value_bits);
+    auto timer_mode_optional = WgmEnumTraits<EnumWGM>::Modes::
+      template getParamFor<WaveformGeneratorModeParam::timer_pwm_mode>(
+        wgm_value_bits.value);
+    if (!timer_mode_optional.is_present()) {
+      return -1;
+    }
+
+    auto l_top_count = p_top_count.is_present()
+      ? p_top_count.get()
+      : TimerDef::get_timer_top(WgmEnumTraits<EnumWGM>::Modes::
+        template getParamFor<WaveformGeneratorModeParam::timer_top>(
+          wgm_value_bits.value).get()).get();
+    auto is_phase_correct_mode = TimerPwmModePhaseCorrect(timer_mode_optional.get());
+    return getTimerFrequency<T>(
+      l_top_count, cs_value_bits.value, p_base_frequency, is_phase_correct_mode);
+  }
 };
 
 template <
@@ -2077,7 +2121,7 @@ struct TimerConfiguration<
 
   template <typename T>
   static std::uint32_t setFrequency(T frequency) {
-    const auto top_count = Config::setFrequency(frequency);
+    const typename TopCountBits::type top_count = Config::setFrequency(frequency);
     
     Registers::ReadModifyWrite(TopCountBits{top_count});
     return top_count;
@@ -2147,6 +2191,21 @@ struct TimerConfiguration<
 
   }
 
+  template <typename T>
+  static std::uint32_t setFrequency(T frequency) {
+    const auto top_count = Config::setFrequency(frequency);
+
+    // Top count it determined by w_bits_resolution and is set by the WGM bits.
+    return top_count;
+  }
+
+  /**
+   * Get the current frequency of the timer.
+   */
+  template <typename T>
+  static T getFrequency() {
+    return Config::template getFrequency<T>();
+  }
 };
 
 enum class OcrEnum : std::uint8_t {
@@ -2201,6 +2260,18 @@ struct Timer {
     w_base_frequency,
     TimerBuiltInSettings<w_timer_mode, w_timer_pwm_mode, w_bits_resolution>>;
 
+  static std::uint32_t getTopCount() {
+    typename TimerDef::BitsCS cs_value_bits;
+    typename TimerDef::BitsWGM_16 wgm_value_bits;
+    TimerDef::Registers::Read(cs_value_bits, wgm_value_bits);
+    using EnumWGM = typename TimerDef::BitsWGM_16::type;
+    auto top_count = TimerDef::get_timer_top(
+      WgmEnumTraits<EnumWGM>::Modes::
+          template getParamFor<WaveformGeneratorModeParam::timer_top>(
+            wgm_value_bits.value).get()).get();
+    return top_count;
+  }
+
 };
 
 struct Timer0 : Timer<Timer0Def> {
@@ -2217,41 +2288,6 @@ struct Timer1 : Timer<Timer1Def> {
   using BuiltInTopConf = BuiltInTop<
     50000, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
 
-  static std::uint32_t xx() {
-
-    using TT = WgmEnumTraits<BitsWGM1_3210::type>::Modes;
-    using TT1 = Wgm1TopCountMapping;
-
-    auto qq = Timer1Def::TimerDefTopGetter<TimerTop::ocra>::get();
-
-    auto zz = WgmEnumTraits<EnumWGM1>::Modes::getParamFor<WaveformGeneratorModeParam::built_in_top>
-      (EnumWGM1::fast_pwm_10bit).get();
-
-
-    setl::Optional<EnumWGM1> ww;
-
-    setl::Optional<TimerTop> dd = 
-    WgmEnumTraits<EnumWGM1>::Modes::
-      template getParamFor<WaveformGeneratorModeParam::timer_top>(
-        EnumWGM1::fast_pwm_10bit);
-
-    auto tt = Timer1Def::get_timer_top(dd.get(), EnumWGM1::fast_pwm_10bit);
-
-    auto c = WgmEnumTraits<EnumWGM1>::Modes::
-      template getParamFor<WaveformGeneratorModeParam::timer_top>(
-        EnumWGM1::pwm_phase_correct_9bit).get();
-
-    auto vv = Timer1Def::get_timer_top(TimerTop::built_in, EnumWGM1::pwm_phase_correct_9bit).get();
-
-    vv = Timer1Def::TimerDefTopGetter<TimerTop::built_in>::get(EnumWGM1::pwm_phase_correct_9bit);
-
-    using TimerTopTuple = Timer1Def::TimerTopTuple;
-
-    vv = setl::ValueTupleGetter<TimerTop, TimerTopTuple, Timer1Def::TimerDefTopGetter>
-          ::get(TimerTop::built_in, EnumWGM1::pwm_phase_correct_9bit).get();
-
-    return vv;
-  }  
 };
 
 struct Timer2 : Timer<Timer2Def> {
@@ -2259,7 +2295,7 @@ struct Timer2 : Timer<Timer2Def> {
     20000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::ocra>;
 
   using BuiltInTopConf = BuiltInTop<
-    11000, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
+    500, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
 };
 
 // template <typename w_OCR, typename w_Gpio, typename w_Timer, OcrEnum w_ocr>

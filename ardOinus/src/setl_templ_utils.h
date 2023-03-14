@@ -337,6 +337,24 @@ static_assert(
   "ValueTupleCat<ValueTuple<int, 1, 2, 3>, ValueTuple<int, 4, 5, 6>, ValueTuple<int, 7, 8, 9>>");
 
 /**
+ * Finds the return type of a function type.
+ */
+
+template <typename T>
+struct return_type_of;
+
+template <typename R, typename...P>
+struct return_type_of<R(P...)> {
+  using type = R;
+};
+
+template <typename T>
+using return_type_of_t = typename return_type_of<T>::type;
+
+static_assert(std::is_same_v<return_type_of_t<float(int, int)>, float>, 
+  "return_type_of_t<float(int, int) should be float>");
+
+/**
  * A value tuple getter.
  * 
  * This is a template class that is used to get a value from a tuple of value types
@@ -405,8 +423,11 @@ struct ValueTupleGetter<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType> {
   using TypeFinder = ValueTupleGetterTypeFinder<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType, P...>;
 
   template <typename ...P>
+  using ReturnType = return_type_of_t<decltype(TypeFinder<P...>::func_for_type)> ;
+
+  template <typename ...P>
   static constexpr auto get(const T& selector, const P&...params)
-    -> setl::Optional<std::remove_cvref_t<decltype(TypeFinder<P...>::func_for_type(params...))>> {
+    -> setl::Optional<std::remove_cvref_t<ReturnType<P...>>> {
     using Type = std::remove_cvref_t<decltype(TypeFinder<P...>::func_for_type(params...))> ;
     using ResultType = setl::Optional<Type>;
 
@@ -414,6 +435,8 @@ struct ValueTupleGetter<T, ValueTuple<T, w_value, w_values...>, w_GetFuncType> {
           ::get(selector, params...);
   }
 };
+
+
 
 }  // namespace
 

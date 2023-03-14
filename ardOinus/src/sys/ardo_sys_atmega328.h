@@ -12,8 +12,10 @@
 namespace ardo_system {
 using ardo::GPIOResource;
 
+#ifndef ARDO_HAS_SERIAL0
 #define ARDO_HAS_SERIAL0 1
 using Serial0Resources0 = setl::TypeArgs<GPIOResource<0>, GPIOResource<1>>;
+#endif  // ARDO_HAS_SERIAL0
 
 #define ARDO_USE_ARDUINO_HARDWARE_PWM 1
 
@@ -22,16 +24,16 @@ using Serial0Resources0 = setl::TypeArgs<GPIOResource<0>, GPIOResource<1>>;
  * utilized by some architectures and not others. The goal is to enable
  * source code compatability across different architectures. 
  */
-template <std::int8_t w_bits, std::int32_t w_frequency, std::int8_t w_channel>
-class HwPwmParameters {
-public:
-  static constexpr std::int8_t bits = w_bits;
-  static constexpr std::int32_t frequency = w_frequency;
-  static constexpr std::int8_t channel = w_channel;
-  using value_type = std::uint16_t;
-};
-
-using DefaultHwPwmParameters = HwPwmParameters<8, -1, 0>;
+//template <std::int8_t w_bits, std::int32_t w_frequency, std::int8_t w_channel>
+//class HwPwmParameters {
+//public:
+//  static constexpr std::int8_t bits = w_bits;
+//  static constexpr std::int32_t frequency = w_frequency;
+//  static constexpr std::int8_t channel = w_channel;
+//  using value_type = std::uint16_t;
+//};
+//
+//using DefaultHwPwmParameters = HwPwmParameters<8, -1, 0>;
 
 /**
  * From:
@@ -80,29 +82,29 @@ class PinHwTimerMap<11> : public std::integral_constant<unsigned, 2> {};
  * ardo::OutputPin.
  */
 
-template <typename w_Pin, typename w_Parameters>
-class HardwarePwmResources {
-public:
-  using Pin = w_Pin;
-  using Parameters = w_Parameters;
-  constexpr static unsigned hwtimer =
-    atmega328p_timers::PinHwTimerMap<Pin::PIN>::value;
-
-  // Pins are associated with timers. The range claim will conflict with
-  // any other use of the timer not in a range claim.
-  using Claims = ardo::ResourceClaim<
-    ardo::range_claim<ardo::HardwareTimer<hwtimer>, Pin::PIN>>;
-
-  using value_type = typename Parameters::value_type;
-
-  // Arduino atmega328 only supports 8 bin resoltuion, regardless of what
-  // Parameters says.
-  constexpr static std::uint8_t timer_bits = 8;
-
-  static void setPwm(value_type value) {
-    ::analogWrite(Pin::PIN, value);
-  }
-};
+//template <typename w_Pin, typename w_Parameters>
+//class HardwarePwmResources {
+//public:
+//  using Pin = w_Pin;
+//  using Parameters = w_Parameters;
+//  constexpr static unsigned hwtimer =
+//    atmega328p_timers::PinHwTimerMap<Pin::PIN>::value;
+//
+//  // Pins are associated with timers. The range claim will conflict with
+//  // any other use of the timer not in a range claim.
+//  using Claims = ardo::ResourceClaim<
+//    ardo::range_claim<ardo::HardwareTimer<hwtimer>, Pin::PIN>>;
+//
+//  using value_type = typename Parameters::value_type;
+//
+//  // Arduino atmega328 only supports 8 bin resoltuion, regardless of what
+//  // Parameters says.
+//  constexpr static std::uint8_t timer_bits = 8;
+//
+//  static void setPwm(value_type value) {
+//    ::analogWrite(Pin::PIN, value);
+//  }
+//};
 
 }  // namespace ardo_system
 
