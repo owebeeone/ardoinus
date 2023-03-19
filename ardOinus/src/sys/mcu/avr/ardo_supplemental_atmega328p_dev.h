@@ -2262,6 +2262,9 @@ struct TimerConfiguration<
     TimerMode::pwm,
     w_timer_pwm_mode,
     w_bits_resolution>> {
+
+  using TimerDef = w_TimerDef;
+
   using Config = TimerPwmBuiltinTopConfigutation<
     w_TimerDef, w_setup_frequency, w_base_frequency, w_timer_pwm_mode, w_bits_resolution>;
   using Registers = typename Config::Registers;
@@ -2493,6 +2496,8 @@ struct Timer0 : Timer<Timer0Def> {
   using PwmFrequencyAccurate = FrequencyAccurate<
     20000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::built_in>;
 
+  using BuiltInTopConf = BuiltInTop<
+    500, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
 };
 
 struct Timer1 : Timer<Timer1Def> {

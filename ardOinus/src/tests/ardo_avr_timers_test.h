@@ -8,9 +8,11 @@
 
 #include "setl_test_framework.h"
 
+#define AS_TEST 1
+
+#if AS_TEST
 namespace avr_timers_tests {
-
-
+#endif
 
 using PwmTimerConfigX = ardo::timers::TimerConfig<
   ardo::timers::VariableFrequency<10000>,  // 10 kHz.
@@ -53,8 +55,58 @@ public:
   using AvrTimer = avrmcu::Timer1;
   using AvrTimer8 = avrmcu::Timer2;
 
+  template <typename TimerConf>
+  void printTimerRegs(const char* timerName) {
+
+    using TimerDef = typename TimerConf::TimerDef;
+    using WGM = typename TimerDef::BitsWGM_16;
+    using CS = typename TimerDef::BitsCS;
+    using Registers = typename TimerDef::Registers;
+    using ComA = typename TimerDef::OutputCompareA::COM;
+    using ComB = typename TimerDef::OutputCompareB::COM;
+    using OcrA = typename TimerDef::OutputCompareA::OCR;
+    using OcrB = typename TimerDef::OutputCompareB::OCR;
+
+    WGM wgm;
+    CS cs;
+    ComA comA;
+    ComB comB;
+    OcrA ocrA;
+    OcrB ocrB;
+
+    using OcrEnum = ardo::sys::avr::mcu::OcrEnum;
+
+    //Registers::Read(wgm, cs, comA, comB, ocrA, ocrB);
+    Registers::Read(wgm, cs, comA, comB);
+    Registers::Read(ocrA, ocrB);
+
+    // Registers::Read(wgm, cs);
+    // Registers::Read(comA, comB);
+
+
+    SerialA::println(timerName, " vvvvvvvvvvvvvvvvvvvvvvvv ");
+    SerialA::println("wgm: ", (int)wgm.value, ardo::ModType<BIN>{},
+      " cs: ", (int)cs.value, ardo::ModType<BIN>{},
+      " comA: ", (int)comA.value, ardo::ModType<BIN>{},
+      " comA: ", (int)comB.value, ardo::ModType<BIN>{},
+      " ocrA: ", (int)ocrA.value,
+      " ocrB: ", (int)ocrB.value);
+    SerialA::println("Frequency: ", TimerConf::template getFrequency<float>());
+    SerialA::println("top count: ", TimerConf::get_top_count());
+
+    SerialA::println(timerName, " ^^^^^^^^^^^^^^^^^^^^^^ ");
+  }
+
   inline void instanceSetup() {
-    
+    printTimerRegs<avrmcu::Timer0::BuiltInTop<
+      500, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::fast, 8>>("Timer0");
+
+    printTimerRegs<avrmcu::Timer1::BuiltInTop<
+      500, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::fast, 8>>("Timer1");
+
+    printTimerRegs<avrmcu::Timer2::BuiltInTop<
+      500, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::fast, 8>>("Timer2");
+
     //analogWrite(5, 128);
     //analogWrite(6, 128);
 
@@ -122,10 +174,12 @@ public:
 
   inline void instanceLoop() {
 
-    /*if (timeSequence.poll()) {
+#if !AS_TEST
+    if (timeSequence.poll()) {
       switch (timeSequence.state() & 1) {
         
-        case 0: {*/
+        case 0: {
+#endif
             SerialA::print("Start ");
             printRegs();
             frequency *= 1.5;
@@ -150,11 +204,13 @@ public:
             
             SerialA::print("Finished ");
             printRegs();
-      //      break;
-      //  }
-      //}
-      
-    //}
+
+#if !AS_TEST
+            break;
+        }
+      }
+    }
+#endif
   }
   
   float frequency = 81.0;
@@ -179,7 +235,7 @@ void loop() {
   mainApp::runLoop();
 }
 
-
+#if AS_TEST
 class TestAvr : setl_test::SetlTest {
 
   bool run() override {
@@ -197,3 +253,4 @@ class TestAvr : setl_test::SetlTest {
 } TestAvrInstance;
 
 }
+#endif
