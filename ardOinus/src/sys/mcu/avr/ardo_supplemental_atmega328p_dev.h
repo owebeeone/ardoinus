@@ -1885,7 +1885,7 @@ struct TimerOutputPin {
   }
 
   template <typename T>
-  static void pwmWrite(float value, T top_count) {  // 0.0 to 1.0
+  static void pwmWritef(float value, T top_count) {  // 0.0 to 1.0
     OCR ocr_bits{ value * top_count };
     if (value > 0.0f && value < 1.0f) {
       setupTimerOutputMode();
@@ -1917,6 +1917,11 @@ struct TimerOutputPin {
    */
   template <typename T>
   static void pwmAdjust(T prev_top_count, T new_top_count) {
+    if (prev_top_count == new_top_count) {
+      // No change.
+      return;
+    }
+
     typename OutputCompare::COM8 com_value;
     TimerDef::Registers::Read(com_value);
     if (com_value == EnumCOMn::disconnect) {
@@ -1929,7 +1934,7 @@ struct TimerOutputPin {
 
     float scale = new_top_count * 1.0f / prev_top_count;
     auto new_ocr_value = ocr_bits.value * scale;
-    TimerDef::Registers::Write(OCR{ new_ocr_value });
+    pwmWrite(new_ocr_value, new_top_count);
   }
 
   /**
@@ -2344,12 +2349,23 @@ struct TimerPwmPinConfiguration {
       TimerOutputPinSettingsSelector<w_ocrEnum>::template Predicate, PinSettings>>;
 
  private:
+  // Function for setting up a pin.
   template <typename w_PinSetting>
   struct SetupPin {
     using ThisPin = OutputPin<w_PinSetting>;
 
     static void run(TopCountType set_count, TopCountType top_count) {
       ThisPin::setup(set_count, top_count);
+    }
+  };
+
+  // Function for adjusting for a new timer top.
+  template <typename w_PinSetting>
+  struct AdjustPin {
+    using ThisPin = OutputPin<w_PinSetting>;
+
+    static void run(TopCountType prev_top_count, TopCountType new_top_count) {
+      ThisPin::pwmAdjust(prev_top_count, new_top_count);
     }
   };
 
@@ -2370,6 +2386,12 @@ struct TimerPwmPinConfiguration {
     */
   template <typename T>
   static std::uint32_t setFrequency(T frequency) {
+    if (sizeof...(w_PinSettings) > 0) {
+      auto prev_top_count = Config::get_top_count();
+      auto new_top_count = Config::setFrequency(frequency);
+      setl::tuple_for_each<AdjustPin, PinSettings>::runall(prev_top_count, new_top_count);
+      return new_top_count;
+    }
     return Config::setFrequency(frequency);
   }
 
