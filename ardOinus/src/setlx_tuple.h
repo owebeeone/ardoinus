@@ -54,6 +54,19 @@ static_assert(std::is_same<std::tuple_element<0, std::tuple<int, bool, char>>::t
 static_assert(std::is_same<std::tuple_element<1, std::tuple<int, bool, char>>::type, bool>::value, "std::tuple_element failed");
 static_assert(std::is_same<std::tuple_element<2, std::tuple<int, bool, char>>::type, char>::value, "std::tuple_element failed");
 
+// tuple_element_t.
+template <size_t I, typename T>
+using tuple_element_t = typename tuple_element<I, T>::type;
+
+static_assert(
+  is_same_v<int, tuple_element_t<0, std::tuple<int, char, short>>>,
+  "tuple_element_t is broken.");
+
+static_assert(
+  is_same_v<char, tuple_element_t<1, std::tuple<int, char, short>>>,
+  "tuple_element_t is broken.");
+
+
 }  // namespace std
 
 #endif  // else HAS_STD_LIB

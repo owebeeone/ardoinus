@@ -41,7 +41,7 @@ namespace avrmcu = ardo::sys::avr::mcu;
 // Use the arduino Serial port.
 using SerialA = ardo::SerialIO<115200>;
 using SerialM = ardo::ModuleBase<ardo::Parameters<SerialA>>;
-using Seq = ardo::Sequence<500, 500>;
+using Seq = ardo::Sequence<2000, 2000>;
 
 template <int timer, std::uint32_t freq>
 class FixedFreqencyExample : 
@@ -55,13 +55,17 @@ public:
 
   inline void instanceSetup() {
     
-    analogWrite(5, 128);
-    analogWrite(6, 128);
+    //analogWrite(5, 128);
+    //analogWrite(6, 128);
 
-    analogWrite(9, 128);
-    analogWrite(10, 128);
+    //analogWrite(9, 128);
+    //analogWrite(10, 128);
     // AvrTimer::PwmFrequencyAccurate::setupTimer();
-    auto top_count = AvrTimer::PwmFrequencyAccurate::setFrequency(frequency);
+    //auto top_count = AvrTimer::PwmFrequencyAccurate::setFrequency(frequency);
+
+    AvrTimer::FaConfig::setup();
+    auto top_count = AvrTimer::FaConfig::setFrequency(frequency);
+
     SerialA::println("top_count: ", top_count);
     
     analogWrite(3, 128);
@@ -69,11 +73,11 @@ public:
     AvrTimer8::BuiltInTopConf::setupTimer();
   }
 
-  using TestTimer = AvrTimer8;
-  using TestTimerConf = TestTimer::BuiltInTopConf;
+  using TestTimer = AvrTimer;
+  //using TestTimerConf = TestTimer::BuiltInTopConf;
 
   //using TestTimer = AvrTimer8;
-  //using TestTimerConf = TestTimer::PwmFrequencyAccurate;
+  using TestTimerConf = TestTimer::PwmFrequencyAccurate;
   using TestTimerConf2 = TestTimer::PwmFrequencyAccurate;
 
   void printRegs() {
@@ -81,15 +85,27 @@ public:
     using WGM = TimerDef::BitsWGM_16;
     using CS = TimerDef::BitsCS;
     using Registers = TimerDef::Registers;
+    using ComA = TimerDef::OutputCompareA::COM8;
+    using ComB = TimerDef::OutputCompareB::COM8;
 
     WGM wgm;
     CS cs;
+    ComA comA;
+    ComB comB;
+    
     
     Registers::Read(wgm, cs);
+    Registers::Read(comA, comB);
 
     SerialA::println("wgm: ", (int) wgm.value, ardo::ModType<BIN>{}, 
-                     " cs: ", (int) cs.value, ardo::ModType<BIN>{});
+                     " cs: ", (int) cs.value, ardo::ModType<BIN>{},
+                     " comA: ", (int)comA.value, ardo::ModType<BIN>{},
+                     " comA: ", (int)comB.value, ardo::ModType<BIN>{});
+    auto modeA = AvrTimer::FaConfig::PwmPinByArgN<0>::COM_MODE;
+    auto modeB = AvrTimer::FaConfig::PwmPinByArgN<1>::COM_MODE;
 
+    SerialA::println(" modeA: ", (int)modeA, ardo::ModType<BIN>{},
+                     " modeB: ", (int)modeB, ardo::ModType<BIN>{});
   }
 
   inline void instanceLoop() {
@@ -100,15 +116,21 @@ public:
         case 0: {*/
             SerialA::print("Start ");
             printRegs();
-            frequency *= 2;;
+            frequency *= 1.5;
             //SerialA::println("now: ", ardo::CoreIF::nowMillis().get());
             auto top_count = TestTimerConf::setFrequency(frequency);
-            if (false && top_count < 12) {
-              frequency = 0.01;
+            if (top_count < 12) {
+              frequency = 0.5;
               top_count = TestTimerConf::setFrequency(frequency);
+              AvrTimer::FaConfig::PwmPinByArgN<0>::pwmWrite(top_count / 2, top_count);
+              AvrTimer::FaConfig::PwmPinByArgN<1>::pwmWrite(top_count / 2, top_count);
             }
             auto actual_freq = TestTimerConf::getFrequency<float>();
             auto actual_top_count = TestTimer::getTopCount();
+
+            AvrTimer::FaConfig::PwmPinByArgN<0>::pwmWrite(top_count / 2, top_count);
+            AvrTimer::FaConfig::PwmPinByArgN<1>::pwmWrite(top_count / 2, top_count);
+
             SerialA::println("requested freq:", frequency,
                              " top_count: ", top_count, 
                              " actual_freq: ", actual_freq,

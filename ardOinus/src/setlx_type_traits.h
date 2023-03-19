@@ -205,15 +205,27 @@ static_assert(!tuple_contained_in_v<float, nfp_tuple<int, char, short>>,
 
 
 template <typename T>
-inline constexpr bool is_floating_point_v = 
+inline constexpr bool is_integral_v =
+    nfp::tuple_contained_in_v<
+      remove_cvref_t<T>, nfp::nfp_tuple<
+        bool, char, unsigned char, signed char, int, unsigned, long, unsigned long,
+        long long, unsigned long long>>;
+
+template <typename T>
+struct is_integral : integral_constant<bool, is_integral_v<T>> {};
+
+template <typename T>
+inline constexpr bool is_floating_point_v =
     nfp::tuple_contained_in_v<
       remove_cvref_t<T>, nfp::nfp_tuple<float, double, long double>>;
 
 template <typename T>
 struct is_floating_point : integral_constant<bool, is_floating_point_v<T>> {};
 
-} // namespace
 
-#endif
 
-#endif
+} // namespace std
+
+#endif  // HAS_STD_LIB
+
+#endif  // SETL_TYPE_TRAITS__H

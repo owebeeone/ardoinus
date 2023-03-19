@@ -474,6 +474,119 @@ static_assert(
         std::tuple<d, e>>, "tuple_select_by_base_t failed");
 } // namespace nfp_testonly2
 
+/**
+ * Calls a function on all elements of a tuple.
+ */
+template <template <typename T> class w_function, typename w_tuple>
+struct tuple_for_each;
+
+template <template <typename T> class w_function>
+struct tuple_for_each<w_function, std::tuple<>> {
+  template <typename...P>
+  static void runall(P...params) {
+      // nothing to do
+  }
+};
+
+template <template <typename T> class w_function, typename w_type, typename...w_types>
+struct tuple_for_each<w_function, std::tuple<w_type, w_types...>> {
+  template <typename...P>
+  static void runall(P...params) {
+    w_function<w_type>::run(params...);
+    tuple_for_each<w_function, std::tuple<w_types...>>::runall(params...);
+  }
+};
+
+namespace nfp {
+
+template <bool found, template <typename T> class w_predicate, typename w_tuple>
+struct tuple_find_helper;
+
+template <template <typename T> class w_predicate, typename w_type0>
+struct tuple_find_helper<false, 
+                         w_predicate, 
+                         std::tuple<w_type0>> {
+    using type = void;
+    static constexpr bool found = false;
+};
+
+template <template <typename T> class w_predicate, 
+          typename w_type0,
+          typename w_type1,
+          typename...w_types>
+struct tuple_find_helper<
+    false, w_predicate, std::tuple<w_type0, w_type1, w_types...>>
+ :  tuple_find_helper<
+        w_predicate<w_type1>::value,
+        w_predicate,
+        std::tuple<w_type1, w_types...>>
+{};
+
+
+template <template <typename T> class w_predicate, 
+          typename w_type0,
+          typename...w_types>
+struct tuple_find_helper<true, w_predicate, std::tuple<w_type0, w_types...>>
+{
+    using type = w_type0;
+    static constexpr bool found = true;
+};
+
+}  // namespace nfp
+
+// Finds a type based on a predicate.
+template <template <typename T> class w_predicate, typename w_tuple>
+struct tuple_find;
+
+template <template <typename T> class w_predicate>
+struct tuple_find<w_predicate, std::tuple<>> {
+    using type = void;
+    static constexpr bool found = false;
+};
+
+template <template <typename T> class w_predicate, 
+          typename w_type, 
+          typename...w_types>
+struct tuple_find<w_predicate, std::tuple<w_type, w_types...>>
+ : nfp::tuple_find_helper<
+        w_predicate<w_type>::value,
+        w_predicate,
+        typename std::tuple<w_type, w_types...>>
+{};
+
+template <template <typename T> class w_predicate, typename w_tuple>
+using tuple_find_t = typename tuple_find<w_predicate, w_tuple>::type;
+
+static_assert(
+    std::is_same_v<
+        tuple_find_t<std::is_integral, std::tuple<double, int>>,
+        int>, "tuple_find_t failed");
+
+static_assert(
+  std::is_same_v<
+  tuple_find_t<std::is_integral, std::tuple<double, float>>,
+  void>, "tuple_find_t failed");
+
+static_assert(
+  std::is_same_v<
+  tuple_find_t<std::is_integral, std::tuple<char, double, float>>,
+  char>, "tuple_find_t failed");
+
+static_assert(
+  std::is_same_v<
+  tuple_find_t<std::is_integral, std::tuple<char, double>>,
+  char>, "tuple_find_t failed");
+
+static_assert(
+  std::is_same_v<
+  tuple_find_t<std::is_integral, std::tuple<char>>,
+  char>, "tuple_find_t failed");
+
+static_assert(
+  std::is_same_v<
+  tuple_find_t<std::is_integral, std::tuple<>>,
+  void>, "tuple_find_t failed");
+
 } // namespace setl
 
 #endif  // SETLX_TUPLE_HELPERS_H

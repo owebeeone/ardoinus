@@ -1825,6 +1825,14 @@ using Timer2Def = TimerDefinition<
   ppPD3   // OC2B
 >;
 
+
+
+enum class OcrEnum : std::uint8_t {
+  OcrA,
+  OcrB
+};
+
+
 /**
  * Grabs a type from a single item tuple.
  */
@@ -1835,6 +1843,104 @@ struct PickSingleItem;
 template <typename T>
 struct PickSingleItem<std::tuple<T>> {
   using type = T;
+};
+
+
+template <typename w_TimerOutputPinSettings, typename w_TimerConfig>
+struct TimerOutputPin {
+  using TimerOutputPinSettings = w_TimerOutputPinSettings;
+  using TimerConfig = w_TimerConfig;
+  using TimerDef = typename TimerConfig::TimerDef;
+  using OutputCompare = std::conditional_t<
+    TimerOutputPinSettings::ocrEnum == OcrEnum::OcrA,
+    typename TimerDef::OutputCompareA,
+    typename TimerDef::OutputCompareB>;
+
+  using COMn = EnumCOMn;
+  using OCR = typename OutputCompare::OCR;
+
+  using GpioPin = std::conditional_t<
+    TimerOutputPinSettings::ocrEnum == OcrEnum::OcrA,
+    typename TimerDef::GpioA,
+    typename TimerDef::GpioB>;
+
+  constexpr static auto COM_MODE = TimerOutputPinSettings::invert_output
+      ? COMn::clear
+      : COMn::set;
+
+  static void setupGpio() {
+    GpioPin::configure_output();
+  }
+
+  static void setupTimerOutputMode() {
+    TimerDef::Registers::ReadModifyWrite(typename OutputCompare::COM8{ COM_MODE });
+  }
+
+  static void setupGpioOutputMode() {
+    TimerDef::Registers::ReadModifyWrite(typename OutputCompare::COM8{ EnumCOMn::disconnect });
+  }
+
+  static void pwmWriteAbsoluteValue(typename OCR::type value) {
+    TimerDef::Registers::ReadModifyWrite(OCR{ value });
+  }
+
+  template <typename T>
+  static void pwmWrite(float value, T top_count) {  // 0.0 to 1.0
+    OCR ocr_bits{ value * top_count };
+    if (value > 0.0f && value < 1.0f) {
+      setupTimerOutputMode();
+      TimerDef::Registers::ReadModifyWrite(ocr_bits);
+    } else {
+      setupGpioOutputMode();
+      GpioPin::set((value > 0.0f) == TimerOutputPinSettings::invert_output);
+    }
+  }
+
+  /**
+   * Write a PWM value to the timer compare register.
+   * Forces the output to true or false if the value is outside the range.
+   */
+  template <typename T, typename U>
+  static void pwmWrite(T value, U top_count) {
+    if (value > 0 && value < top_count) {
+      setupTimerOutputMode();
+      TimerDef::Registers::ReadModifyWrite(OCR{static_cast<typename OCR::type>(value)});
+    } else {
+      setupGpioOutputMode();
+      GpioPin::set((value > 0) == TimerOutputPinSettings::invert_output);
+    }
+  }
+
+  /**
+   * Adjust the PWM value to the timer compare register for a top count
+   * change to maintain a similar duty cycle.
+   */
+  template <typename T>
+  static void pwmAdjust(T prev_top_count, T new_top_count) {
+    typename OutputCompare::COM8 com_value;
+    TimerDef::Registers::Read(com_value);
+    if (com_value == EnumCOMn::disconnect) {
+      // Not in PWM mode, so nothing to do.
+      return;
+    }
+
+    OCR ocr_bits{};
+    TimerDef::Registers::Read(ocr_bits);
+
+    float scale = new_top_count * 1.0f / prev_top_count;
+    auto new_ocr_value = ocr_bits.value * scale;
+    TimerDef::Registers::Write(OCR{ new_ocr_value });
+  }
+
+  /**
+   * Initial setup of the timer output pin.
+   */
+  template <typename T>
+  static void setup(T initial_value, T top_count) {
+    setupGpio();
+    pwmWrite(initial_value, top_count);
+  }
+
 };
 
 /**
@@ -1935,7 +2041,6 @@ struct TimerPwmConfigutation {
     return getTimerFrequency<T>(
       l_top_count, cs_value_bits.value, p_base_frequency, is_phase_correct_mode);
   }
-
 };
 
 /**
@@ -1961,6 +2066,7 @@ struct TimerPwmBuiltinTopConfigutation {
   using BitsCS = typename TimerDef::BitsCS;
   using BitsTCNT = typename TimerDef::BitsTCNT;
   using EnumCS = typename BitsCS::type;
+  using TopCountType = typename TimerDef::OutputCompareA::OCR::type;
 
   static constexpr std::uint32_t setup_frequency = w_max_frequency;
   static constexpr std::uint32_t base_frequency = w_base_frequency;
@@ -2028,6 +2134,7 @@ struct TimerPwmBuiltinTopConfigutation {
     return getTimerFrequency<T>(
       l_top_count, cs_value_bits.value, p_base_frequency, is_phase_correct_mode);
   }
+
 };
 
 template <
@@ -2069,6 +2176,7 @@ struct TimerConfiguration<
 
   using TimerDef = w_TimerDef;
   using TopCountBits = typename TimerDef::template TimerDefTopRegister<w_timer_top>;
+  using TopCountType = typename TopCountBits::type;
 
   using Config = TimerPwmConfigutation<
     w_TimerDef, w_setup_frequency, w_base_frequency, w_timer_pwm_mode, w_timer_top>;
@@ -2092,6 +2200,15 @@ struct TimerConfiguration<
     Registers::ReadModifyWrite(TopCountBits{top_count});
     return top_count;
   }
+
+  /**
+   * Get the current top count.
+   */
+  static typename TopCountBits::type get_top_count() {
+    TopCountBits top_count_bits;
+    Registers::Read(top_count_bits);
+    return top_count_bits.value;
+  }
   
   /**
    * Get the current frequency of the timer.
@@ -2100,6 +2217,10 @@ struct TimerConfiguration<
   static T getFrequency() {
     return Config::template getFrequency<T>();
   }
+
+  template <typename w_TimerOutputPinSettings>
+  using OutputPin = TimerOutputPin<w_TimerOutputPinSettings, TimerConfiguration>;
+
 };
 
 /**
@@ -2139,6 +2260,7 @@ struct TimerConfiguration<
   using Config = TimerPwmBuiltinTopConfigutation<
     w_TimerDef, w_setup_frequency, w_base_frequency, w_timer_pwm_mode, w_bits_resolution>;
   using Registers = typename Config::Registers;
+  using TopCountType = typename Config::TopCountType;
 
   /**
    * Setup the timer for these settings.
@@ -2147,15 +2269,6 @@ struct TimerConfiguration<
     Config::TimerSetupApplier::template apply<Registers>();
   }
 
-  template <typename w_GpioPin>
-  static void setupGpio() {
-
-  }
-
-
-  void pwmWrite(std::uint16_t) {
-
-  }
 
   template <typename T>
   static std::uint32_t setFrequency(T frequency) {
@@ -2172,11 +2285,117 @@ struct TimerConfiguration<
   static T getFrequency() {
     return Config::template getFrequency<T>();
   }
+
+  /**
+   * Get the current top count.
+   */
+  static TopCountType get_top_count() {
+    return Config::top_count;
+  }
+
+  /**
+   * A PWM timer pin configuration.
+   */
+  template <typename w_TimerOutputPinSettings>
+  using OutputPin = TimerOutputPin<w_TimerOutputPinSettings, TimerConfiguration>;
+
 };
 
-enum class OcrEnum : std::uint8_t {
-  OcrA,
-  OcrB
+
+/**
+ * Timer settings for output GPIO pins.
+ */
+template <
+  OcrEnum w_ocrEnum,
+  bool w_invert_output>
+struct TimerOutputPinSettings {
+  static constexpr OcrEnum ocrEnum = w_ocrEnum;
+  static constexpr bool invert_output = w_invert_output;
+};
+
+template <OcrEnum w_ocrEnum>
+struct TimerOutputPinSettingsSelector {
+  template <typename Settings>
+  struct Predicate {
+    static constexpr bool value = w_ocrEnum == Settings::ocrEnum;
+  };
+};
+
+
+/**
+ * A PWM timer configuration containing pin settings.
+ * This contains a complete configuration for a timer including the output
+ * PWM pins.
+ */
+template <typename w_Config, typename...w_PinSettings>
+struct TimerPwmPinConfiguration {
+  using Config = w_Config;
+
+  using TopCountType = typename Config::TopCountType;
+  using PinSettings = std::tuple<w_PinSettings...>;
+  template <typename w_PinSetting>
+  using OutputPin = typename Config::template OutputPin<w_PinSetting>;
+
+  template <int w_pin>
+  using PwmPinByArgN = OutputPin<std::tuple_element_t<w_pin, PinSettings>>;
+
+  template <OcrEnum w_ocrEnum>
+  using PwmPinByOcrReg = OutputPin<setl::tuple_find_t<
+      TimerOutputPinSettingsSelector<w_ocrEnum>::template Predicate, PinSettings>>;
+
+ private:
+  template <typename w_PinSetting>
+  struct SetupPin {
+    using ThisPin = OutputPin<w_PinSetting>;
+
+    static void run(TopCountType set_count, TopCountType top_count) {
+      ThisPin::setup(set_count, top_count);
+    }
+  };
+
+ public:
+  /**
+    * Setup the timer for these settings.
+    */
+  static void setup() {
+    Config::setupTimer();
+
+    // Configure PWM pins.
+    auto top_count = Config::get_top_count();
+    setl::tuple_for_each<SetupPin, PinSettings>::runall(top_count / 2, top_count);
+  }
+
+  /**
+    * Set the frequency of the timer.
+    */
+  template <typename T>
+  static std::uint32_t setFrequency(T frequency) {
+    return Config::setFrequency(frequency);
+  }
+
+  /**
+    * Get the current frequency of the timer.
+    */
+  template <typename T>
+  static T getFrequency() {
+    return Config::template getFrequency<T>();
+  }
+
+  /**
+    * Get the current top count.
+    */
+  static typename Config::TopCountType get_top_count() {
+    return Config::get_top_count();
+  }
+
+  /**
+    * Write a PWM value to the given pin.
+    */
+  template <typename w_PinSetting>
+  static void pwmWrite(w_PinSetting, std::uint16_t value) {
+    Config::pwmWrite(value);
+  }
+
 };
 
 
@@ -2226,6 +2445,7 @@ struct Timer {
     w_base_frequency,
     TimerBuiltInSettings<w_timer_mode, w_timer_pwm_mode, w_bits_resolution>>;
 
+
   static std::uint32_t getTopCount() {
     typename TimerDef::BitsCS cs_value_bits;
     typename TimerDef::BitsWGM_16 wgm_value_bits;
@@ -2237,7 +2457,14 @@ struct Timer {
             wgm_value_bits.value).get()).get();
     return top_count;
   }
-
+  
+  /**
+   * A PWM timer configuration containing pin settings.
+   * This contains a complete configuration for a timer including the output
+   * PWM pins.
+   */
+  template <typename w_Config, typename...w_PinSettings>
+  using PwmPinConfiguration = TimerPwmPinConfiguration<w_Config, w_PinSettings...>;
 };
 
 struct Timer0 : Timer<Timer0Def> {
@@ -2251,14 +2478,50 @@ struct Timer1 : Timer<Timer1Def> {
   using PwmFrequencyAccurate = FrequencyAccurate<
     11000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::icr>;
 
+  using FaConfig = PwmPinConfiguration<
+    PwmFrequencyAccurate,
+    TimerOutputPinSettings<OcrEnum::OcrA, false>,
+    TimerOutputPinSettings<OcrEnum::OcrB, true>>;
+
+  using FacPwmArg0 = FaConfig::PwmPinByArgN<0>;
+  using FacPwmArg1 = FaConfig::PwmPinByArgN<1>;
+
+  using FacPwmPinA = FaConfig::PwmPinByOcrReg<OcrEnum::OcrA>;
+  using FacPwmPinB = FaConfig::PwmPinByOcrReg<OcrEnum::OcrB>;
+
+  using FaPwmPinA = PwmFrequencyAccurate::OutputPin<
+    TimerOutputPinSettings<OcrEnum::OcrA, false>>;
+
+  using FaPwmPinB = PwmFrequencyAccurate::OutputPin<
+    TimerOutputPinSettings<OcrEnum::OcrB, false>>;
+
   using BuiltInTopConf = BuiltInTop<
     50000, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
+
+
+  using BiPwmPinA = BuiltInTopConf::OutputPin<
+    TimerOutputPinSettings<OcrEnum::OcrA, false>>;
+
+  using BiPwmPinB = BuiltInTopConf::OutputPin<
+    TimerOutputPinSettings<OcrEnum::OcrB, false>>;
+
 
 };
 
 struct Timer2 : Timer<Timer2Def> {
   using PwmFrequencyAccurate = FrequencyAccurate<
     20000, 16000000, TimerMode::pwm, TimerPwmMode::fast, TimerTop::ocra>;
+
+  using FaConfig = PwmPinConfiguration<
+    PwmFrequencyAccurate,
+    TimerOutputPinSettings<OcrEnum::OcrA, false>,
+    TimerOutputPinSettings<OcrEnum::OcrB, true>>;
+
+  using FacPwmArg0 = FaConfig::PwmPinByArgN<0>;
+  using FacPwmArg1 = FaConfig::PwmPinByArgN<1>;
+
+  using FacPwmPinA = FaConfig::PwmPinByOcrReg<OcrEnum::OcrA>;
+  using FacPwmPinB = FaConfig::PwmPinByOcrReg<OcrEnum::OcrB>;
 
   using BuiltInTopConf = BuiltInTop<
     500, 16000000, TimerMode::pwm, TimerPwmMode::fast, 8>;
