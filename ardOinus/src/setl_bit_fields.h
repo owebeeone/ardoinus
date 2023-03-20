@@ -9,6 +9,7 @@
 #include "setl_tuple_helpers.h"
 #include "setl_system.h"
 #include "setl_integers.h"
+#include "type_for_size.h"
 #include "setlx_cstddef.h"
 #include "setlx_cstdint.h"
 #include "setlx_tuple.h"
@@ -363,7 +364,9 @@ using GetTypeOf = typename GetTypeOfHelper<T>::type;
 template <BitOps w_ops, typename T, unsigned...bits>
 struct Bits {
   static constexpr BitOps ops{ w_ops };
+  static constexpr unsigned max_bits{Max<bits...>::value};
   using type = T;
+  using shift_type = UnsignedTypeForMaxBits<max_bits>;
   using Sequence = UintList<bits...>;
   template <typename UT>
   using ShiftMaskInfo = GroupMaskShifts<UT, bits...>;
@@ -482,6 +485,22 @@ struct TypesOfBits<T, Ts...> {
   using type = tuple_concat_t<
       std::tuple<typename T::type>, 
       typename TypesOfBits<Ts...>::type>;
+};
+
+// Create list of types from tuple of shift bits types.
+template <typename...Bs>
+struct TypesOfShiftBits;
+
+template <>
+struct TypesOfShiftBits<> {
+  using type = std::tuple<>;
+};
+
+template <typename T, typename...Ts>
+struct TypesOfShiftBits<T, Ts...> {
+  using type = tuple_concat_t<
+    std::tuple<typename T::shift_type>,
+    typename TypesOfShiftBits<Ts...>::type>;
 };
 
 template <typename w_UnsignedType, typename w_BitsType>
@@ -733,8 +752,13 @@ struct Assigner<w_Proxy, w_Proxies...> : Assigner<w_Proxies...> {
   const Assigner& AssignSparse(const BitValue<w_FormatType>& value) const {
     using FormatTypeType = typename w_FormatType::type;
     using TypesOfBitsType = typename TypesOfBits<w_Proxy, w_Proxies...>::type;
+    using TypesOfShiftBitsType = typename TypesOfShiftBits<w_Proxy, w_Proxies...>::type;
+
+    // The type used to shift bits around needs to be at least the size of either the largest
+    // destination type or the largest shifted bit, hence the selection of an unsigned type
+    // at least as large as all thise types including the type of the format value.
     using unsigned_type = typename UnsignedType<
-      tuple_concat_t<std::tuple<FormatTypeType>, TypesOfBitsType>>::type;
+      tuple_concat_t<std::tuple<FormatTypeType>, TypesOfBitsType, TypesOfShiftBitsType>>::type;
     AssignSparse<w_FormatType, unsigned_type>(static_cast<unsigned_type>(value.value));
     return *this;
   }

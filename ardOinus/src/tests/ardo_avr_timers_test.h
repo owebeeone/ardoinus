@@ -58,6 +58,10 @@ public:
   template <typename TimerConf>
   void printTimerRegs(const char* timerName) {
 
+#if AS_TEST
+    TimerConf::setupTimer();
+#endif
+
     using TimerDef = typename TimerConf::TimerDef;
     using WGM = typename TimerDef::BitsWGM_16;
     using CS = typename TimerDef::BitsCS;
@@ -76,9 +80,9 @@ public:
 
     using OcrEnum = ardo::sys::avr::mcu::OcrEnum;
 
-    //Registers::Read(wgm, cs, comA, comB, ocrA, ocrB);
-    Registers::Read(wgm, cs, comA, comB);
-    Registers::Read(ocrA, ocrB);
+    Registers::Read(wgm, cs, comA, comB, ocrA, ocrB);
+    //Registers::Read(wgm, cs, comA, comB);
+    //Registers::Read(ocrA, ocrB);
 
     // Registers::Read(wgm, cs);
     // Registers::Read(comA, comB);
@@ -98,14 +102,15 @@ public:
   }
 
   inline void instanceSetup() {
+
     printTimerRegs<avrmcu::Timer0::BuiltInTop<
-      500, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::fast, 8>>("Timer0");
+      1000, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::fast, 8>>("Timer0");
 
     printTimerRegs<avrmcu::Timer1::BuiltInTop<
-      500, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::fast, 8>>("Timer1");
+      1000, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::phase_correct, 8>>("Timer1");
 
     printTimerRegs<avrmcu::Timer2::BuiltInTop<
-      500, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::fast, 8>>("Timer2");
+      500, 16000000, avrmcu::TimerMode::pwm, avrmcu::TimerPwmMode::phase_correct, 8>>("Timer2");
 
     //analogWrite(5, 128);
     //analogWrite(6, 128);
@@ -234,6 +239,25 @@ void setup() {
 void loop() {
   mainApp::runLoop();
 }
+
+/*
+Timer0 vvvvvvvvvvvvvvvvvvvvvvvv
+wgm: 11 cs: 11 comA: 0 comA: 0 ocrA: 0 ocrB: 0
+Frequency: 980.39
+top count: 255
+Timer0 ^^^^^^^^^^^^^^^^^^^^^^
+Timer1 vvvvvvvvvvvvvvvvvvvvvvvv
+wgm: 1 cs: 11 comA: 0 comA: 0 ocrA: 0 ocrB: 0
+Frequency: 490.20
+top count: 255
+Timer1 ^^^^^^^^^^^^^^^^^^^^^^
+Timer2 vvvvvvvvvvvvvvvvvvvvvvvv
+wgm: 1 cs: 100 comA: 0 comA: 0 ocrA: 0 ocrB: 0
+Frequency: 490.20
+top count: 255
+Timer2 ^^^^^^^^^^^^^^^^^^^^^^
+top_count: 24691
+*/
 
 #if AS_TEST
 class TestAvr : setl_test::SetlTest {
