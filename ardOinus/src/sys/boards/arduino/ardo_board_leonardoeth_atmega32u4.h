@@ -8,7 +8,7 @@
 #include "setlx_tuple.h"
 
 // Include the MCU specific definitions.
-#include "ardo_supplemental_atmega32u4_dev.h"
+#include "sys/mcu/avr/ardo_supplemental_atmega32u4_dev.h"
 
 namespace ardo {
 namespace sys {

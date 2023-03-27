@@ -956,7 +956,7 @@ ADRO_BOARD_HEADER='''\
 #include "setlx_tuple.h"
 
 // Include the MCU specific definitions.
-#include "ardo_supplemental_{mcu_arch}_dev.h"
+#include "sys/mcu/avr/ardo_supplemental_{mcu_arch}_dev.h"
 
 namespace ardo {{
 namespace sys {{

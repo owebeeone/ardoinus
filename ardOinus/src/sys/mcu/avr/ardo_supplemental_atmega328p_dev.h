@@ -1601,17 +1601,24 @@ struct TimerCapture<void, void, void> {
   static constexpr bool has_edge_selection = false;
 };
 
+enum class OcrEnum : std::uint8_t {
+  OcrA = 0,
+  OcrB = 1
+};
+
 template <typename w_OCR, 
           typename w_OCIE, 
           typename w_OCF, 
           typename w_COM, 
-          typename w_COM8>
+          typename w_COM8,
+          typename w_GpioDef>
 struct OutputCompare {
   using OCR = w_OCR;
   using OCIE = w_OCIE;
   using OCF = w_OCF;
   using COM = w_COM;
   using COM8 = w_COM8;
+  using GpioDef = w_GpioDef;
 };
 
 /**
@@ -1644,7 +1651,7 @@ template <typename w_TimerDef>
 struct TopGetter<w_TimerDef, TimerTop::ocra> {
   using TypeWgmEnum = typename w_TimerDef::TypeWgmEnum;
   using Registers = typename w_TimerDef::Registers;
-  using OCR = typename w_TimerDef::OutputCompareA::OCR;
+  using OCR = typename w_TimerDef::template OcrType<OcrEnum::OcrA>::OCR;
   using OCRAType = typename OCR::type;
 
   static OCRAType get() {
@@ -1691,7 +1698,7 @@ struct TopRegisterFinder<w_TimerDef, TimerTop::icr> {
 
 template <typename w_TimerDef>
 struct TopRegisterFinder<w_TimerDef, TimerTop::ocra> {
-  using OutputCompareA = typename w_TimerDef::OutputCompareA;
+  using OutputCompareA = typename w_TimerDef::template OcrType<OcrEnum::OcrA>;
   using type = typename OutputCompareA::OCR;
 };
 
@@ -1706,12 +1713,9 @@ struct TopRegisterFinder<w_TimerDef, TimerTop::ocra> {
  *  w_BitsFOCA: The FOCnA bit in the TCCRnA register.
  *  w_BitsFOCB: The FOCnB bit in the TCCRnA register.
  *  w_BitsTCNT: The TCNTn register.
- *  w_OutputCompareA: An OutputCompare type containing properties for OCRA functions.
- *  w_OutputCompareB: An OutputCompare type containing properties for OCRB functions.
+ *  w_OutputCompareTuple: A tuple of OutputCompare type containing properties for OCRA functions.
  *  w_TimerCapture: A TimerCapture type containing properties for ICR functions.
  *  w_RegistersTuple: A RegisterSelector wil all the registers used by the timer.
- *  w_GpioA: The GPIO pin used for OCRA.
- *  w_GpioB: The GPIO pin used for OCRB.
  */
 template <
   typename w_BitsWGM_16,
@@ -1719,12 +1723,9 @@ template <
   typename w_BitsFOCA,
   typename w_BitsFOCB,
   typename w_BitsTCNT,
-  typename w_OutputCompareA,
-  typename w_OutputCompareB,
+  typename w_OutputCompareTuple,
   typename w_TimerCapture,
   typename w_RegistersTuple,
-  typename w_GpioA,
-  typename w_GpioB,
   typename w_TimerTopTuple = setl::ValueTuple<TimerTop, TimerTop::built_in, TimerTop::ocra>
 >
 struct TimerDefinition
@@ -1734,12 +1735,9 @@ struct TimerDefinition
   using BitsFOCA = w_BitsFOCA;
   using BitsFOCB = w_BitsFOCB;
   using BitsTCNT = w_BitsTCNT;
-  using OutputCompareA = w_OutputCompareA;
-  using OutputCompareB = w_OutputCompareB;
+  using OutputCompareTuple = w_OutputCompareTuple;
   using TimerCaptureType = w_TimerCapture;
   using Registers = setl::RegisterSelector<w_RegistersTuple>;
-  using GpioA = w_GpioA;
-  using GpioB = w_GpioB;
   using TimerTopTuple = setl::ValueTupleCat<
       w_TimerTopTuple, typename TimerCaptureType::TopCountProvided>;
   using TypeWgmEnum = typename BitsWGM_16::type;
@@ -1749,6 +1747,13 @@ struct TimerDefinition
 
   template <TimerTop w_timer_top>
   using TimerDefTopRegister = typename TopRegisterFinder<TimerDefinition, w_timer_top>::type;
+
+  /**
+   * The OutputCompare type for the given w_ocr value.
+   */
+  template <OcrEnum w_ocr>
+  using OcrType = std::tuple_element_t<static_cast<std::size_t>(w_ocr), OutputCompareTuple>;
+
 
   /** Returns the timer top value for the given timer top enum. */
   static setl::Optional<std::uint32_t> get_timer_top(TimerTop timer_top) {
@@ -1767,8 +1772,9 @@ using Timer0Def = TimerDefinition<
   BitsFOC0A,
   BitsFOC0B,
   BitsTCNT0,
-  OutputCompare<BitsOCR0A, BitsOCIE0A, BitsOCF0A, BitsCOM0A, BitsCOM0A8>,
-  OutputCompare<BitsOCR0B, BitsOCIE0B, BitsOCF0B, BitsCOM0B, BitsCOM0B8>,
+  std::tuple<
+    OutputCompare<BitsOCR0A, BitsOCIE0A, BitsOCF0A, BitsCOM0A, BitsCOM0A8, ppPD6>,
+    OutputCompare<BitsOCR0B, BitsOCIE0B, BitsOCF0B, BitsCOM0B, BitsCOM0B8, ppPD5>>,
   TimerCapture<void, void, void>,
   std::tuple<
     RegisterTCCR0AB,
@@ -1777,9 +1783,7 @@ using Timer0Def = TimerDefinition<
     RegisterOCR0A,
     RegisterOCR0B, 
     RegisterTIMSK0, 
-    RegisterTIFR0>,
-  ppPD6, // OC0A
-  ppPD5  // OC0B
+    RegisterTIFR0>
 >;
 
 using Timer1Def = TimerDefinition<
@@ -1788,8 +1792,9 @@ using Timer1Def = TimerDefinition<
   BitsFOC1A,
   BitsFOC1B,
   BitsTCNT1,
-  OutputCompare<BitsOCR1A, BitsOCIE1A, BitsOCF1A, BitsCOM1A, BitsCOM1A8>,
-  OutputCompare<BitsOCR1B, BitsOCIE1B, BitsOCF1B, BitsCOM1B, BitsCOM1B8>,
+  std::tuple<
+    OutputCompare<BitsOCR1A, BitsOCIE1A, BitsOCF1A, BitsCOM1A, BitsCOM1A8, ppPB1>,
+    OutputCompare<BitsOCR1B, BitsOCIE1B, BitsOCF1B, BitsCOM1B, BitsCOM1B8, ppPB2>>,
   TimerCapture<BitsICR1, BitsICNC1_16, BitsICES1_16>,
   std::tuple<
     RegisterTCCR1A,
@@ -1800,9 +1805,7 @@ using Timer1Def = TimerDefinition<
     RegisterOCR1A,
     RegisterOCR1B,
     RegisterTIMSK1,
-    RegisterTIFR1>,
-  ppPB1,  // OC1A
-  ppPB2   // OC1B
+    RegisterTIFR1>
 >;
 
 using Timer2Def = TimerDefinition<
@@ -1811,8 +1814,9 @@ using Timer2Def = TimerDefinition<
   BitsFOC2A,
   BitsFOC2B,
   BitsTCNT2,
-  OutputCompare<BitsOCR2A, BitsOCIE2A, BitsOCF2A, BitsCOM2A, BitsCOM2A8>,
-  OutputCompare<BitsOCR2B, BitsOCIE2B, BitsOCF2B, BitsCOM2B, BitsCOM2B8>,
+  std::tuple<
+    OutputCompare<BitsOCR2A, BitsOCIE2A, BitsOCF2A, BitsCOM2A, BitsCOM2A8, ppPB3>,
+    OutputCompare<BitsOCR2B, BitsOCIE2B, BitsOCF2B, BitsCOM2B, BitsCOM2B8, ppPD3>>,
   TimerCapture<void, void, void>,
   std::tuple<
     RegisterTCCR2AB, 
@@ -1821,18 +1825,8 @@ using Timer2Def = TimerDefinition<
     RegisterOCR2A, 
     RegisterOCR2B, 
     RegisterTIMSK2, 
-    RegisterTIFR2>,
-  ppPB3,  // OC2A
-  ppPD3   // OC2B
+    RegisterTIFR2>
 >;
-
-
-
-enum class OcrEnum : std::uint8_t {
-  OcrA,
-  OcrB
-};
-
 
 /**
  * Grabs a type from a single item tuple.
@@ -1852,18 +1846,13 @@ struct TimerOutputPin {
   using TimerOutputPinSettings = w_TimerOutputPinSettings;
   using TimerConfig = w_TimerConfig;
   using TimerDef = typename TimerConfig::TimerDef;
-  using OutputCompare = std::conditional_t<
-    TimerOutputPinSettings::ocrEnum == OcrEnum::OcrA,
-    typename TimerDef::OutputCompareA,
-    typename TimerDef::OutputCompareB>;
+  using OutputCompare = typename TimerDef::template OcrType<TimerOutputPinSettings::ocrEnum>;
+    
 
   using COMn = EnumCOMn;
   using OCR = typename OutputCompare::OCR;
 
-  using GpioPin = std::conditional_t<
-    TimerOutputPinSettings::ocrEnum == OcrEnum::OcrA,
-    typename TimerDef::GpioA,
-    typename TimerDef::GpioB>;
+  using GpioPin = typename OutputCompare::GpioDef;
 
   constexpr static auto COM_MODE = TimerOutputPinSettings::invert_output
       ? COMn::clear
@@ -2072,7 +2061,8 @@ struct TimerPwmBuiltinTopConfigutation {
   using BitsCS = typename TimerDef::BitsCS;
   using BitsTCNT = typename TimerDef::BitsTCNT;
   using EnumCS = typename BitsCS::type;
-  using TopCountType = typename TimerDef::OutputCompareA::OCR::type;
+
+  using TopCountType = typename TimerDef::template OcrType<OcrEnum::OcrA>::OCR::type;
 
   static constexpr std::uint32_t setup_frequency = w_max_frequency;
   static constexpr std::uint32_t base_frequency = w_base_frequency;
@@ -2434,10 +2424,7 @@ struct Timer {
    * The OutputCompare type for the given w_ocr value.
    */
   template <OcrEnum w_ocr>
-  using OcrType = std::conditional_t<
-    w_ocr == OcrEnum::OcrA,
-    typename TimerDef::OutputCompareA,
-    typename TimerDef::OutputCompareB>;
+  using OcrType = typename TimerDef::template OcrType<w_ocr>;
 
   /**
    * Settings for accurate static frequency timer.

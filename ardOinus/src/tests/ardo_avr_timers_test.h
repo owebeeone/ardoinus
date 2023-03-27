@@ -71,10 +71,10 @@ public:
     using WGM = typename TimerDef::BitsWGM_16;
     using CS = typename TimerDef::BitsCS;
     using Registers = typename TimerDef::Registers;
-    using ComA = typename TimerDef::OutputCompareA::COM;
-    using ComB = typename TimerDef::OutputCompareB::COM;
-    using OcrA = typename TimerDef::OutputCompareA::OCR;
-    using OcrB = typename TimerDef::OutputCompareB::OCR;
+    using ComA = typename TimerDef::template OcrType<avrmcu::OcrEnum::OcrA>::COM;
+    using ComB = typename TimerDef::template OcrType<avrmcu::OcrEnum::OcrB>::COM;
+    using OcrA = typename TimerDef::template OcrType<avrmcu::OcrEnum::OcrA>::OCR;
+    using OcrB = typename TimerDef::template OcrType<avrmcu::OcrEnum::OcrB>::OCR;
 
     WGM wgm;
     CS cs;
@@ -147,10 +147,10 @@ public:
     using WGM = TimerDef::BitsWGM_16;
     using CS = TimerDef::BitsCS;
     using Registers = TimerDef::Registers;
-    using ComA = TimerDef::OutputCompareA::COM;
-    using ComB = TimerDef::OutputCompareB::COM;
-    using OcrA = TimerDef::OutputCompareA::OCR;
-    using OcrB = TimerDef::OutputCompareB::OCR;
+    using ComA = TimerDef::OcrType<avrmcu::OcrEnum::OcrA>::COM;
+    using ComB = TimerDef::OcrType<avrmcu::OcrEnum::OcrB>::COM;
+    using OcrA = TimerDef::OcrType<avrmcu::OcrEnum::OcrA>::OCR;
+    using OcrB = TimerDef::OcrType<avrmcu::OcrEnum::OcrB>::OCR;
 
     WGM wgm;
     CS cs;
