@@ -100,7 +100,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -130,7 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -166,6 +166,7 @@
     <ClInclude Include="..\..\..\setl_tuple_helpers.h" />
     <ClInclude Include="..\..\..\setl_utils.h" />
     <ClInclude Include="..\..\..\sys\ardo_sys_mock.h" />
+    <ClInclude Include="..\..\..\sys\boards\arduino\arduino_boards.h" />
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb320.h" />
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb320_dev.h" />
     <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb355.h" />

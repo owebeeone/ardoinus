@@ -10,6 +10,7 @@
 #include "setl_tuple_helpers.h"
 #include "setl_int_scaler.h"
 #include "setl_system.h"
+#include "setl_device_map.h"
 #include "setlx_cstdint.h"
 #include "setlx_type_traits.h"
 #include "ardo_supplemental_atmega328p.h"
@@ -2875,73 +2876,73 @@ using McuResources = ResourceFinder<
   ppXTAL
 >;
 
-/**
- * Maps an arduino pin no to a port type.
- */
-template <typename P, std::uint16_t w_pin_no>
-struct ArduinoPortMap {
-  using PinType = P;
-  static constexpr std::uint16_t pin_no = w_pin_no;
-};
+// /**
+//  * Maps an arduino pin no to a port type.
+//  */
+// template <typename P, std::uint16_t w_pin_no>
+// struct setl::PortMapping {
+//   using PinType = P;
+//   static constexpr std::uint16_t pin_no = w_pin_no;
+// };
 
-/**
- * Holds a collection of pin mapings.
- */
-template <typename w_DigitalMap>
-struct ArduinoDeviceMapping {
-  using DigitalMap = w_DigitalMap;  // A tuple of all the ArduinoPortMaps
-};
+// /**
+//  * Holds a collection of pin mapings.
+//  */
+// template <typename w_DigitalMap>
+// struct ArduinoDeviceMapping {
+//   using DigitalMap = w_DigitalMap;  // A tuple of all the setl::PortMappings
+// };
 
 // "digital" pin map for Arduino Nano (with 32 pin package).
-using ArduinoNanoPinmap = ArduinoDeviceMapping<
+using ArduinoNanoPinmap = setl::DeviceMappings<
   std::tuple<
-    ArduinoPortMap<ppPD0, 0>,
-    ArduinoPortMap<ppPD1, 1>,
-    ArduinoPortMap<ppPD2, 2>,
-    ArduinoPortMap<ppPD3, 3>,
-    ArduinoPortMap<ppPD4, 4>,
-    ArduinoPortMap<ppPD5, 5>,
-    ArduinoPortMap<ppPD6, 6>,
-    ArduinoPortMap<ppPD7, 7>,
-    ArduinoPortMap<ppPB0, 8>,
-    ArduinoPortMap<ppPB1, 9>,
-    ArduinoPortMap<ppPB2, 10>,
-    ArduinoPortMap<ppPB3, 11>,
-    ArduinoPortMap<ppPB4, 12>,
-    ArduinoPortMap<ppPB5, 13>,
-    ArduinoPortMap<ppPC0, 14>,
-    ArduinoPortMap<ppPC1, 15>,
-    ArduinoPortMap<ppPC2, 16>,
-    ArduinoPortMap<ppPC3, 17>,
-    ArduinoPortMap<ppPC4, 18>,
-    ArduinoPortMap<ppPC5, 19>,
-    ArduinoPortMap<ppADC6, 20>,
-    ArduinoPortMap<ppADC7, 21>>
+    setl::PortMapping<ppPD0, 0>,
+    setl::PortMapping<ppPD1, 1>,
+    setl::PortMapping<ppPD2, 2>,
+    setl::PortMapping<ppPD3, 3>,
+    setl::PortMapping<ppPD4, 4>,
+    setl::PortMapping<ppPD5, 5>,
+    setl::PortMapping<ppPD6, 6>,
+    setl::PortMapping<ppPD7, 7>,
+    setl::PortMapping<ppPB0, 8>,
+    setl::PortMapping<ppPB1, 9>,
+    setl::PortMapping<ppPB2, 10>,
+    setl::PortMapping<ppPB3, 11>,
+    setl::PortMapping<ppPB4, 12>,
+    setl::PortMapping<ppPB5, 13>,
+    setl::PortMapping<ppPC0, 14>,
+    setl::PortMapping<ppPC1, 15>,
+    setl::PortMapping<ppPC2, 16>,
+    setl::PortMapping<ppPC3, 17>,
+    setl::PortMapping<ppPC4, 18>,
+    setl::PortMapping<ppPC5, 19>,
+    setl::PortMapping<ppADC6, 20>,
+    setl::PortMapping<ppADC7, 21>>
 >;
 
 // "digital" pin map for Arduino Uno (with 28 pin package).
-using ArduinoUnoPinmap = ArduinoDeviceMapping <
+using ArduinoUnoPinmap = setl::DeviceMappings <
   std::tuple <
-    ArduinoPortMap<ppPD0, 0>,
-    ArduinoPortMap<ppPD1, 1>,
-    ArduinoPortMap<ppPD2, 2>,
-    ArduinoPortMap<ppPD3, 3>,
-    ArduinoPortMap<ppPD4, 4>,
-    ArduinoPortMap<ppPD5, 5>,
-    ArduinoPortMap<ppPD6, 6>,
-    ArduinoPortMap<ppPD7, 7>,
-    ArduinoPortMap<ppPB0, 8>,
-    ArduinoPortMap<ppPB1, 9>,
-    ArduinoPortMap<ppPB2, 10>,
-    ArduinoPortMap<ppPB3, 11>,
-    ArduinoPortMap<ppPB4, 12>,
-    ArduinoPortMap<ppPB5, 13>,
-    ArduinoPortMap<ppPC0, 14>,
-    ArduinoPortMap<ppPC1, 15>,
-    ArduinoPortMap<ppPC2, 16>,
-    ArduinoPortMap<ppPC3, 17>,
-    ArduinoPortMap<ppPC4, 18>,
-    ArduinoPortMap<ppPC5, 19>>
+    setl::PortMapping<ppPD0, 0>,
+    setl::PortMapping<ppPD1, 1>,
+    setl::PortMapping<ppPD2, 2>,
+    setl::PortMapping<ppPD3, 3>,
+    setl::PortMapping<ppPD4, 4>,
+    setl::PortMapping<ppPD5, 5>,
+    setl::PortMapping<ppPD6, 6>,
+    setl::PortMapping<ppPD7, 7>,
+    setl::PortMapping<ppPB0, 8>,
+    setl::PortMapping<ppPB1, 9>,
+    setl::PortMapping<ppPB2, 10>,
+    setl::PortMapping<ppPB3, 11>,
+    setl::PortMapping<ppPB4, 12>,
+    setl::PortMapping<ppPB5, 13>,
+    setl::PortMapping<ppPC0, 14>,
+    setl::PortMapping<ppPC1, 15>,
+    setl::PortMapping<ppPC2, 16>,
+    setl::PortMapping<ppPC3, 17>,
+    setl::PortMapping<ppPC4, 18>,
+    setl::PortMapping<ppPC5, 19>>
 >;
 
 }  // arch_atmega328p

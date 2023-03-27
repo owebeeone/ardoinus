@@ -1942,6 +1942,9 @@
     <ClInclude Include="..\..\..\sys\ardo_sys_mock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\sys\boards\arduino\arduino_boards.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\setl_system.cpp">

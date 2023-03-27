@@ -8,6 +8,11 @@
 
 #include "setl_test_framework.h"
 
+#define ARDUINO_AVR_NANO 1
+#define __AVR_ATmega328p 1
+#define F_CPU 16000000L
+#include "arduino_boards.h"
+
 #define AS_TEST 1
 
 #if AS_TEST
