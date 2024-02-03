@@ -1,0 +1,797 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{45AD37AB-ACE6-47B1-8101-5696195456E8}</ProjectGuid>
+    <RootNamespace>ArdOinus</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>../../../../src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\libraries\FastLED;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\ardOinus.h" />
+    <ClInclude Include="..\..\..\ardo_eeprom.h" />
+    <ClInclude Include="..\..\..\ardo_sequencer.h" />
+    <ClInclude Include="..\..\..\ardo_sys_defs.h" />
+    <ClInclude Include="..\..\..\ardo_timers.h" />
+    <ClInclude Include="..\..\..\ardo_time_poller.h" />
+    <ClInclude Include="..\..\..\assert_that.h" />
+    <ClInclude Include="..\..\..\circular_buffer.h" />
+    <ClInclude Include="..\..\..\pwe_serial.h" />
+    <ClInclude Include="..\..\..\pwm_serial_comms.h" />
+    <ClInclude Include="..\..\..\setlx_array.h" />
+    <ClInclude Include="..\..\..\setlx_cassert.h" />
+    <ClInclude Include="..\..\..\setlx_cstddef.h" />
+    <ClInclude Include="..\..\..\setlx_cstdint.h" />
+    <ClInclude Include="..\..\..\setlx_cstdlib.h" />
+    <ClInclude Include="..\..\..\setlx_limits.h" />
+    <ClInclude Include="..\..\..\setlx_tuple.h" />
+    <ClInclude Include="..\..\..\setlx_type_traits.h" />
+    <ClInclude Include="..\..\..\setl_cyclic_int.h" />
+    <ClInclude Include="..\..\..\setl_interactive_scaling.h" />
+    <ClInclude Include="..\..\..\setl_system.h" />
+    <ClInclude Include="..\..\..\setl_templ_utils.h" />
+    <ClInclude Include="..\..\..\setl_test_framework.h" />
+    <ClInclude Include="..\..\..\setl_time.h" />
+    <ClInclude Include="..\..\..\setl_time_unit.h" />
+    <ClInclude Include="..\..\..\setl_tuple_helpers.h" />
+    <ClInclude Include="..\..\..\setl_utils.h" />
+    <ClInclude Include="..\..\..\sys\ardo_sys_mock.h" />
+    <ClInclude Include="..\..\..\sys\boards\arduino\arduino_boards.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb320.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb320_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb355.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at43usb355_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at76c711.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at76c711_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at86rf401.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at86rf401_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90c8534.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90c8534_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90can128.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90can128_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90can32.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90can32_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90can64.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90can64_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm161.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm161_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm216.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm216_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm2b.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm2b_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm316.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm316_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm3b.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm3b_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm81.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90pwm81_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s1200.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s1200_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2313.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2313_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2323.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2323_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2333.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2333_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2343.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s2343_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s4414.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s4414_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s4433.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s4433_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s4434.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s4434_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s8515.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s8515_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s8535.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90s8535_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90scr100.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90scr100_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb1286.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb1286_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb1287.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb1287_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb162.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb162_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb646.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb646_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb647.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb647_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb82.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at90usb82_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at94k.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_at94k_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5272.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5272_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5505.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5505_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5702m322.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5702m322_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5782.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5782_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5790.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5790n.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5790n_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5790_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5791.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5791_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5795.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5795_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5831.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata5831_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6285.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6285_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6286.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6286_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6289.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6289_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6612c.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6612c_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6613c.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6613c_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6614q.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6614q_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6616c.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6616c_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6617c.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata6617c_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata664251.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata664251_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata8210.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata8210_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata8510.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_ata8510_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega103.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega103_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1280.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1280_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1281.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1281_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1284.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1284p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1284p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1284rfr2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1284rfr2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1284_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128rfa1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128rfa1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128rfr2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128rfr2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega128_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1608.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1608_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1609.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega1609_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega161.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega161_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega162.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega162_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega163.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega163_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega164a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega164a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega164p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega164pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega164pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega164p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega165_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168pb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168pb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega168_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega169_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hva.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hva2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hva2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hva_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hvb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hvbrevb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hvbrevb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16hvb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16m1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16m1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16u2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16u2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16u4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16u4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega16_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega2560.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega2560_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega2561.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega2561_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega2564rfr2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega2564rfr2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega256rfr2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega256rfr2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3208.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3208_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3209.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3209_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega323.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega323_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324pb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324pb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega324p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3250_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega325_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega328.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega328p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega328pb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega328pb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega328p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega328_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega3290_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega329_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32c1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32c1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32hvb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32hvbrevb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32hvbrevb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32hvb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32m1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32m1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32u2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32u2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32u4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32u4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32u6.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32u6_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega32_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega406.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega406_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega4808.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega4808_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega4809.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega4809_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48pb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48pb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega48_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega640.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega640_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644rfr2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644rfr2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega644_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega645.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6450.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6450a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6450a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6450p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6450p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6450_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega645a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega645a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega645p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega645p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega645_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega649.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6490.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6490a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6490a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6490p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6490p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega6490_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega649a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega649a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega649p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega649p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega649_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64c1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64c1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64hve.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64hve2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64hve2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64hve_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64m1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64m1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64rfr2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64rfr2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega64_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega808.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega808_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega809.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega809_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8515.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8515_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8535.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8535_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88p.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88pa.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88pa_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88pb.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88pb_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88p_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega88_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8hva.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8hva_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8u2.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8u2_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atmega8_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny10.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny102.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny102_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny104.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny104_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny10_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny11.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny11_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny12.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny12_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny13.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny13a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny13a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny13_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny15.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny15_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1604.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1604_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1606.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1606_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1607.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1607_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1614.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1614_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1616.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1616_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1617.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1617_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1624.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1624_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1626.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1626_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1627.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1627_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1634.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny1634_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny167.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny167_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny20.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny202.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny202_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny204.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny204_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny20_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny212.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny212_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny214.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny214_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny22.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny22_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny2313.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny2313a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny2313a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny2313_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny24.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny24a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny24a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny24_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny25.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny25_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny26.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny261.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny261a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny261a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny261_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny26_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny28.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny28_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny3214.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny3214_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny3216.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny3216_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny3217.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny3217_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny40.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny402.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny402_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny404.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny404_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny406.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny406_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny40_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny412.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny412_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny414.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny414_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny416.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny416_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny417.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny417_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny4313.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny4313_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny43u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny43u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny44.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny441.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny441_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny44a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny44a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny44_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny45.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny45_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny461.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny461a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny461a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny461_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny48.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny48_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny5.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny5_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny804.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny804_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny806.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny806_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny807.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny807_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny814.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny814_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny816.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny816_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny817.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny817_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny828.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny828_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny84.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny841.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny841_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny84a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny84a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny84_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny85.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny85_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny861.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny861a.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny861a_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny861_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny87.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny87_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny88.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny88_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny9.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_attiny9_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a1u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a1u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a3u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a3u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a4u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128a4u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128b1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128b1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128b3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128b3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128c3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128c3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128d3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128d3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128d4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega128d4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16a4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16a4u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16a4u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16a4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16c4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16c4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16d4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16d4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16e5.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega16e5_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192a3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192a3u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192a3u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192a3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192c3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192c3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192d3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega192d3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3b.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3bu.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3bu_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3b_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256a3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256c3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256c3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256d3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega256d3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32a4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32a4u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32a4u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32a4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32c3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32c3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32c4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32c4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32d3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32d3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32d4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32d4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32e5.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega32e5_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega384c3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega384c3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega384d3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega384d3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a1u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a1u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a3u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a3u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a4u.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64a4u_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64b1.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64b1_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64b3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64b3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64c3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64c3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64d3.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64d3_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64d4.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega64d4_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega8e5.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_atxmega8e5_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da28.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da28_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da32.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da32_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da48.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da48_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da64.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_avr128da64_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_m3000.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_supplemental_m3000_dev.h" />
+    <ClInclude Include="..\..\..\sys\mcu\avr\ardo_sys_avr_mcu_defs.h" />
+    <ClInclude Include="..\..\..\tests\ardOinus_test.h" />
+    <ClInclude Include="..\..\..\tests\ardo_avr_timers_test.h" />
+    <ClInclude Include="..\..\..\tests\circular_buffer_test.h" />
+    <ClInclude Include="..\..\..\tests\pwe_serial_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_cyclic_int_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_templ_utils_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_time_test.h" />
+    <ClInclude Include="..\..\..\tests\setl_time_unit_test.h" />
+    <ClInclude Include="..\..\..\tests\type_for_size_test.h" />
+    <ClInclude Include="..\..\..\type_for_size.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\setl_system.cpp" />
+    <ClCompile Include="..\..\..\tests\adro_avr_mock_registers.cxx" />
+    <ClCompile Include="..\..\code\ardOinus_test.cxx" />
+    <ClCompile Include="..\..\code\blink_test.cxx" />
+    <ClCompile Include="..\..\code\emulate_arduino.cxx" />
+    <ClCompile Include="..\..\code\pwe_test_module.cxx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

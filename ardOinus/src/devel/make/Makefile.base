@@ -1,0 +1,16 @@
+
+INCLUDE_DIRS=../..
+
+CODE=$(wildcard ../code/*.cxx)
+
+INCLUDES_FILES=$(wildcard ../../*.h ../../tests/*.h)
+
+.PHONY: test
+test: ardo_test
+	./ardo_test
+
+ardo_test : $(INCLUDES_FILES)
+	$(CXX) -DHAS_STDIOSTREAM=1 -ggdb3 -o ardo_test -std=c++11 -w -I $(INCLUDE_DIRS) $(CODE)
+
+clean:
+	rm ardo_test.exe
