@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from dataclasses import fields
 from dataclasses import replace
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from pathlib import Path
 
 
@@ -877,7 +877,7 @@ SUPPLEMENTAL_HEADER='''// Generated for arch {mcu_arch}.
 // set to {mcu_arch} from macros specific to avr/io.h.
 // Any changes to this file will likely be lost next time this file
 // is regenerated. Many any mcu_arch specific changes to 
-// ardo_supplemental_{mcu_arch}_defs.h.
+// ardo_supplemental_{mcu_arch}_dev.h.
 
 #ifndef ardo_supplemental_{mcu_arch}__h
 #define ardo_supplemental_{mcu_arch}__h
@@ -1127,8 +1127,13 @@ class IntValueType:
     value: str
     orig_value: str
     
+    TYPE = 'I'
+    
     def render(self):
-        return f'constexpr unsigned cc{self.macro_name} = {self.value};\n'
+        return f'constexpr unsigned {self.render_name()} = {self.value};\n'
+    
+    def render_name(self):
+        return f'cc{self.macro_name}'
 
 @dataclass
 class RegisterType:
@@ -1137,10 +1142,15 @@ class RegisterType:
     size: str
     orig_value: str
     
+    TYPE = 'R'
+    
     def render(self):
         return (
-            f'using rr{self.macro_name} = '
+            f'using {self.render_name()} = '
             f'{self.REGTYPE}RegisterDef<std::uint{self.size}_t, {self.value}>;\n')
+        
+    def render_name(self):
+        return f'rr{self.macro_name}'
 
     
 class MemResisterType(RegisterType):
@@ -1167,6 +1177,8 @@ class UcharBvValueType:
     value: str
     orig_value: str
     
+    TYPE = 'UC'
+    
     def render(self):
         return (
             f'using ff{self.macro_name} = setl::BitsRW<'
@@ -1179,6 +1191,7 @@ class DefaultValueType:
     macro_name: str
     orig_value: str
     
+    TYPE = 'D'
     
     def render(self):
         return ''
@@ -1201,6 +1214,315 @@ def get_def_type(name, value, match):
 
 class DeviceSpecCompilerErrorException(Exception):
     pass
+
+@dataclass
+class GpioBit:
+    port: str
+    bit_type: str
+    name: str
+    bit: int
+    value: IntValueType
+    
+    def bitsName(self):
+        return f'Bits{self.rawName()}'
+    
+    def rawName(self):
+        return f'{self.bit_type}{self.port}{self.bit}'
+
+@dataclass
+class GpioBitCollector:
+    bit_type: str
+    regex: re.Pattern
+    bits: dict = field(default_factory=lambda : defaultdict(list))
+    
+    def collect(self, name, value):
+        # Only collect integer values
+        if value.TYPE != 'I':
+            return False
+        match = self.regex.match(name)
+        if match:
+            port = match.group(1)
+            bit = int(match.group(2))
+            self.bits[port].append(GpioBit(port, self.bit_type, name, bit, value))
+            return True
+        return False
+    
+    def fieldsName(self, port):
+        return f'Fields{self.bit_type}{port}'
+    
+    def registerName(self, port):
+        return f'Register{self.bit_type}{port}'
+    
+    def output(self, outfile, port):
+        port_bits = self.bits[port]
+        for bit in port_bits:
+            outfile.write(f'using {bit.bitsName()} = setl::BitsRW<'
+                          f'setl::SemanticType<setl::hash("{bit.rawName()}"), bool>, '
+                          f'{bit.value.render_name()}>;\n')
+        
+        outfile.write(f'\nusing {self.fieldsName(port)} = setl::BitFields<')
+        outfile.write(', '.join(f'{bit.bitsName()}' for bit in port_bits))
+        outfile.write('>;\n')
+        
+        outfile.write(f'using {self.registerName(port)} = Register<{self.fieldsName(port)},'
+                      f' rr{self.bit_type}{port}>;\n\n')
+
+@dataclass
+class GpioBuilder:
+    # AVR GPIO pins are defined by a port and a bit number with 3 registers
+    # being the PORT, DD, and PIN registers.  The PORT register is used to
+    # set the output value of the pin, the DD register is used to set the
+    # direction of the pin, and the PIN register is used to read the input
+    # value of the pin. While the registers are 8 bits wide, not all the
+    # bits are exposed as GPIO pins.
+    #
+    bits: tuple = field(default_factory=lambda : (
+            GpioBitCollector('PORT', re.compile(r'^PORT([A-Z])([0-9])$')),
+            GpioBitCollector('DD', re.compile(r'^DD([A-Z])([0-9])$')),
+            GpioBitCollector('PIN', re.compile(r'^PIN([A-Z])([0-9])$'))))
+    
+    ports: dict = field(default_factory=dict)
+    
+    PORT_RX = re.compile('^PORT([A-Z])$')
+    
+    def collect(self, sorted_keys, ket_value_map):
+        '''Collect the GPIO bits and collected by port letter.  The GPIO bits
+        will will have bit number and the value of the bit.
+        '''
+        for key in sorted_keys:
+            for bit in self.bits:
+                if bit.collect(key, ket_value_map[key]):
+                    break
+            self.collect_port(key, ket_value_map[key])
+        
+        return self
+            
+    def collect_port(self, name, value):
+        '''Collect the PORT register for each port.  This is used to
+        collect the port name and the port value for each port.
+        '''
+        if value.TYPE != 'R':
+            return False
+        
+        match = self.PORT_RX.match(name)
+        if match:
+            port = match.group(1)
+            self.ports[port] = (value)
+            return True
+        
+        return False
+    
+    def writeGpioPorts(self, outfile):
+        '''Generate the GPIO ports from the collected GPIO bits.'''
+        for port in self.ports:
+            for bit in self.bits:
+                bit.output(outfile, port)
+
+@dataclass
+class CollectedBit:
+    key: tuple
+    bit_type: str
+    macro_name: str
+    value: IntValueType
+
+# A generic macro collector that collects macro definitions that match a
+# regular expression.  The regular expression is used to extract the
+# port name and bit number from the macro name.
+@dataclass
+class MacroCollector:
+    bit_type: str
+    is_register: bool
+    is_16bit: bool
+    indexes: tuple
+    regex: re.Pattern
+    bits: dict = field(default_factory=lambda : defaultdict(list))
+    
+    def collect(self, name, value):
+        match = self.regex.match(name)
+        if match:
+            key = tuple(match.group(n) if n > 0 else () for n in self.indexes)
+            self.bits[key].append(CollectedBit(key, self.bit_type, name, value))
+            return True
+        return False
+    
+    def get_all_index_keys(self, n):
+        result = set()
+        for key in self.bits.keys():
+            result.add(key[n])
+        return result
+    
+    def get_by_key(self, key_n, key_v):
+        bits = []
+        for key, value in self.bits.items():
+            key_actual_v = key[key_n]
+            if key_actual_v == key_v or key_actual_v == ():
+                bits.append(value)
+        return bits
+
+    def write(self, outfile, key_n, key_v):
+        found = False
+        for key, value in self.bits.items():
+            key_actual_v = key[key_n]
+            if key_actual_v == key_v or key_actual_v == ():
+                outfile.write(f'// {value}\n')
+                found = True
+        if not found:
+            outfile.write(f'// No {self.bit_type} bits for {key_n}, {key_v}\n')
+
+REGISTER_ONLY_DEFINE = '''\
+using Bits{bits_name} = setl::BitsRW<setl::SemanticType<setl::hash("{bits_name}"), {cc_type}>>;
+using Fields{bits_name} = setl::BitFields<Bits{bits_name}>;
+using Register{reg_name} = Register<Fields{bits_name}, rr{reg_name}>;
+'''
+
+@dataclass
+class RegisterBuilder:
+    register: MacroCollector
+    bits8: tuple
+    bits16: tuple
+    
+    def bits_empty(self, key_n, key_v):
+        for bit in self.bits8 + self.bits16:
+            if not bit.bits_empty(key_n, key_v):
+                return False
+        return True
+    
+    def write(self, outfile, key_n, key_v):
+        regs_for_key = self.get_registers_by_key(key_n, key_v)
+        for reg in regs_for_key:
+            reg.write(outfile, 0, key_n, key_v)
+        
+        if self.bits_empty(key_n, key_v):
+            # Just the register name.
+            for reg in regs_for_key:
+                outfile.write(f'// {reg}\n')
+                bits_size = 8 if reg.is_16bit else 16
+                params = {'bits_name': reg.bit_type,
+                        'cc_type': f'std::uint{bits_size}_t',
+                        'reg_name': reg.bit_type
+                        }
+                outfile.write(REGISTER_ONLY_DEFINE.format(**params))
+            
+    def get_registers_by_key(self, key_n, key_v):
+        result = []
+        for bit in self.register:
+            key = bit.indexes[key_n]
+            if key == key_v or key == () or key_v == ():
+                result.add(bit)
+        return result
+        
+            
+    
+@dataclass
+class TccrRegisterBuilder(RegisterBuilder):
+    pass
+
+@dataclass
+class TimerBuilder:
+    # AVR timers are defined by a timer number and can be 16 or 8 bits wide.
+    # COM: Compare output mode
+    # CS: Clock select
+    # TCNT: Timer counter
+    # ICR: Input capture register
+    # ICIE: Input capture interrupt enable
+    # ICNC: Input capture noise canceler
+    # OCR: Output compare register
+    # OCIE: Output compare interrupt enable
+    # TOIE: Timer overflow interrupt enable
+    # TIFR: Timer interrupt flag register
+    # TOV: Timer overflow
+    # FOC: Force output compare
+    bits: tuple = field(default_factory=lambda : (
+        MacroCollector('COM', 0, 0, (1, 2, 3, -1), re.compile(r'^COM([0-9])([A-Z])([0-9])$')),
+        MacroCollector('CS', 0, 0, (1, -1, 2, -1), re.compile(r'^CS([0-9])([0-9])$')),
+        MacroCollector('TCNT', 0, 0, (1, -1, 2, -1), re.compile(r'^TCNT([0-9])_([0-9])$')),
+        MacroCollector('TCNT', 0, 1, (1, -1, 3, 2), re.compile(r'^TCNT([0-9])([HL])([0-9])$')),
+        MacroCollector('TCNT', 1, 0, (1, -1, -1, -1), re.compile(r'^TCNT([0-9])$')),
+        MacroCollector('TCNT', 1, 1, (1, -1, -1, 2), re.compile(r'^TCNT([0-9])([HL])$')),
+        MacroCollector('TCCR', 1, 0, (1, 2, -1, -1), re.compile(r'^TCCR([0-9])([A-Z])$')),
+        MacroCollector('TIMSK', 1, 0, (1, -1, -1, -1), re.compile(r'^TIMSK([0-9])$')),
+        MacroCollector('TIFR', 1, 0, (1, -1, -1, -1), re.compile(r'^TIFR([0-9])$')),
+        MacroCollector('ICR', 1, 0, (1, -1, -1, -1), re.compile(r'^ICR([0-9])$')),
+        MacroCollector('ICR', 1, 1, (1, -1, -1, 2), re.compile(r'^ICR([0-9])([HL])$')),
+        MacroCollector('ICR', 0, 0, (1, -1, 3, 2), re.compile(r'^ICR([0-9])([HL])([0-9])$')),
+        MacroCollector('ICES', 0, 0, (1, -1, -1, -1), re.compile(r'^ICES([0-9])$')),
+        MacroCollector('ICNC', 0, 0, (1, -1, -1, -1), re.compile(r'^ICNC([0-9])$')),
+        MacroCollector('OCR', 1, 0, (1, 2, -1, -1), re.compile(r'^OCR([0-9])([A-Z])$')),
+        MacroCollector('OCR', 1, 1, (1, 2, -1, 3), re.compile(r'^OCR([0-9])([A-Z])([HL])$')),
+        MacroCollector('OCR', 0, 0, (1, 2, 3), re.compile(r'^OCR([0-9])([A-Z])_([0-9])$')),
+        MacroCollector('OCR', 0, 1, (1, 2, 4, 3), re.compile(r'^OCR([0-9])([A-Z])([HL])([0-9])$')),
+        MacroCollector('WGM', 0, 0, (1, -1, 2, -1), re.compile(r'^WGM([0-9])([0-9])$')),
+        MacroCollector('OCIE', 0, 0, (1, 2, -1, -1), re.compile(r'^OCIE([0-9])([0-9])$')),
+        MacroCollector('ICIE', 0, 0, (1, -1, -1, -1), re.compile(r'^OCIE([0-9])$')),
+        MacroCollector('OCF', 0, 0, (1, 2, -1, -1), re.compile(r'^OCF([0-9])([0-9])$')),
+        MacroCollector('TOIE', 0, 0, (1, -1, -1, -1), re.compile(r'^TOIE([0-9])$')),
+        MacroCollector('TOV', 0, 0, (1, -1, -1, -1), re.compile(r'^TOV([0-9])$')),
+        MacroCollector('FOC', 0, 0, (1, 2, -1, -1), re.compile(r'^FOC([0-9])([A-Z])$'))))     
+    
+                    
+    def assemble_collectors(self):
+        return (
+            self.get_register_whole('TCNT'),
+            self.get_register_whole('ICR'),
+            self.get_register_whole('OCR'),
+            self.get_register_whole('TCCR', 
+                                    ('WGM', 'ICES', 'ICNC', 'COM', 'CS', 'FOC'),
+                                    TccrRegisterBuilder),
+            self.get_register_whole('TIMSK', ('OCIE', 'ICIE', 'TOIE')),
+            self.get_register_whole('TIFR', ('OCF', 'TOV')),
+            )
+                
+
+    def collect(self, sorted_keys, ket_value_map):
+        for key in sorted_keys:
+            for bit in self.bits:
+                if bit.collect(key, ket_value_map[key]):
+                    break
+        return self
+
+    def get_all_index_keys(self, n):
+        result = set()
+        for bit in self.bits:
+            result = result.union(bit.get_all_index_keys(n))
+        return tuple(sorted(result))
+        
+    def write(self, outfile):
+        collectors = self.assemble_collectors()
+        keys = self.get_all_index_keys(0)
+        for key_v in keys:
+            for collector in collectors:
+                collector.write(outfile, 0, key_v)
+                
+    def get_register_whole(self, reg_name, bits_types=(), builder=RegisterBuilder):
+        '''Get the register and bits collectors for a register.
+        If bits_types is specified, only bits of those types will be provided
+        otherwise bits with the same name as the register will be provided.
+        '''
+        if not bits_types:
+            bits_types = (reg_name,)
+        registers = []
+        bits8 = []
+        bits16 = []
+        for collector in self.bits:
+            if collector.bit_type == reg_name:
+                
+                if collector.is_register:
+                    registers.append(collector)
+                else:
+                    if collector.is_16bit:
+                        bits16.append(collector)
+                    else:
+                        bits8.append(collector)
+        
+        return builder(registers, bits8, bits16)
+                
+    def write_register_components(self, outfile, reg_name, bits):
+        if not bits:
+            # No bits for this register, assume the entire register is used.
+            pass
+        for bit in self.bits:
+            bit.write(outfile, 1, reg_name)
+        
 
 @dataclass
 class ProcessedBoard:
@@ -1487,8 +1809,24 @@ class CreateArduinoData:
                 mcu_arch=mcu_arch, __SFR_OFFSET=kv['__SFR_OFFSET'].value))
             keys = list(kv.keys()) 
             keys.remove('__SFR_OFFSET')
-            mf.write(''.join(kv[k].render() for k in sorted(keys)))
+            sorted_keys = sorted(keys)
+            mf.write(''.join(kv[k].render() for k in sorted_keys))
+            
+            self.writeGpioBits(mf, sorted_keys, kv)
+            
+            self.writeTimerBits(mf, sorted_keys, kv)
+            
             mf.write(SUPPLEMENTAL_TAIL.format(mcu_arch=mcu_arch))
+            
+    def writeGpioBits(self, outfile, sorted_keys, kay_value_map):
+        builder = GpioBuilder().collect(sorted_keys, kay_value_map)
+        outfile.write('\n\n# GPIO port definitions.\n')
+        builder.writeGpioPorts(outfile)
+        
+    def writeTimerBits(self, outfile, sorted_keys, kay_value_map):
+        builder = TimerBuilder().collect(sorted_keys, kay_value_map)
+        builder.write(outfile)
+            
 
     def writeSupplementalParentFile(self, parent_filename):
         

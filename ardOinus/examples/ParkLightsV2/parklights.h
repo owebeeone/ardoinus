@@ -12,6 +12,7 @@
 #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include "AsyncUDP.h"
 #include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 #include "ardo_time_poller.h"  // A time poller class.
 #include "ardo_color_space.h"
 #include "setlx_array.h"
@@ -22,6 +23,15 @@
 #include <errno.h>
 
 #include "ssid_creds.h" // contains symbols ssid and password
+/*
+*** If ssid_creds.h is missing, create it with creds like so: ***
+namespace {
+constexpr char ssid[] = "<your wifi ssid name>";
+constexpr char password[] = "<your wifi password>";
+constexpr char ota_password[] = "<The OTA update password>";
+}
+*** ***
+*/
 
 
 #define PL_VERSION "V1.1"
@@ -178,7 +188,7 @@ constexpr float PIXEL_Y_X_SIZE_RATIO = (990.0 / 21) / (1000.0 / 30);
 
 // Create an LEDs module.
 using CentralParkLeds = ardo_fastled::LedStrip<
-  LEDS_COUNT, ardo::ExternalPin<27>, WS2812B, GRB, 210>;
+  LEDS_COUNT, ardo::ExternalPin<27>, WS2815, RGB, 210>;
 
 struct RgbColor {
   CRGB convert() const {
@@ -362,6 +372,10 @@ class Esp32Wifi : public ardo::ModuleBase<ardo::Parameters<SerialA>> {
          }
        }
      }
+   }
+
+   static bool is_connected() {
+     return instance.connection_state == &wstates::CONNECTED;
    }
 
    static Esp32Wifi instance;
@@ -1093,8 +1107,160 @@ private:
   GFXcanvas16 canvas{ pixelXcount, pixelYcount };
 };
 
+class Esp32OtaOld : public ardo::ModuleBase<> {
+public:
+  void handle_setup() {
+    // Don't set up host name and onstart util we're connected.
+    bool is_connected = Esp32Wifi::is_connected();
+    if (is_connected == last_wifi_state_was_connected) {
+      return;
+    }
+    last_wifi_state_was_connected = is_connected;
+    if (!is_connected) {
+      return;
+    }
+    SerialA::println("OTA Setup");
+    ArduinoOTA.setHostname("parklights");
+    ArduinoOTA.onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH) {
+        type = "sketch";
+      } else { // U_SPIFFS
+        type = "filesystem";
+      }
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      SerialA::println("Start updating " + type);
+        })
+      .onEnd([]() {
+          SerialA::println("\nEnd");
+        })
+          .onProgress([](unsigned int progress, unsigned int total) {
+          Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+            })
+          .onError([](ota_error_t error) {
+              Serial.printf("Error[%u]: ", error);
+              if (error == OTA_AUTH_ERROR) SerialA::println("Auth Failed");
+              else if (error == OTA_BEGIN_ERROR) SerialA::println("Begin Failed");
+              else if (error == OTA_CONNECT_ERROR) SerialA::println("Connect Failed");
+              else if (error == OTA_RECEIVE_ERROR) SerialA::println("Receive Failed");
+              else if (error == OTA_END_ERROR) SerialA::println("End Failed");
+            });
+     is_initialized = true;
+  }
+
+  void instanceLoop() {
+    handle_setup();
+    if (is_initialized) {
+      ArduinoOTA.handle();
+    }
+  }
+
+  static void runLoop() {
+    instance.instanceLoop();
+  }
+
+  bool last_wifi_state_was_connected = false;
+  bool is_initialized = false;
+
+  static Esp32OtaOld instance;
+};
+
+class Esp32Ota : public ardo::ModuleBase<> {
+public:
+  // This function will be called repeatedly from instanceLoop to manage OTA state
+  void manageOtaState() {
+    bool is_wifi_connected = Esp32Wifi::is_connected();
+
+    if (is_wifi_connected) {
+      // WiFi is connected
+      if (!ota_service_initialized) {
+        // OTA service has not been initialized yet for this WiFi session
+        SerialA::println("OTA: WiFi Connected. Initializing OTA services...");
+
+        // Set the hostname for OTA. This is how it will appear in Arduino IDE network ports.
+        ArduinoOTA.setHostname("parklights"); // You can change "parklights" if needed
+
+        // (Optional but recommended) Set a password for OTA updates
+        ArduinoOTA.setPassword("UploadMe"); 
+        // If you set a password, you'll be prompted for it in the Arduino IDE during upload.
+
+        // Configure OTA event callbacks
+        ArduinoOTA.onStart([]() {
+          String type;
+          if (ArduinoOTA.getCommand() == U_FLASH) {
+            type = "sketch";
+          }
+          else { // U_SPIFFS
+            type = "filesystem";
+          }
+          SerialA::println("OTA: Start updating " + type);
+          // You might want to stop other critical operations here (e.g., motor control, sensor readings)
+          // to ensure a smooth update process.
+          });
+
+        ArduinoOTA.onEnd([]() {
+          SerialA::println("\nOTA: Update End. ESP32 will restart.");
+          // The ESP32 will automatically reboot after a successful sketch update.
+          });
+
+        ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+          // Avoid using SerialA::println here as it might be too slow or complex for an ISR-like context.
+          // Stick to Serial.printf for progress if needed, or disable for faster updates.
+          Serial.printf("OTA Progress: %u%%\r", (progress / (total / 100)));
+          });
+
+        ArduinoOTA.onError([](ota_error_t error) {
+          Serial.printf("OTA Error[%u]: ", error);
+          if (error == OTA_AUTH_ERROR) SerialA::println("Auth Failed");
+          else if (error == OTA_BEGIN_ERROR) SerialA::println("Begin Failed (mDNS conflict or already running?)");
+          else if (error == OTA_CONNECT_ERROR) SerialA::println("Connect Failed (IDE couldn't connect)");
+          else if (error == OTA_RECEIVE_ERROR) SerialA::println("Receive Failed (network issue during transfer)");
+          else if (error == OTA_END_ERROR) SerialA::println("End Failed (error finalizing update)");
+          });
+
+        // ****** CRITICAL: Start the ArduinoOTA service ******
+        ArduinoOTA.begin();
+
+        ota_service_initialized = true; // Mark OTA as initialized
+        SerialA::println("OTA: Service started. Hostname: parklights. Waiting for uploads on network port.");
+        SerialA::print("OTA: IP address: ");
+        SerialA::println(WiFi.localIP().toString());
+      }
+    }
+    else {
+      // WiFi is not connected
+      if (ota_service_initialized) {
+        SerialA::println("OTA: WiFi Disconnected. OTA services are now inactive.");
+        // ArduinoOTA.end(); // Optional: explicitly stop OTA. begin() should reinitialize if WiFi comes back.
+        ota_service_initialized = false; // Reset the flag, so it re-initializes if WiFi reconnects
+      }
+    }
+  }
+
+  void instanceLoop() {
+    manageOtaState(); // Manage OTA initialization and state based on WiFi connection
+
+    // Only call ArduinoOTA.handle() if the service is initialized and WiFi is connected.
+    // ArduinoOTA.handle() listens for incoming OTA requests from the IDE.
+    if (ota_service_initialized && Esp32Wifi::is_connected()) {
+      ArduinoOTA.handle();
+    }
+  }
+
+  static void runLoop() {
+    instance.instanceLoop();
+  }
+
+  // Flag to track if ArduinoOTA.begin() has been called successfully in the current WiFi session
+  bool ota_service_initialized = false;
+
+  static Esp32Ota instance; // Static instance for the module
+};
+
+Esp32Ota Esp32Ota::instance;
+
 // Define the main app.
-using mainApp = ardo::Application<NetworkStatusUpdater, LedsToTftMirror, LedsUpdater>;
+using mainApp = ardo::Application<NetworkStatusUpdater, LedsToTftMirror, LedsUpdater, Esp32Ota>;
 
 #include "default_image.h"
 #endif // PARKLIGHTS___H

@@ -4,7 +4,7 @@
 
 #include "setl_support.h"
 
-#ifndef HAS_STD_LIB
+#if defined(HAS_STD_LIB) || 1
 #include <array>
 #else
 

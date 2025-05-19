@@ -362,7 +362,7 @@ template <typename T>
 using GetTypeOf = typename GetTypeOfHelper<T>::type;
 
 template <BitOps w_ops, typename T, unsigned...bits>
-struct Bits {
+struct BitsImpl {
   static constexpr BitOps ops{ w_ops };
   static constexpr unsigned max_bits{Max<bits...>::value};
   using type = T;
@@ -371,8 +371,8 @@ struct Bits {
   template <typename UT>
   using ShiftMaskInfo = GroupMaskShifts<UT, bits...>;
 
-  Bits() = default;
-  explicit Bits(const type& value)
+  BitsImpl() = default;
+  explicit BitsImpl(const type& value)
     : value{value}
   {}
 
@@ -385,7 +385,7 @@ struct Bits {
 
     using unsigned_type = typename UnsignedType<w_FormatType::type, type>::type;
 
-    using applier = typename Bits::template ShiftMaskInfo<unsigned_type>::group::template apply<ApplyMaskShift>;
+    using applier = typename BitsImpl::template ShiftMaskInfo<unsigned_type>::group::template apply<ApplyMaskShift>;
     return static_cast<type>(
       applier::convert(static_cast<unsigned_type>(value.value)));
   }
@@ -398,6 +398,91 @@ struct Bits {
   // Instantiations of this class contain the value read or written.
   type value{};
 };
+
+// namespace nfp is not part of the public API.
+namespace nfp {
+// Creates the bits... parameter for Bits if not specified. The idea is to allow for omission
+// of the bits... parameter for Bits when the register's value is the complete set of bits.
+template <typename U, unsigned N, unsigned...bits>
+struct DeriveBitsFor;
+
+// Case when the bits... parameter is specified in the original BitsXX declaration.
+template <unsigned N, unsigned...orig, unsigned...bits>
+struct DeriveBitsFor<UintList<orig...>, N, bits...> {
+  using uint_bits = UintList<orig...>;
+};
+
+// Case when the bits... parameter is not specified in the original BitsXX declaration
+// and we recursively create it.
+template <unsigned N, unsigned...bits>
+struct DeriveBitsFor<UintList<>, N, bits...> {
+  using uint_bits = typename DeriveBitsFor<UintList<>, N - 1, bits..., N - 1>::uint_bits;
+};
+
+template <unsigned...bits>
+struct DeriveBitsFor<UintList<>, 0, bits...> {
+  using uint_bits = UintList<bits...>;
+};
+
+template <typename U, unsigned N, unsigned...bits>
+using DeriveBitsFor_t = typename DeriveBitsFor<U, N, bits...>::uint_bits;
+
+template <typename T>
+struct MakeBitsFor;
+
+template <unsigned...bits>
+struct MakeBitsFor<UintList<bits...>> {
+  template <BitOps w_ops, typename T>
+  using type = BitsImpl<w_ops, T, bits...>;
+};
+
+static_assert(
+  std::is_same_v<
+    DeriveBitsFor_t<UintList<4, 3>, 7, 7>,
+    UintList<4, 3>>,
+  "DeriveBitsFor is broken"
+);
+
+static_assert(
+  std::is_same_v<
+    DeriveBitsFor_t<UintList<>, 7, 7>,
+    UintList<7, 6, 5, 4, 3, 2, 1, 0>>,
+  "DeriveBitsFor is broken"
+);
+
+static_assert(
+  std::is_same_v<
+    MakeBitsFor<UintList<3, 2, 1>>::type<BitOps::ReadOnly, int>,
+    BitsImpl<BitOps::ReadOnly, int, 3, 2, 1>>,
+  "MakeBitsFor is broken"
+);
+
+
+} // namespace nfp
+
+// Handles filling in of ...bits when omitted.
+template <BitOps w_ops, typename T, unsigned...bits>
+using Bits = typename nfp::MakeBitsFor<nfp::DeriveBitsFor_t<
+    UintList<bits...>,
+    sizeof(T) * 8 - 1, 
+    sizeof(T) * 8 - 1>>::template type<w_ops, T>;
+
+// Tests for Bits when bits... is specified.
+static_assert(
+  std::is_same_v<
+    Bits<BitOps::ReadOnly, char, 3, 2, 1>,
+    BitsImpl<BitOps::ReadOnly, char, 3, 2, 1>>,
+  "Bits is broken"
+);
+
+// Tests for Bits when bits... is omitted.
+static_assert(
+  std::is_same_v<
+    Bits<BitOps::ReadOnly, char>,
+    BitsImpl<BitOps::ReadOnly, char, 7, 6, 5, 4, 3, 2, 1, 0>>,
+  "Bits is broken"
+);
+
 
 template <typename T, unsigned...bits>
 struct BitsRO : Bits<BitOps::ReadOnly, GetTypeOf<T>, bits...> {
