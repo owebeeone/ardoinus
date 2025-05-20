@@ -100,7 +100,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\cores\esp32;C:\Users\gianni\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\libraries\AsyncUDP\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -138,6 +138,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\examples\ParkLightsV2\parklights.h" />
+    <ClInclude Include="..\..\..\..\tests\modules_test.h" />
     <ClInclude Include="..\..\..\ardOinus.h" />
     <ClInclude Include="..\..\..\ardo_eeprom.h" />
     <ClInclude Include="..\..\..\ardo_sequencer.h" />

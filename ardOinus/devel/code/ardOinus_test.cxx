@@ -28,6 +28,8 @@
 
 #include "tests/ardo_singleton_test.h"
 
+#include "tests/modules_test.h"
+
 
 #if HAS_STDIOSTREAM
 

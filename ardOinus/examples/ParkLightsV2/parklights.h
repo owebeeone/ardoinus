@@ -1165,7 +1165,11 @@ public:
   static Esp32OtaOld instance;
 };
 
-class Esp32Ota : public ardo::ModuleBase<> {
+class Esp32Ota : public ardo::ModuleInstanceBase<
+  Esp32Ota,
+  ardo::Parameters<>,
+  ardo::DependentModules<Esp32Wifi>
+> {
 public:
   // This function will be called repeatedly from instanceLoop to manage OTA state
   void manageOtaState() {
@@ -1218,7 +1222,6 @@ public:
           else if (error == OTA_END_ERROR) SerialA::println("End Failed (error finalizing update)");
           });
 
-        // ****** CRITICAL: Start the ArduinoOTA service ******
         ArduinoOTA.begin();
 
         ota_service_initialized = true; // Mark OTA as initialized
@@ -1247,17 +1250,9 @@ public:
     }
   }
 
-  static void runLoop() {
-    instance.instanceLoop();
-  }
-
   // Flag to track if ArduinoOTA.begin() has been called successfully in the current WiFi session
   bool ota_service_initialized = false;
-
-  static Esp32Ota instance; // Static instance for the module
 };
-
-Esp32Ota Esp32Ota::instance;
 
 // Define the main app.
 using mainApp = ardo::Application<NetworkStatusUpdater, LedsToTftMirror, LedsUpdater, Esp32Ota>;
