@@ -1950,19 +1950,22 @@
     <ClCompile Include="..\..\..\setl_system.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\ardOinus_test.cxx">
+    <ClCompile Include="..\..\..\..\devel\code\ardOinus_test.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\blink_test.cxx">
+    <ClCompile Include="..\..\..\..\devel\code\blink_test.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\emulate_arduino.cxx">
+    <ClCompile Include="..\..\..\..\devel\code\emulate_arduino.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\pwe_test_module.cxx">
+    <ClCompile Include="..\..\..\..\devel\code\pwe_test_module.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\tests\adro_avr_mock_registers.cxx">
+    <ClCompile Include="..\..\..\..\devel\code\servo_test.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\tests\adro_avr_mock_registers.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

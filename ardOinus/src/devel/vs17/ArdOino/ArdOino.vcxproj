@@ -100,7 +100,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>HAS_STDIOSTREAM=1;ARDO_USE_MOCK_ARDUINO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\mcu\avr;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src\sys\boards\arduino;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus;C:\Users\gianni\Documents\Arduino\ardOinus\ardOinus\src;C:\Users\gianni\Documents\Arduino\ardOinus\ardOQuadEncoder\src;C:\Users\gianni\Documents\Arduino\libraries\FastLED\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -784,12 +784,13 @@
     <ClInclude Include="..\..\..\type_for_size.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\devel\code\ardOinus_test.cxx" />
+    <ClCompile Include="..\..\..\..\devel\code\blink_test.cxx" />
+    <ClCompile Include="..\..\..\..\devel\code\emulate_arduino.cxx" />
+    <ClCompile Include="..\..\..\..\devel\code\pwe_test_module.cxx" />
+    <ClCompile Include="..\..\..\..\devel\code\servo_test.cxx" />
+    <ClCompile Include="..\..\..\..\tests\adro_avr_mock_registers.cxx" />
     <ClCompile Include="..\..\..\setl_system.cpp" />
-    <ClCompile Include="..\..\..\tests\adro_avr_mock_registers.cxx" />
-    <ClCompile Include="..\..\code\ardOinus_test.cxx" />
-    <ClCompile Include="..\..\code\blink_test.cxx" />
-    <ClCompile Include="..\..\code\emulate_arduino.cxx" />
-    <ClCompile Include="..\..\code\pwe_test_module.cxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
