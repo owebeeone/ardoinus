@@ -1,8 +1,43 @@
+/**
+ * @file ardo_packet_reassembler.h
+ * @brief Application-level UDP packet fragmentation and reassembly
+ * 
+ * This file implements a robust solution for UDP packet fragmentation and reassembly
+ * since the ESP32 (and many embedded platforms) do not support IP fragmentation at
+ * the network layer by default.
+ * 
+ * Key features:
+ * - Supports multiple in-flight fragmented packets simultaneously
+ * - Uses bitmap tracking to efficiently manage out-of-order fragment arrival
+ * - Includes CRC-based packet identification
+ * - Handles packet boundaries and corruption detection
+ * - Automatic LRU (least recently used) buffer management
+ * 
+ * Main components:
+ * - PacketReassembler: Core reassembly logic for a single packet
+ * - PacketReassemblerManager: Manages multiple reassemblers
+ * - FragmentReceiver: Handles incoming fragments
+ * - FragmentSender: Fragments outgoing packets
+ * 
+ * Usage example:
+ *   FragmentReceiver<4, 8> receiver; // Support 4 packets in flight, max 8 fragments each
+ *   FragmentSender<8> sender;        // Support packets requiring up to 8 fragments
+ *   
+ *   // When sending data:
+ *   sender.send(data, length, [](const uint8_t* data, uint32_t length) {
+ *     udp.send(data, length);
+ *   });
+ *   
+ *   // When receiving data:
+ *   receiver.receive(remoteIp, remotePort, data, length, 
+ *     [](const uint8_t* data, uint32_t length) {
+ *       // Process the reassembled packet
+ *     });
+ */
 
 #ifndef ARDO_PACKET_REASSEMBLER__H
 #define ARDO_PACKET_REASSEMBLER__H
 
-//#include "WiFi.h"
 
 #include <cstdint>
 #include <cstring>
